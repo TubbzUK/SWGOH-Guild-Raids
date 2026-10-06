@@ -26,17 +26,26 @@ raid results or roster, and the raid, then drop the file in. The page checks the
 (right type, raid date, player count, players belong to that guild, file name matches the raid),
 uploads it, and shows progress until the site has updated.
 
-It needs a **GitHub access token** the first time (tick *Remember on this device* to save it in
-that browser only). To make one, signed in as the repository owner:
-1. Open https://github.com/settings/personal-access-tokens/new
-2. Name it (e.g. *Raid tracker upload*) and pick an expiry date.
-3. **Repository access → Only select repositories →** this repository.
-4. **Permissions → Repository permissions:** *Contents* = **Read and write**, *Actions* = **Read-only**.
-5. **Generate token**, copy it (starts `github_pat_`) and paste it into the upload page.
+Officers log in with the **officer password**, which the repository owner sets up once:
 
-For another officer, make a separate token the same way and send it privately. Delete it on GitHub
-(Settings → Developer settings → Personal access tokens) any time to remove their access.
-Never post a token in Discord or commit it to the repository.
+1. Create a fine-grained token at https://github.com/settings/personal-access-tokens/new:
+   **Only select repositories →** this repository; **Contents: Read and write**, **Actions: Read-only**.
+   Copy it with the copy button (don't screenshot it).
+2. On the upload page click **Repository owner: set up or change the officer password**, paste the
+   token, choose a password of at least 12 characters (four random words works well) and click
+   **Save officer password**.
+3. About two minutes later the upload page asks for the password. Share it with officers privately.
+
+The token is locked with the password in your browser (PBKDF2 + AES-256) and only the locked copy
+(`site/upload-key.json`) is saved, so the password must be long: anyone can download the locked copy
+and try to guess it.
+
+**Changing the password or removing someone's access:** create a new token, run the setup again
+with a new password, then delete the old token on GitHub (Settings → Developer settings → Personal
+access tokens). Deleting the old token matters, because older locked copies stay in the repository's
+history. To stop password uploads completely, just delete the token.
+
+You can also upload with a GitHub token directly (*Use a GitHub token instead* on the upload page).
 
 ## After every raid (uploading on GitHub instead)
 

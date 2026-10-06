@@ -134,22 +134,30 @@ a { color: var(--accent); }
     <div class="step">
       <span class="n" id="tokenN">5</span>
       <div>
-        <label class="title" for="token">GitHub access token</label>
-        <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+        <div id="pwMode">
+          <label class="title" for="password">Officer password</label>
+          <input type="password" id="password" autocomplete="current-password" spellcheck="false">
+        </div>
+        <div id="tokenMode" hidden>
+          <label class="title" for="token">GitHub access token</label>
+          <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+        </div>
         <div class="row">
           <label><input type="checkbox" id="remember"> Remember on this device</label>
-          <button type="button" class="link" id="forget" hidden>Forget saved token</button>
+          <button type="button" class="link" id="forget" hidden>Forget saved login</button>
+          <button type="button" class="link" id="switchMode"></button>
         </div>
-        <details>
+        <div class="msg info" id="noPassword" hidden style="margin-top:10px">No officer password has been set up yet, so a GitHub token is needed. The repository owner can <button type="button" class="link" id="openSetup">set up an officer password</button>.</div>
+        <details id="tokenHelp" hidden>
           <summary>How do I get a token?</summary>
           <ol>
             <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a> (signed in as the repository owner).</li>
             <li>Name it e.g. <i>Raid tracker upload</i> and pick an expiry date.</li>
-            <li>Under <b>Repository access</b> choose <b>Only select repositories</b> → <span class="num" id="repoName">this repository</span>.</li>
+            <li>Under <b>Repository access</b> choose <b>Only select repositories</b> → <span class="num repoName">this repository</span>.</li>
             <li>Under <b>Permissions → Repository permissions</b> set <b>Contents</b> to <b>Read and write</b> and <b>Actions</b> to <b>Read-only</b>.</li>
-            <li><b>Generate token</b>, copy it (it starts <span class="num">github_pat_</span>) and paste it above.</li>
+            <li><b>Generate token</b>, copy it with the copy button (it starts <span class="num">github_pat_</span>) and paste it above. Don't screenshot it.</li>
           </ol>
-          <p>The token only works on this one repository. For another officer, make a separate token the same way and send it to them privately; delete it on GitHub any time to remove their access. Never post a token in Discord or put it in a file on the site.</p>
+          <p>The token only works on this one repository. Never post it in Discord or put it in a file yourself; delete it on GitHub any time to cut off access.</p>
         </details>
       </div>
     </div>
@@ -160,6 +168,39 @@ a { color: var(--accent); }
   <div class="card" id="status" hidden>
     <ul class="progress" id="progress"></ul>
   </div>
+
+  <p class="sub" style="text-align:center"><button type="button" class="link" id="ownerLink">Repository owner: set up or change the officer password</button></p>
+
+  <section class="card" id="setup" hidden>
+    <h2 style="font-size:17px;margin:0 0 4px">Set up the officer password</h2>
+    <p class="sub" style="margin:0 0 14px">For the repository owner. Officers then upload with this password instead of a GitHub token. Your token is locked with the password in your browser, and only the locked version is saved to the site.</p>
+    <div class="step" style="border-top:0;padding-top:0">
+      <span class="n">1</span>
+      <div>
+        <label class="title" for="setupToken">Your GitHub access token</label>
+        <input type="password" id="setupToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+        <div class="sub" style="margin-top:6px">Make a new fine-grained token for this: only <span class="num repoName">this repository</span>, Contents: Read and write, Actions: Read-only. <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create one</a>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <span class="n">2</span>
+      <div>
+        <label class="title" for="setupPw">Officer password</label>
+        <input type="password" id="setupPw" autocomplete="new-password" spellcheck="false">
+        <label class="title" for="setupPw2" style="margin-top:10px">Type it again</label>
+        <input type="password" id="setupPw2" autocomplete="new-password" spellcheck="false">
+        <div class="sub" style="margin-top:6px">At least 12 characters. Four random words works well, e.g. <i>lantern-gravel-otter-sunday</i>. The locked token is public, so a short password could be guessed.</div>
+      </div>
+    </div>
+    <div class="check" id="setupCheck"></div>
+    <div class="row" style="margin-top:12px"><button type="button" class="primary" id="setupGo" disabled>Save officer password</button></div>
+    <ul class="progress" id="setupProgress" style="margin-top:12px"></ul>
+    <details>
+      <summary>Changing or cancelling the password</summary>
+      <p>To change it, create a new token, run this setup again with the new password, then delete the old token on GitHub (Settings → Developer settings → Personal access tokens). Deleting the old token matters: older locked copies stay in the repository's history.</p>
+      <p>To stop password uploads completely, delete the token on GitHub.</p>
+    </details>
+  </section>
 </div>
 
 <script>
@@ -170,7 +211,31 @@ a { color: var(--accent); }
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
                   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
                   del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
-  const TOKEN_KEY = "raidTrackerToken";
+  const TOKEN_KEY = "raidTrackerToken", PW_KEY = "raidTrackerPassword";
+
+  // ---------- password lock (PBKDF2 + AES-GCM, all in the browser) ----------
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  const b64 = bytes => { let s = ""; new Uint8Array(bytes).forEach(b => s += String.fromCharCode(b)); return btoa(s); };
+  const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const ITERATIONS = 600000;
+  async function deriveKey(pw, salt, iterations) {
+    const base = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+  async function lock(token, pw) {
+    const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(pw, salt, ITERATIONS);
+    const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(token));
+    return { v: 1, kdf: "PBKDF2-SHA256", iterations: ITERATIONS, salt: b64(salt), iv: b64(iv), data: b64(data), created: new Date().toISOString() };
+  }
+  async function unlock(blob, pw) {
+    const key = await deriveKey(pw, unb64(blob.salt), blob.iterations);
+    try { return dec.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(blob.iv) }, key, unb64(blob.data))); }
+    catch (e) { return null; }
+  }
+  let keyBlob = null;
+  try { const r = await fetch("upload-key.json", { cache: "no-store" }); if (r.ok) keyBlob = await r.json(); } catch (e) {}
+  let mode = keyBlob ? "password" : "token";
 
   // ---------- site config (written by the build) ----------
   let cfg = {};
@@ -181,7 +246,7 @@ a { color: var(--accent); }
   }
   const branch = cfg.branch || "main";
   const guilds = cfg.guilds || [], raids = cfg.raids || [];
-  if (repo) $("#repoName").textContent = repo.split("/")[1];
+  if (repo) document.querySelectorAll(".repoName").forEach(el => el.textContent = repo.split("/")[1]);
 
   let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
   $("#guild").innerHTML = guilds.map(g => `<option value="${esc(g.slug)}">${esc(g.name)}</option>`).join("");
@@ -192,9 +257,25 @@ a { color: var(--accent); }
   const backLink = () => { $("#back").href = `./?guild=${encodeURIComponent($("#guild").value)}&raid=${encodeURIComponent($("#raid").value)}`; };
   backLink();
 
-  const saved = store.get(TOKEN_KEY);
-  if (saved) { $("#token").value = saved; $("#remember").checked = true; $("#forget").hidden = false; }
-  $("#forget").onclick = () => { store.del(TOKEN_KEY); $("#token").value = ""; $("#remember").checked = false; $("#forget").hidden = true; update(); };
+  const savedTok = store.get(TOKEN_KEY), savedPw = store.get(PW_KEY);
+  if (savedTok) $("#token").value = savedTok;
+  if (savedPw) $("#password").value = savedPw;
+  if (savedTok && !savedPw && keyBlob) mode = "token";
+  if (savedTok || savedPw) { $("#remember").checked = true; $("#forget").hidden = false; }
+  $("#forget").onclick = () => { store.del(TOKEN_KEY); store.del(PW_KEY); $("#token").value = ""; $("#password").value = ""; $("#remember").checked = false; $("#forget").hidden = true; update(); };
+  function showMode() {
+    $("#pwMode").hidden = mode !== "password";
+    $("#tokenMode").hidden = mode !== "token";
+    $("#tokenHelp").hidden = mode !== "token";
+    $("#noPassword").hidden = !!keyBlob || mode !== "token";
+    $("#switchMode").hidden = !keyBlob;
+    $("#switchMode").textContent = mode === "password" ? "Use a GitHub token instead" : "Use the officer password instead";
+  }
+  $("#switchMode").onclick = () => { mode = mode === "password" ? "token" : "password"; showMode(); update(); };
+  const openSetup = () => { $("#setup").hidden = false; $("#setup").scrollIntoView({ behavior: "smooth" }); };
+  $("#openSetup").onclick = openSetup; $("#ownerLink").onclick = openSetup;
+  if (location.hash === "#setup") $("#setup").hidden = false;
+  showMode();
 
   if (!guilds.length || !repo) {
     $("#check").innerHTML = `<div class="msg bad">The upload settings couldn't be loaded. Run the "Update raid site" action once on GitHub, then reload this page.</div>`;
@@ -304,7 +385,8 @@ a { color: var(--accent); }
     $("#fileN").textContent = raidKind ? "4" : "3";
     $("#tokenN").textContent = raidKind ? "5" : "4";
     const blocked = !!$("#check .bad");
-    $("#go").disabled = !(file && $("#token").value.trim() && $("#guild").value && (!raidKind || $("#raid").value) && !blocked && repo);
+    const login = mode === "password" ? $("#password").value : $("#token").value.trim();
+    $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && !blocked && repo);
   }
   const pick = f => { file = f || null; $("#dropText").innerHTML = file ? `<b>${esc(file.name)}</b> · ${(file.size / 1024).toFixed(0)} KB · <u>change</u>` : `<b>Choose a file</b> or drag it here`; runChecks(); };
   $("#file").onchange = e => pick(e.target.files[0]);
@@ -316,7 +398,7 @@ a { color: var(--accent); }
   document.querySelectorAll("input[name=kind]").forEach(r => r.onchange = () => { update(); runChecks(); });
   $("#guild").onchange = () => { backLink(); runChecks(); };
   $("#raid").onchange = () => { backLink(); runChecks(); };
-  $("#token").oninput = update;
+  $("#token").oninput = update; $("#password").oninput = update;
   update();
 
   // ---------- upload ----------
@@ -335,7 +417,9 @@ a { color: var(--accent); }
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const explain = async (res) => {
     let m = ""; try { m = (await res.json()).message || ""; } catch (e) {}
-    if (res.status === 401) return "GitHub didn't accept the token. Check it was copied in full, and that it hasn't expired.";
+    if (res.status === 401) return mode === "password"
+      ? "The password is right, but the GitHub token behind it has expired or been deleted. Ask the repository owner to run the officer password setup again."
+      : "GitHub didn't accept the token. Check it was copied in full, and that it hasn't expired.";
     if (res.status === 404) return `The token can't see the repository. When creating it, choose "Only select repositories" and pick ${esc(repo.split("/")[1])}.`;
     if (res.status === 403) return `The token isn't allowed to add files. Edit it on GitHub and set Contents to "Read and write". (${esc(m)})`;
     if (res.status === 422) return `GitHub rejected the file: ${esc(m)}`;
@@ -344,9 +428,17 @@ a { color: var(--accent); }
 
   $("#form").onsubmit = async e => {
     e.preventDefault();
-    const token = $("#token").value.trim();
-    if ($("#remember").checked) { store.set(TOKEN_KEY, token); $("#forget").hidden = false; } else store.del(TOKEN_KEY);
     $("#go").disabled = true;
+    let token;
+    if (mode === "password") {
+      progress([["run", "Checking the password…"]]);
+      token = await unlock(keyBlob, $("#password").value);
+      if (!token) { progress([["fail", "That password isn't right. Check with whoever gave it to you."]]); store.del(PW_KEY); update(); return; }
+      if ($("#remember").checked) { store.set(PW_KEY, $("#password").value); store.del(TOKEN_KEY); $("#forget").hidden = false; } else store.del(PW_KEY);
+    } else {
+      token = $("#token").value.trim();
+      if ($("#remember").checked) { store.set(TOKEN_KEY, token); store.del(PW_KEY); $("#forget").hidden = false; } else store.del(TOKEN_KEY);
+    }
     const g = $("#guild").value, gName = $("#guild").selectedOptions[0].text;
     const isRaid = kind() === "raid", rName = $("#raid").selectedOptions[0]?.text;
     const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
@@ -399,6 +491,43 @@ a { color: var(--accent); }
       list[0] = ["fail", `Couldn't reach GitHub (${esc(err.message)}). Check your connection and try again.`]; progress(list);
     }
     file = null; $("#file").value = ""; pick(null);
+  };
+  // ---------- owner setup: lock a token with the officer password ----------
+  function setupCheck() {
+    const t = $("#setupToken").value.trim(), a = $("#setupPw").value, b = $("#setupPw2").value;
+    const msgs = [];
+    if (a && a.length < 12) msgs.push(["warn", `The password needs at least 12 characters (it has ${a.length}).`]);
+    else if (a && b && a !== b) msgs.push(["warn", "The two passwords don't match."]);
+    if (t && !/^(github_pat_|ghp_)/.test(t)) msgs.push(["warn", "That doesn't look like a GitHub token (they start with github_pat_)."]);
+    $("#setupCheck").innerHTML = msgs.map(([c, m]) => `<div class="msg ${c}">${m}</div>`).join("");
+    $("#setupGo").disabled = !(t && a.length >= 12 && a === b && repo && !msgs.length);
+  }
+  ["#setupToken", "#setupPw", "#setupPw2"].forEach(id => $(id).oninput = setupCheck);
+  const setupProgress = list => { $("#setupProgress").innerHTML = list.map(([st, t]) => `<li class="${st}"><span class="ic">${st === "done" ? "✓" : st === "fail" ? "✗" : '<span class="spin" aria-hidden="true"></span>'}</span><span>${t}</span></li>`).join(""); };
+  $("#setupGo").onclick = async () => {
+    const token = $("#setupToken").value.trim(), pw = $("#setupPw").value;
+    $("#setupGo").disabled = true;
+    setupProgress([["run", "Checking the token…"]]);
+    try {
+      const chk = await gh(`/repos/${repo}`, token);
+      if (!chk.ok) { setupProgress([["fail", await explain(chk)]]); $("#setupGo").disabled = false; return; }
+      setupProgress([["done", "Token works"], ["run", "Locking it with the password…"]]);
+      const blob = await lock(token, pw);
+      if ((await unlock(blob, pw)) !== token) throw new Error("self-check failed");
+      const existing = await gh(`/repos/${repo}/contents/site/upload-key.json?ref=${encodeURIComponent(branch)}`, token);
+      const sha = existing.ok ? (await existing.json()).sha : undefined;
+      setupProgress([["done", "Token works"], ["done", "Locked with the password"], ["run", "Saving to the site…"]]);
+      const content = btoa(JSON.stringify(blob, null, 1));
+      const put = await gh(`/repos/${repo}/contents/site/upload-key.json`, token, {
+        method: "PUT", body: JSON.stringify({ message: "Set the officer upload password", content, branch, ...(sha ? { sha } : {}) }),
+      });
+      if (!put.ok) { setupProgress([["done", "Token works"], ["done", "Locked with the password"], ["fail", await explain(put)]]); $("#setupGo").disabled = false; return; }
+      setupProgress([["done", "Token works"], ["done", "Locked with the password"], ["done", "Saved. In about 2 minutes officers can upload with the password. Share it privately (e.g. a DM), not in a public channel."]]);
+      $("#setupToken").value = $("#setupPw").value = $("#setupPw2").value = "";
+    } catch (err) {
+      setupProgress([["fail", `Something went wrong (${esc(err.message)}). Nothing was saved.`]]);
+      $("#setupGo").disabled = false;
+    }
   };
 })();
 </script>
