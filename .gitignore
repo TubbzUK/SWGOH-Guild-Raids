@@ -1,0 +1,6 @@
+site/data/
+site/guilds.json
+site/data.json
+__pycache__/
+.DS_Store
+~$*
