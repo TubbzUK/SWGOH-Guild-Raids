@@ -1,0 +1,62 @@
+# ------------------------------------------------------------------
+#  Raid definition - shared by every guild.
+#  Each guild keeps this raid's score files in guilds/<guild>/order-66/
+# ------------------------------------------------------------------
+
+name: "Order 66"
+
+# Order in the site's raid switcher (lowest first)
+order: 1
+
+# Words that identify this raid's WookieeBot file name (e.g. Order66_Raid_1.csv),
+# used when a file is uploaded into the guild folder instead of the raid folder
+file_names: ["Order66", "Order 66"]
+
+# Members scoring below this are counted as "below target". Leave blank for none.
+# A guild can set its own in its config.yml under target_scores.
+target_score: 3000000
+
+readiness:
+  title: "Order 66 readiness"
+
+  # Readiness % = sum of the player's relic levels across these characters
+  #               ÷ (number of characters × max_relic)
+  max_relic: 10
+
+  # Status bands shown on the site
+  ready_pct: 50     # 50%+  -> Ready
+  close_pct: 35     # 35-49% -> Close, below -> Building
+
+  # One BaseId (from the WookieeBot roster export) per line. For a nicer name or lower target:
+  #   - id: VADERDUELSEND
+  #     label: "Vader (Duel's End)"
+  #     relic: 9
+  characters:
+    - BARRISSOFFEE
+    - VANGUARDTEMPLEGUARD
+    - BATCHERS3
+    - CROSSHAIRS3
+    - KITFISTO
+    - HUNTERS3
+    - SCORCH
+    - LUMINARAUNDULI
+    - DISGUISEDCLONETROOPER
+    - APPO
+    - PLOKOON
+    - GRANDMOFFTARKIN
+    - KELLERANBEQ
+    - DEPABILLABA
+    - OPERATIVE
+    - HONDO
+    - ITHANO
+    - ENFYSNEST
+    - IMAGUNDI
+    - EETHKOTH
+    - OMEGAS3
+    - JOCASTANU
+    - JEDIKNIGHTCONSULAR
+    - WRECKERS3
+    - AAYLASECURA
+    - JEDIKNIGHTGUARDIAN
+    - SHAAKTI
+    - JEDIMASTERMACEWINDU

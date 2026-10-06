@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guild Raid Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: summary tiles, then charts and watch lists, then the detailed tables. */
+:root {
+  color-scheme: light;
+  --bg: #f4f3f0; --surface: #fcfcfb; --surface-2: #f0efec; --border: #e3e1dc;
+  --text: #0b0b0b; --text-2: #52514e; --muted: #85837d;
+  --accent: #2a78d6; --series-1: #2a78d6; --series-2: #eb6834; --target: #85837d;
+  --good: #0ca30c; --good-bg: #dff3df; --good-ink: #006300;
+  --warn: #fab219; --warn-bg: #fdf0d2; --warn-ink: #7a5200;
+  --bad: #d03b3b; --bad-bg: #fbe1e1; --bad-ink: #a12424;
+  --none-bg: #ecebe7; --none-ink: #85837d;
+  --grid: #e8e6e1;
+  --r1: #cde2fb; --r2: #9ec5f4; --r3: #6da7ec; --r4: #3987e5; --r5: #256abf; --r6: #184f95;
+  --r-ink-lo: #0b0b0b; --r-ink-hi: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2e2e2b;
+    --text: #ffffff; --text-2: #c3c2b7; --muted: #8d8c84;
+    --accent: #3987e5; --series-1: #3987e5; --series-2: #d95926; --target: #8d8c84;
+    --good-bg: #173a17; --good-ink: #7fdc7f;
+    --warn-bg: #3d3112; --warn-ink: #f6c862;
+    --bad-bg: #431b1b; --bad-ink: #f19a9a;
+    --none-bg: #262624; --none-ink: #77766f;
+    --grid: #2a2a28;
+    --r1: #104281; --r2: #184f95; --r3: #1c5cab; --r4: #2a78d6; --r5: #5598e7; --r6: #9ec5f4;
+    --r-ink-lo: #ffffff; --r-ink-hi: #0b0b0b;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2e2e2b;
+  --text: #ffffff; --text-2: #c3c2b7; --muted: #8d8c84;
+  --accent: #3987e5; --series-1: #3987e5; --series-2: #d95926; --target: #8d8c84;
+  --good-bg: #173a17; --good-ink: #7fdc7f;
+  --warn-bg: #3d3112; --warn-ink: #f6c862;
+  --bad-bg: #431b1b; --bad-ink: #f19a9a;
+  --none-bg: #262624; --none-ink: #77766f;
+  --grid: #2a2a28;
+  --r1: #104281; --r2: #184f95; --r3: #1c5cab; --r4: #2a78d6; --r5: #5598e7; --r6: #9ec5f4;
+    --r-ink-lo: #ffffff; --r-ink-hi: #0b0b0b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.5 Inter, system-ui, sans-serif; }
+.num { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
+header { padding: 28px 0 8px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+header > div:first-child { min-width: 0; }
+.switches { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+@media (max-width: 600px) { .switches { align-items: flex-start; } }
+.guilds { display: flex; flex-wrap: wrap; gap: 6px; }
+.raids button { font-weight: 500; padding: 5px 12px; font-size: 12.5px; }
+.guilds.raids button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.raids button .soon { opacity: .7; font-weight: 400; }
+.guilds button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font: 600 13px Inter, sans-serif; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+.guilds button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+.sub { color: var(--text-2); font-size: 13px; }
+nav { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; margin: 16px 0 20px; width: fit-content; max-width: 100%; overflow-x: auto; }
+nav button { border: 0; background: transparent; color: var(--text-2); font: 600 13px Inter, sans-serif; padding: 8px 16px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+nav button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+button:focus-visible, input:focus-visible, select:focus-visible, tr.click:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+.kpi .label { color: var(--text-2); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.kpi .value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.02em; }
+.kpi .note { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+.up { color: var(--good-ink); } .down { color: var(--bad-ink); }
+.grid2 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+.grid2 > *, .grid3 > * { min-width: 0; }
+@media (max-width: 960px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+h2 { font-size: 15px; margin: 0 0 2px; }
+.card .hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.chart { position: relative; height: 260px; }
+.chart.small { height: 200px; }
+ol.list { margin: 0; padding: 0; list-style: none; }
+ol.list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+ol.list li:last-child { border-bottom: 0; }
+ol.list .rk { color: var(--muted); width: 22px; display: inline-block; }
+ol.list .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--bad-bg); color: var(--bad-ink); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 500; }
+.chip.soft { background: var(--none-bg); color: var(--text-2); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px Inter, sans-serif; min-width: 0; }
+input[type=search] { flex: 1 1 220px; max-width: 320px; }
+label.check { display: flex; gap: 6px; align-items: center; color: var(--text-2); font-size: 13px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 9px 12px; text-align: left; white-space: nowrap; }
+th { font-size: 12px; color: var(--text-2); font-weight: 600; background: var(--surface-2); user-select: none; }
+th[data-sort] { cursor: pointer; }
+th.r, td.r { text-align: right; }
+th[data-sort]::after { content: " \2195"; color: var(--muted); }
+th.asc::after { content: " \2191"; color: var(--text); } th.desc::after { content: " \2193"; color: var(--text); }
+tbody tr { border-top: 1px solid var(--border); }
+tbody tr.click { cursor: pointer; } tbody tr.click:hover { background: var(--surface-2); }
+tbody tr.sel { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+td.name { font-weight: 600; }
+.former { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.below { color: var(--bad-ink); }
+.bar { display: inline-block; width: 56px; height: 6px; background: var(--surface-2); border-radius: 3px; vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 3px; background: var(--series-1); }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; font-family: Inter, sans-serif; }
+.b-good { background: var(--good-bg); color: var(--good-ink); }
+.b-warn { background: var(--warn-bg); color: var(--warn-ink); }
+.b-bad { background: var(--bad-bg); color: var(--bad-ink); }
+.b-none { background: var(--none-bg); color: var(--text-2); }
+.spark { vertical-align: middle; margin-left: 8px; }
+.heat td.c { text-align: center; padding: 5px 3px; }
+.heat th.c { text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); height: 170px; padding: 8px 4px; font-weight: 500; vertical-align: bottom; }
+.heat td.name, .heat thead tr:last-child th:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+.heat thead tr:last-child th:first-child { background: var(--surface-2); z-index: 2; }
+.heat .team { text-align: center; border-left: 2px solid var(--border); }
+.heat .first { border-left: 2px solid var(--border); }
+.cell { display: inline-block; min-width: 28px; padding: 3px 3px; border-radius: 5px; font-size: 12px; font-weight: 600; font-style: normal; }
+.c-good { background: var(--good-bg); color: var(--good-ink); }
+.c-none { background: var(--none-bg); color: var(--none-ink); }
+.c-1 { background: var(--r1); color: var(--r-ink-lo); } .c-2 { background: var(--r2); color: var(--r-ink-lo); }
+.c-3 { background: var(--r3); color: #fff; } .c-4 { background: var(--r4); color: #fff; }
+.c-5 { background: var(--r5); color: var(--r-ink-hi); } .c-6 { background: var(--r6); color: var(--r-ink-hi); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.detail { margin-top: 12px; }
+.detail .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stats div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+.stats b { display: block; font-size: 16px; }
+.stats span { font-size: 12px; color: var(--text-2); }
+.warnings { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+.warnings summary { cursor: pointer; font-weight: 600; }
+.warnings ul { margin: 6px 0 0; padding-left: 18px; }
+.empty { color: var(--muted); padding: 24px; text-align: center; }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+@media (max-width: 600px) { .kpi .value { font-size: 22px; } .heat td.name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="guild">Guild Raid Tracker</h1>
+      <div class="sub" id="updated"></div>
+    </div>
+    <div class="switches">
+      <div class="guilds" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+      <div class="guilds raids" id="raidSwitch" role="group" aria-label="Raid" hidden></div>
+    </div>
+  </header>
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
+    <button role="tab" aria-selected="false" data-tab="players">Players</button>
+    <button role="tab" aria-selected="false" data-tab="readiness">Readiness</button>
+  </nav>
+  <div id="warnings"></div>
+
+  <!-- OVERVIEW -->
+  <section class="tab" id="tab-overview">
+    <div class="kpis" id="kpis"></div>
+    <div id="ovBody">
+    <div class="grid2">
+      <div class="card">
+        <h2>Guild total by raid</h2>
+        <p class="hint">Sum of every member's actual score</p>
+        <div class="chart"><canvas id="totalChart" aria-label="Guild total by raid"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Top 10 &middot; latest raid</h2>
+        <p class="hint" id="topHint"></p>
+        <ol class="list" id="top10"></ol>
+      </div>
+    </div>
+    <div class="grid3">
+      <div class="card">
+        <h2>Improving</h2>
+        <p class="hint" id="impHint"></p>
+        <ol class="list" id="improving"></ol>
+      </div>
+      <div class="card">
+        <h2>Declining &middot; watch list</h2>
+        <p class="hint" id="decHint"></p>
+        <ol class="list" id="declining"></ol>
+      </div>
+      <div class="card">
+        <h2>No score in latest raid</h2>
+        <p class="hint">Members listed by WookieeBot with a blank or zero score</p>
+        <div class="chips" id="noScore"></div>
+        <h2 style="margin-top:18px">Below the <span id="targetLbl"></span> target</h2>
+        <p class="hint">Scored, but under target</p>
+        <div class="chips" id="belowTarget"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Participation by raid</h2>
+      <p class="hint">Members who posted a score above zero</p>
+      <div class="chart small"><canvas id="partChart" aria-label="Participation by raid"></canvas></div>
+    </div>
+    </div>
+  </section>
+
+  <!-- PLAYERS -->
+  <section class="tab" id="tab-players" hidden>
+    <div class="toolbar">
+      <input type="search" id="pSearch" placeholder="Search players&hellip;" aria-label="Search players">
+      <select id="pTrend" aria-label="Filter by trend">
+        <option value="">All trends</option>
+        <option value="improving">Improving</option>
+        <option value="level">Level</option>
+        <option value="declining">Declining</option>
+        <option value="new">New (under 3 raids)</option>
+      </select>
+      <label class="check"><input type="checkbox" id="pCurrent" checked> Current members only</label>
+    </div>
+    <div class="tablewrap"><table id="pTable"></table></div>
+    <div class="card detail" id="pDetail" hidden></div>
+  </section>
+
+  <!-- READINESS -->
+  <section class="tab" id="tab-readiness" hidden>
+    <div class="kpis" id="rKpis"></div>
+    <div id="rBody">
+    <div class="card" style="margin-bottom:12px">
+      <h2>Average relic across the guild, per character</h2>
+      <p class="hint" id="charHint"></p>
+      <div class="chart" id="charWrap"><canvas id="charChart" aria-label="Average relic per character"></canvas></div>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="rSearch" placeholder="Search players&hellip;" aria-label="Search players">
+    </div>
+    <div class="legend" id="rLegend"></div>
+    <div class="tablewrap"><table class="heat" id="rTable"></table></div>
+    </div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = n => n == null ? "–" : Math.abs(n) >= 1e9 ? (n / 1e9).toFixed(2) + "B" : Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.abs(n) >= 1e3 ? (n / 1e3).toFixed(1) + "K" : Math.round(n).toString();
+  const signedPct = n => n == null ? "–" : (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(1) + "%";
+  const dcls = n => n > 0 ? "up" : n < 0 ? "down" : "";
+  const dfmt = (s, y) => new Date(s + "T00:00:00").toLocaleDateString("en-GB", y ? { day: "numeric", month: "short", year: "numeric" } : { day: "numeric", month: "short" });
+  // tabs
+  document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+    document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll(".tab").forEach(t => t.hidden = t.id !== "tab-" + b.dataset.tab);
+    history.replaceState(null, "", "#" + b.dataset.tab);
+  });
+  const h = location.hash.slice(1); if (h) document.querySelector(`nav button[data-tab="${h}"]`)?.click();
+
+  // Chart.js defaults
+  Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+  Chart.defaults.color = css("--text-2");
+  Chart.defaults.borderColor = css("--grid");
+  Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--text"), titleColor: css("--surface"), bodyColor: css("--surface"), padding: 10 });
+  Chart.defaults.maintainAspectRatio = false;
+  const axisY = cb => ({ beginAtZero: true, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: cb || (v => fmt(v)) } });
+  const axisX = { grid: { display: false }, border: { color: css("--border") }, ticks: { maxRotation: 0, autoSkipPadding: 12 } };
+
+  function render(data) {
+  Object.values(Chart.instances).forEach(c => c.destroy());
+  $("#pDetail").hidden = true;
+  $("#warnings").innerHTML = "";
+  const raids = data.raids, players = data.players, latest = raids[raids.length - 1], prev = raids[raids.length - 2];
+  const rconf = data.readiness_config, rsum = data.readiness_summary, target = data.target_score;
+  const multiYear = raids.length && raids[0].date.slice(0, 4) !== latest.date.slice(0, 4);
+  const raidLabels = raids.map(r => multiYear ? new Date(r.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" }) : dfmt(r.date));
+  const current = players.filter(p => p.current);
+
+  document.title = data.guild_name + " · Raid Tracker";
+  $("#guild").textContent = data.guild_name;
+  $("#updated").textContent = latest ? `${data.raid_name} · latest raid ${dfmt(latest.date, true)} · ${raids.length} raids tracked · ${current.length} members` : `${data.raid_name} · no results yet · ${current.length} members`;
+  $("#footer").textContent = `Updated ${new Date(data.generated_at).toLocaleString("en-GB")}` + (data.roster_file ? ` · roster: ${data.roster_file}` : "");
+  if (data.warnings?.length) $("#warnings").innerHTML = `<details class="warnings"><summary>Data notes (${data.warnings.length})</summary><ul>${data.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul></details>`;
+
+  const TREND = { improving: ["b-good", "▲ Improving"], level: ["b-none", "■ Level"], declining: ["b-bad", "▼ Declining"], new: ["b-none", "● New"] };
+  const trendBadge = p => `<span class="badge ${TREND[p.trend][0]}" title="${p.trend_pct == null ? "Fewer than 3 scores" : signedPct(p.trend_pct) + " per raid over last " + Math.min(data.trend_over_last, p.played) + " scores"}">${TREND[p.trend][1]}</span>`;
+  const spark = (vals, w = 72, hgt = 20) => {
+    const v = vals.slice(-8).filter(x => x > 0); if (v.length < 2) return "";
+    const mn = Math.min(...v), mx = Math.max(...v), sx = (w - 4) / (v.length - 1), sy = mx > mn ? (hgt - 4) / (mx - mn) : 0;
+    const pts = v.map((y, i) => [2 + i * sx, hgt - 2 - (y - mn) * sy]);
+    const [lx, ly] = pts[pts.length - 1];
+    return `<svg class="spark" width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}" aria-hidden="true"><polyline fill="none" stroke="${css("--series-1")}" stroke-width="1.5" stroke-linejoin="round" points="${pts.map(p => p.join(",")).join(" ")}"/><circle cx="${lx}" cy="${ly}" r="2.5" fill="${css("--series-1")}"/></svg>`;
+  };
+
+  $("#ovBody").hidden = !latest;
+  if (!latest) $("#kpis").innerHTML = `<div class="card empty" style="grid-column:1/-1">No ${esc(data.raid_name)} results for ${esc(data.guild_name)} yet. Upload a WookieeBot ${esc(data.raid_name)} export into <span class="num">guilds/${esc(data.slug)}/${esc(data.raid_slug)}/</span>.${rsum ? " The Readiness tab already shows who's ready for it." : ""}</div>`;
+
+  // ---------------- overview
+  if (latest) {
+    const dtp = prev && prev.total ? (latest.total - prev.total) / prev.total * 100 : null;
+    const ts = data.trend_summary;
+    $("#kpis").innerHTML = [
+      ["Guild total", fmt(latest.total), prev ? `<span class="${dcls(dtp)}">${signedPct(dtp)}</span> vs ${dfmt(prev.date, prev.date.slice(0, 4) !== latest.date.slice(0, 4))}` : "First raid tracked"],
+      ["Participation", `${latest.participants}<span class="sub"> / ${latest.members}</span>`, `${latest.no_attempt} blank · ${latest.zero} zero`],
+      ["Average score", fmt(latest.average), `Median ${fmt(latest.median)} · best ${fmt(latest.max)}`],
+      ["Below target", target ? `${latest.below_target}` : "–", target ? `Scored under ${fmt(target)}` + (latest.zero ? ` · ${latest.zero} on zero` : "") : "Set target_score in config"],
+      ["Trend", `<span class="up">${ts.improving}</span><span class="sub"> ▲ </span><span class="down">${ts.declining}</span><span class="sub"> ▼</span>`, `${ts.level} level · ${ts.new} new`],
+    ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+
+    new Chart($("#totalChart"), {
+      type: "bar",
+      data: { labels: raidLabels, datasets: [{ label: "Guild total", data: raids.map(r => r.total), backgroundColor: css("--series-1"), borderRadius: 4, maxBarThickness: 40 }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true), label: c => ` Total ${c.parsed.y.toLocaleString("en-GB")}`, afterLabel: c => ` ${raids[c.dataIndex].participants} of ${raids[c.dataIndex].members} scored` } } }, scales: { y: axisY(), x: axisX } }
+    });
+    new Chart($("#partChart"), {
+      type: "line",
+      data: { labels: raidLabels, datasets: [{ label: "Scored", data: raids.map(r => r.participants), borderColor: css("--series-1"), backgroundColor: css("--series-1"), borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, tension: 0.25 }] },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y} of ${raids[c.dataIndex].members} members scored` } } }, scales: { y: axisY(v => v), x: axisX } }
+    });
+
+    const top = current.filter(p => p.last > 0).slice(0, 10);
+    $("#topHint").textContent = dfmt(latest.date, true);
+    $("#top10").innerHTML = top.map((p, i) => `<li><span class="who"><span class="rk num">${i + 1}</span>${esc(p.name)}</span><span class="num">${fmt(p.last)}</span></li>`).join("");
+
+    const trendList = (dir) => current.filter(p => p.trend === dir).sort((a, b) => dir === "improving" ? b.trend_pct - a.trend_pct : a.trend_pct - b.trend_pct);
+    const imp = trendList("improving"), dec = trendList("declining");
+    $("#impHint").textContent = `${imp.length} members rising ${data.trend_threshold_pct}%+ per raid`;
+    $("#decHint").textContent = `${dec.length} members falling ${data.trend_threshold_pct}%+ per raid`;
+    const li = p => `<li><span class="who">${esc(p.name)}</span><span>${spark(p.scores)} <span class="num ${dcls(p.trend_pct)}" style="display:inline-block;min-width:56px;text-align:right">${signedPct(p.trend_pct)}</span></span></li>`;
+    $("#improving").innerHTML = imp.slice(0, 8).map(li).join("") || `<li class="sub">Nobody yet</li>`;
+    $("#declining").innerHTML = dec.slice(0, 8).map(li).join("") || `<li class="sub">Nobody is declining 🎉</li>`;
+    const ns = latest.no_score || [];
+    $("#noScore").innerHTML = ns.length ? ns.map(n => `<span class="chip">${esc(n)}</span>`).join("") : `<span class="sub">Everyone posted a score.</span>`;
+    $("#targetLbl").textContent = target ? fmt(target) : "";
+    const bt = target ? current.filter(p => p.last > 0 && p.last < target) : [];
+    $("#belowTarget").innerHTML = bt.length ? bt.map(p => `<span class="chip soft">${esc(p.name)} <span class="num">${fmt(p.last)}</span></span>`).join("") : `<span class="sub">${target ? "Everyone who scored hit the target." : "No target set."}</span>`;
+  }
+
+  // ---------------- players
+  const rCell = r => !r ? `<span class="sub">–</span>` : `<span class="bar"><i style="width:${Math.min(r.score, 100)}%"></i></span><span class="num">${r.score.toFixed(0)}%</span>`;
+  const pCols = [
+    ["rank", "#", "r", p => p.rank ?? "–"],
+    ["name", "Player", "", p => `${esc(p.name)}${p.current ? "" : '<span class="former">left</span>'}`],
+    ["last", "Latest", "r", p => `<span class="${target && p.last != null && p.last < target ? "below" : ""}" title="${target && p.last != null && p.last < target ? "Below target" : ""}">${fmt(p.last)}</span>`],
+    ["delta_pct", "vs prev", "r", p => `<span class="${dcls(p.delta)}">${signedPct(p.delta_pct)}</span>`],
+    ["trend_pct", "Trend", "", p => `${trendBadge(p)}${spark(p.scores)}`],
+    ["avg_recent", `Avg (last ${data.average_over_last})`, "r", p => fmt(p.avg_recent)],
+    ["best", "Best", "r", p => fmt(p.best)],
+    ["vs_estimate_pct", "vs estimate", "r", p => `<span class="${dcls(p.vs_estimate_pct)}" title="Actual vs WookieeBot estimate ${fmt(p.estimate)}">${signedPct(p.vs_estimate_pct)}</span>`],
+    ["played", "Raids", "r", p => `${p.played}/${p.listed}`],
+    ["readiness", "Readiness", "", p => rCell(p.readiness)],
+  ];
+  let pSort = { key: "last", dir: -1 }, selected = null, detailChart = null;
+  const sortVal = (p, k) => k === "readiness" ? (p.readiness?.score ?? -1) : k === "name" ? p.name.toLowerCase() : (p[k] ?? -Infinity);
+  function renderPlayers() {
+    const q = $("#pSearch").value.toLowerCase(), cur = $("#pCurrent").checked, tr = $("#pTrend").value;
+    const rows = players.filter(p => (!cur || p.current) && (!tr || p.trend === tr) && p.name.toLowerCase().includes(q))
+      .sort((a, b) => { const x = sortVal(a, pSort.key), y = sortVal(b, pSort.key); return (x > y ? 1 : x < y ? -1 : 0) * pSort.dir; });
+    $("#pTable").innerHTML = `<thead><tr>${pCols.map(([k, l, c]) => `<th data-sort="${k}" class="${c} ${pSort.key === k ? (pSort.dir > 0 ? "asc" : "desc") : ""}">${l}</th>`).join("")}</tr></thead>` +
+      `<tbody>${rows.map(p => `<tr class="click ${p.id === selected ? "sel" : ""}" data-id="${p.id}" tabindex="0">${pCols.map(([k, , c, f]) => `<td class="${c} ${k === "name" ? "name" : "num"}">${f(p)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${pCols.length}" class="empty">No players match</td></tr>`}</tbody>`;
+    $("#pTable").querySelectorAll("th").forEach(th => th.onclick = () => { const k = th.dataset.sort; pSort = { key: k, dir: pSort.key === k ? -pSort.dir : (k === "name" ? 1 : -1) }; renderPlayers(); });
+    $("#pTable").querySelectorAll("tbody tr.click").forEach(tr => { const open = () => { selected = tr.dataset.id; renderPlayers(); showPlayer(players.find(p => p.id === selected)); }; tr.onclick = open; tr.onkeydown = e => { if (e.key === "Enter") open(); }; });
+  }
+  function showPlayer(p) {
+    const el = $("#pDetail"); el.hidden = false;
+    const r = p.readiness;
+    el.innerHTML = `<div class="head"><div><h2>${esc(p.name)} ${trendBadge(p)}</h2><div class="sub">${p.ally ? "Ally code " + p.ally.replace(/(\d{3})(\d{3})(\d{3})/, "$1-$2-$3") + " · " : ""}scored in ${p.played} of ${p.listed} raids while a member</div></div></div>
+      <div class="stats">
+        <div><b class="num">${fmt(p.last)}</b><span>Latest${p.rank ? " · #" + p.rank : ""}</span></div>
+        <div><b class="num">${fmt(p.avg_recent)}</b><span>Avg last ${data.average_over_last}</span></div>
+        <div><b class="num">${fmt(p.best)}</b><span>Best</span></div>
+        <div><b class="num">${fmt(p.worst)}</b><span>Lowest</span></div>
+        <div><b class="num ${dcls(p.trend_pct)}">${signedPct(p.trend_pct)}</b><span>Trend per raid</span></div>
+        <div><b class="num ${dcls(p.vs_estimate_pct)}">${signedPct(p.vs_estimate_pct)}</b><span>vs estimate ${fmt(p.estimate)}</span></div>
+        <div><b class="num">${r ? r.score.toFixed(0) + "%" : "–"}</b><span>Readiness${r ? ` · ${r.relicked}/${r.characters} relicked` : ""}</span></div>
+      </div>
+      <div class="legend"><span><i class="swatch" style="background:${css("--series-1")}"></i>${esc(p.name)}</span><span><i class="swatch" style="background:${css("--series-2")}"></i>Guild average</span>${target ? `<span><i class="swatch" style="background:${css("--target")}"></i>Target ${fmt(target)}</span>` : ""}</div>
+      <div class="chart"><canvas id="pChart" aria-label="${esc(p.name)} score history"></canvas></div>`;
+    detailChart?.destroy();
+    const ds = [
+      { label: p.name, data: p.scores.map(v => v || null), borderColor: css("--series-1"), backgroundColor: css("--series-1"), borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, spanGaps: true, tension: .25 },
+      { label: "Guild average", data: raids.map(r => r.average), borderColor: css("--series-2"), backgroundColor: css("--series-2"), borderWidth: 2, borderDash: [5, 4], pointRadius: 0, pointHoverRadius: 4, tension: .25 }];
+    if (target) ds.push({ label: "Target", data: raids.map(() => target), borderColor: css("--target"), borderWidth: 1, borderDash: [2, 3], pointRadius: 0, pointHoverRadius: 0 });
+    detailChart = new Chart($("#pChart"), {
+      type: "line", data: { labels: raidLabels, datasets: ds },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { filter: c => c.dataset.label !== "Target", callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true), label: c => ` ${c.dataset.label}: ${c.parsed.y == null ? "no score" : c.parsed.y.toLocaleString("en-GB")}` } } }, scales: { y: axisY(), x: axisX } }
+    });
+    el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+  }
+  $("#pSearch").oninput = renderPlayers; $("#pCurrent").onchange = renderPlayers; $("#pTrend").onchange = renderPlayers;
+  renderPlayers();
+
+  // ---------------- readiness
+  $("#rBody").hidden = !rsum;
+  if (!rsum) {
+    $("#rKpis").innerHTML = `<div class="card empty">Upload the WookieeBot guild roster export into this guild's folder, and list the characters in its config.yml, to see readiness.</div>`;
+  } else {
+    const chars = rconf.teams.flatMap((t, ti) => t.characters.map((c, i) => ({ ...c, team: t.name, first: ti > 0 && i === 0 })));
+    const multiTeam = rconf.teams.length > 1;
+    const weakest = rsum.characters.filter(c => c.relicked > 0 || c.average > 0 || rsum.characters.every(x => !x.relicked)).sort((a, b) => a.average - b.average).slice(0, 3);
+    $("#rKpis").innerHTML = [
+      ["Guild average", rsum.average.toFixed(0) + "%", `${rconf.title} · ${chars.length} characters`],
+      ["Ready", `${rsum.status.ready}`, `${rconf.ready_pct}%+`],
+      ["Close", `${rsum.status.close}`, `${rconf.close_pct}–${rconf.ready_pct - 1}%`],
+      ["Building", `${rsum.status.building}`, `Under ${rconf.close_pct}%`],
+      ["Weakest characters", `<span style="font:700 14px Inter,sans-serif;line-height:1.35;display:block;overflow-wrap:anywhere">${weakest.map(c => esc(c.label)).join("<br>")}</span>`, `Lowest average relic (units someone has relicked)`],
+    ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+
+    $("#charHint").textContent = `Current members, out of a target of R${rconf.max_relic}. Not unlocked counts as 0.`;
+    $("#charWrap").style.height = Math.max(220, rsum.characters.length * 22 + 40) + "px";
+    new Chart($("#charChart"), {
+      type: "bar",
+      data: { labels: rsum.characters.map(c => c.label), datasets: [{ label: "Average relic", data: rsum.characters.map(c => c.average), backgroundColor: css("--series-1"), borderRadius: 3, barPercentage: 0.8 }] },
+      options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const x = rsum.characters[c.dataIndex]; return [` Average R${x.average}`, ` ${x.relicked} of ${rsum.players} relicked`, ` ${x.at_target} at R${x.relic}`]; } } } },
+        scales: { x: { ...axisY(v => "R" + v), max: rconf.max_relic }, y: { grid: { display: false }, border: { display: false }, ticks: { autoSkip: false, font: { size: 11 } } } } }
+    });
+
+    $("#rLegend").innerHTML = `<span><i class="cell c-none">–</i> Not unlocked</span><span><i class="cell c-none">G</i> Not relicked</span>` +
+      [1, 3, 5, 7, 9].filter(n => n < rconf.max_relic).map(n => `<span><i class="cell ${shade(n, rconf.max_relic)}">${n}</i></span>`).join("") +
+      `<span><i class="cell c-good">${rconf.max_relic}</i> At target</span>`;
+    function shade(have, need) { const f = have / need; return "c-" + Math.min(6, Math.max(1, Math.ceil(f * 6))); }
+    const cellHtml = (have, need) => have == null ? `<span class="cell c-none">–</span>` : have <= 0 ? `<span class="cell c-none">G</span>`
+      : `<span class="cell ${have >= need ? "c-good" : shade(have, need)}" title="R${have} of R${need}">${have}</span>`;
+    const ST = { ready: ["b-good", "✓ Ready"], close: ["b-warn", "● Close"], building: ["b-bad", "○ Building"] };
+    let rSort = { key: "score", dir: -1 };
+    function renderReady() {
+      const q = $("#rSearch").value.toLowerCase();
+      const rows = current.filter(p => p.readiness && p.name.toLowerCase().includes(q))
+        .sort((a, b) => rSort.key === "name" ? a.name.localeCompare(b.name) * rSort.dir : ((a.readiness.score - b.readiness.score) * rSort.dir || a.name.localeCompare(b.name)));
+      const head1 = multiTeam ? `<tr><th colspan="3"></th>${rconf.teams.map(t => `<th class="team" colspan="${t.characters.length}">${esc(t.name)}</th>`).join("")}</tr>` : "";
+      const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}">${esc(c.label)}</th>`).join("")}</tr>`;
+      const body = rows.map(p => {
+        const r = p.readiness, st = ST[r.status];
+        return `<tr><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;
+      }).join("");
+      const missing = current.filter(p => !p.readiness).map(p => esc(p.name));
+      $("#rTable").innerHTML = `<thead>${head1}${head2}</thead><tbody>${body}${missing.length ? `<tr><td colspan="${chars.length + 3}" class="sub" style="white-space:normal">Not in the roster export yet: ${missing.join(", ")}</td></tr>` : ""}</tbody>`;
+      $("#rTable").querySelectorAll("th[data-sort]").forEach(th => th.onclick = () => { const k = th.dataset.sort; rSort = { key: k, dir: rSort.key === k ? -rSort.dir : (k === "name" ? 1 : -1) }; renderReady(); });
+    }
+    $("#rSearch").oninput = renderReady;
+    renderReady();
+  }
+  }
+
+  // ---------------- guilds & raids
+  const preview = window.__GUILDS__;
+  let index = [];
+  try { index = preview ? preview.index : await fetch("guilds.json", { cache: "no-store" }).then(r => r.json()); } catch (e) { index = []; }
+  const load = (g, r) => preview ? Promise.resolve(preview.data[g + "/" + r]) : fetch(`data/${g}/${r}.json`, { cache: "no-store" }).then(x => x.json());
+  if (!index.length) {
+    $("#guild").textContent = "Raid Tracker";
+    $("#updated").textContent = "No guild has any files yet. Upload a WookieeBot export into a folder in guilds/.";
+    return;
+  }
+  let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  let guild = index.find(g => g.slug === params.guild) || index[0];
+  let raid = (guild.raids.find(r => r.slug === params.raid) || guild.raids.find(r => r.slug === guild.default_raid) || guild.raids[0]).slug;
+  const pills = (el, items, cur, label, onPick) => {
+    el.hidden = items.length < 2;
+    el.innerHTML = items.map(x => `<button type="button" aria-pressed="${x.slug === cur}" data-slug="${esc(x.slug)}">${label(x)}</button>`).join("");
+    el.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.slug !== cur) onPick(b.dataset.slug); });
+  };
+  async function show(first) {
+    pills($("#guildSwitch"), index, guild.slug, g => esc(g.name), async s => {
+      guild = index.find(g => g.slug === s);
+      if (!guild.raids.some(r => r.slug === raid)) raid = guild.default_raid;
+      show();
+    });
+    pills($("#raidSwitch"), guild.raids, raid, r => esc(r.name) + (r.raids ? "" : ' <span class="soon">· no results yet</span>'), s => { raid = s; show(); });
+    try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}` + location.hash); } catch (e) {}
+    const data = await load(guild.slug, raid);
+    render(data);
+    // A raid that hasn't started yet: open on readiness unless a tab was chosen
+    const onOverview = !document.querySelector("#tab-overview").hidden;
+    if (!data.raids.length && data.readiness_summary && onOverview && (!first || !location.hash)) document.querySelector('nav button[data-tab="readiness"]').click();
+  }
+  show(true);
+})();
+</script>
+</body>
+</html>

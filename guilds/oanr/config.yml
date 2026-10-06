@@ -1,0 +1,29 @@
+# ------------------------------------------------------------------
+#  Guild settings - edit this file on GitHub (pencil icon) and commit.
+#  Raid names, targets and readiness characters live in raids/*.yml
+#  The site rebuilds automatically a minute or two later.
+# ------------------------------------------------------------------
+
+guild_name: "OANR"
+
+# Name of the GitHub secret holding this guild's Discord webhook URL
+discord_secret: DISCORD_WEBHOOK_OANR
+
+# Position in the site's guild switcher (lowest first; the first is shown by default)
+site_order: 1
+
+# Dates inside WookieeBot files are UK style (06/10/2026 = 6 October). Use "mdy" for US style.
+date_format: "dmy"
+
+# Optional: this guild's own target scores, overriding the ones in raids/*.yml
+# target_scores:
+#   order-66: 3000000
+
+# "Avg (last N)" averages each player's last N raids they actually scored in
+average_over_last: 5
+
+# Trend: compares each player's last N scores. If they rise by at least
+# trend_threshold_pct % per raid on average they're "Improving", if they fall by
+# that much "Declining", otherwise "Level". Players with fewer than 3 scores are "New".
+trend_over_last: 5
+trend_threshold_pct: 3
