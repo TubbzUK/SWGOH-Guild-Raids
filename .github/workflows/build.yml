@@ -1,0 +1,79 @@
+name: Update raid site
+
+on:
+  push:
+    branches: [main]
+    paths: ["guilds/**", "raids/**", "scripts/**", "site/**", ".github/workflows/**"]
+  workflow_dispatch:
+    inputs:
+      post_to_discord:
+        description: "Post each guild's latest raid summary to Discord"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write     # to file uploads by date
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: File uploads by raid date
+        id: organize
+        run: |
+          NEW=""
+          if [ "${{ github.event_name }}" = "push" ]; then
+            NEW=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- guilds 2>/dev/null || true)
+          fi
+          python scripts/organize.py --new "$NEW"
+          if [ -n "$(git status --porcelain guilds)" ]; then
+            git config user.name "raid-tracker-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A guilds
+            git commit -m "File uploaded raid/roster files by date"
+            git pull --rebase --autostash
+            git push
+          fi
+
+      - name: Build data.json
+        run: python scripts/build.py
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Post to Discord
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.post_to_discord }}" = "true" ]; then
+              python scripts/post_discord.py $(ls guilds | grep -v '^[_.]')
+            fi
+          else
+            python scripts/post_discord.py ${{ steps.organize.outputs.post }}
+          fi
