@@ -19,7 +19,26 @@ guilds/
   _template/                 ← starter config for adding more guilds (ignored by the site)
 ```
 
-## After every raid
+## Uploading from the website (easiest)
+
+Click **⬆ Upload results** at the top right of the site (or open `…/upload.html`). Pick the guild,
+raid results or roster, and the raid, then drop the file in. The page checks the file first
+(right type, raid date, player count, players belong to that guild, file name matches the raid),
+uploads it, and shows progress until the site has updated.
+
+It needs a **GitHub access token** the first time (tick *Remember on this device* to save it in
+that browser only). To make one, signed in as the repository owner:
+1. Open https://github.com/settings/personal-access-tokens/new
+2. Name it (e.g. *Raid tracker upload*) and pick an expiry date.
+3. **Repository access → Only select repositories →** this repository.
+4. **Permissions → Repository permissions:** *Contents* = **Read and write**, *Actions* = **Read-only**.
+5. **Generate token**, copy it (starts `github_pat_`) and paste it into the upload page.
+
+For another officer, make a separate token the same way and send it privately. Delete it on GitHub
+(Settings → Developer settings → Personal access tokens) any time to remove their access.
+Never post a token in Discord or commit it to the repository.
+
+## After every raid (uploading on GitHub instead)
 
 1. Export the raid results from WookieeBot (e.g. `Order66_Raid_1.csv`).
 2. On GitHub open the guild and raid folder, e.g. **guilds → oanr → order-66** →

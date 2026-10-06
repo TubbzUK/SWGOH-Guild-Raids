@@ -60,6 +60,8 @@ header > div:first-child { min-width: 0; }
 .switches { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 @media (max-width: 600px) { .switches { align-items: flex-start; } }
 .guilds { display: flex; flex-wrap: wrap; gap: 6px; }
+.uplink { font-size: 12.5px; color: var(--text-2); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+.uplink:hover { color: var(--accent); border-color: var(--accent); }
 .raids button { font-weight: 500; padding: 5px 12px; font-size: 12.5px; }
 .guilds.raids button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .raids button .soon { opacity: .7; font-weight: 400; }
@@ -158,6 +160,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       <div class="sub" id="updated"></div>
     </div>
     <div class="switches">
+      <a class="uplink" id="uploadLink" href="upload.html">⬆ Upload results</a>
       <div class="guilds" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
       <div class="guilds raids" id="raidSwitch" role="group" aria-label="Raid" hidden></div>
     </div>
@@ -478,6 +481,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     });
     pills($("#raidSwitch"), guild.raids, raid, r => esc(r.name) + (r.raids ? "" : ' <span class="soon">· no results yet</span>'), s => { raid = s; show(); });
     try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}` + location.hash); } catch (e) {}
+    $("#uploadLink").href = `upload.html?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}`;
     const data = await load(guild.slug, raid);
     render(data);
     // A raid that hasn't started yet: open on readiness unless a tab was chosen

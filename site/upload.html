@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upload · Raid Tracker</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow column - the form as numbered steps, then a progress panel. */
+:root {
+  color-scheme: light;
+  --bg: #f4f3f0; --surface: #fcfcfb; --surface-2: #f0efec; --border: #e3e1dc;
+  --text: #0b0b0b; --text-2: #52514e; --muted: #85837d; --accent: #2a78d6; --accent-ink: #ffffff;
+  --good-bg: #dff3df; --good-ink: #006300; --warn-bg: #fdf0d2; --warn-ink: #7a5200; --bad-bg: #fbe1e1; --bad-ink: #a12424;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2e2e2b;
+    --text: #ffffff; --text-2: #c3c2b7; --muted: #8d8c84; --accent: #3987e5; --accent-ink: #ffffff;
+    --good-bg: #173a17; --good-ink: #7fdc7f; --warn-bg: #3d3112; --warn-ink: #f6c862; --bad-bg: #431b1b; --bad-ink: #f19a9a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2e2e2b;
+  --text: #ffffff; --text-2: #c3c2b7; --muted: #8d8c84; --accent: #3987e5; --accent-ink: #ffffff;
+  --good-bg: #173a17; --good-ink: #7fdc7f; --warn-bg: #3d3112; --warn-ink: #f6c862; --bad-bg: #431b1b; --bad-ink: #f19a9a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.5 Inter, system-ui, sans-serif; }
+.num { font-family: "JetBrains Mono", ui-monospace, monospace; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 48px; }
+header { padding: 28px 0 16px; }
+header a { color: var(--text-2); font-size: 13px; text-decoration: none; }
+header a:hover { text-decoration: underline; }
+h1 { font-size: 26px; margin: 8px 0 2px; letter-spacing: -0.02em; text-wrap: balance; }
+.sub { color: var(--text-2); font-size: 13px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 12px; }
+.step { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 14px 0; border-top: 1px solid var(--border); }
+.step:first-child { border-top: 0; padding-top: 0; }
+.step[hidden] { display: none; }
+.n { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--text-2); font: 600 12px Inter, sans-serif; display: grid; place-items: center; }
+.step label.title, .step .title { display: block; font-weight: 600; margin-bottom: 8px; }
+select, input[type=password], input[type=text] { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font: 14px Inter, sans-serif; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.choices label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; cursor: pointer; flex: 1 1 180px; }
+.choices label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.choices small { display: block; color: var(--muted); font-size: 12px; }
+.drop { display: block; border: 2px dashed var(--border); border-radius: 10px; padding: 22px 14px; text-align: center; color: var(--text-2); cursor: pointer; }
+.drop.over { border-color: var(--accent); background: var(--surface-2); }
+.drop b { color: var(--text); }
+.drop input { display: none; }
+.check { margin-top: 10px; display: grid; gap: 6px; }
+.msg { border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+.ok { background: var(--good-bg); color: var(--good-ink); }
+.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.bad { background: var(--bad-bg); color: var(--bad-ink); }
+.info { background: var(--surface-2); color: var(--text-2); }
+details { margin-top: 10px; font-size: 13px; color: var(--text-2); }
+details summary { cursor: pointer; color: var(--accent); }
+details ol { padding-left: 20px; margin: 8px 0 0; }
+details li { margin-bottom: 4px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--text-2); }
+.row label { display: flex; gap: 6px; align-items: center; }
+button { font: 600 14px Inter, sans-serif; border-radius: 8px; padding: 10px 18px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); width: 100%; padding: 12px; font-size: 15px; }
+button.primary:disabled { opacity: .45; cursor: not-allowed; }
+button.link { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 500; font-size: 13px; }
+button:focus-visible, select:focus-visible, input:focus-visible, .drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.progress { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.progress li { display: flex; gap: 10px; align-items: flex-start; }
+.progress li.done .ic { color: var(--good-ink); }
+.progress .ic { width: 20px; text-align: center; flex: none; }
+.progress li.todo { color: var(--muted); }
+.progress li.fail { color: var(--bad-ink); }
+.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: s 0.8s linear infinite; vertical-align: -1px; }
+@keyframes s { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a id="back" href="./">← Back to raid results</a>
+    <h1>Upload a WookieeBot file</h1>
+    <div class="sub">For officers. Adds a raid result or roster export to the site; it updates about two minutes later.</div>
+  </header>
+
+  <form class="card" id="form" novalidate>
+    <div class="step">
+      <span class="n">1</span>
+      <div>
+        <label class="title" for="guild">Guild</label>
+        <select id="guild"></select>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="n">2</span>
+      <div>
+        <span class="title">What are you uploading?</span>
+        <div class="choices">
+          <label><input type="radio" name="kind" value="raid" id="kindRaid" checked> <span>Raid results<small>WookieeBot raid export, e.g. Order66_Raid_1.csv</small></span></label>
+          <label><input type="radio" name="kind" value="roster" id="kindRoster"> <span>Guild roster<small>Relic levels for the readiness pages</small></span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="raidStep">
+      <span class="n">3</span>
+      <div>
+        <label class="title" for="raid">Which raid?</label>
+        <select id="raid"></select>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="n" id="fileN">4</span>
+      <div>
+        <span class="title">File</span>
+        <label class="drop" id="drop" tabindex="0">
+          <input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls">
+          <span id="dropText"><b>Choose a file</b> or drag it here</span>
+        </label>
+        <div class="check" id="check"></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="n" id="tokenN">5</span>
+      <div>
+        <label class="title" for="token">GitHub access token</label>
+        <input type="password" id="token" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+        <div class="row">
+          <label><input type="checkbox" id="remember"> Remember on this device</label>
+          <button type="button" class="link" id="forget" hidden>Forget saved token</button>
+        </div>
+        <details>
+          <summary>How do I get a token?</summary>
+          <ol>
+            <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a> (signed in as the repository owner).</li>
+            <li>Name it e.g. <i>Raid tracker upload</i> and pick an expiry date.</li>
+            <li>Under <b>Repository access</b> choose <b>Only select repositories</b> → <span class="num" id="repoName">this repository</span>.</li>
+            <li>Under <b>Permissions → Repository permissions</b> set <b>Contents</b> to <b>Read and write</b> and <b>Actions</b> to <b>Read-only</b>.</li>
+            <li><b>Generate token</b>, copy it (it starts <span class="num">github_pat_</span>) and paste it above.</li>
+          </ol>
+          <p>The token only works on this one repository. For another officer, make a separate token the same way and send it to them privately; delete it on GitHub any time to remove their access. Never post a token in Discord or put it in a file on the site.</p>
+        </details>
+      </div>
+    </div>
+
+    <button type="submit" class="primary" id="go" disabled>Upload</button>
+  </form>
+
+  <div class="card" id="status" hidden>
+    <ul class="progress" id="progress"></ul>
+  </div>
+</div>
+
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = s => String(s ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+                  del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+  const TOKEN_KEY = "raidTrackerToken";
+
+  // ---------- site config (written by the build) ----------
+  let cfg = {};
+  try { cfg = await fetch("upload-config.json", { cache: "no-store" }).then(r => r.json()); } catch (e) {}
+  let repo = cfg.repository;
+  if (!repo && /\.github\.io$/i.test(location.hostname)) {
+    repo = location.hostname.split(".")[0] + "/" + (location.pathname.split("/").filter(Boolean)[0] || "");
+  }
+  const branch = cfg.branch || "main";
+  const guilds = cfg.guilds || [], raids = cfg.raids || [];
+  if (repo) $("#repoName").textContent = repo.split("/")[1];
+
+  let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  $("#guild").innerHTML = guilds.map(g => `<option value="${esc(g.slug)}">${esc(g.name)}</option>`).join("");
+  $("#raid").innerHTML = raids.map(r => `<option value="${esc(r.slug)}">${esc(r.name)}</option>`).join("");
+  if (guilds.some(g => g.slug === params.guild)) $("#guild").value = params.guild;
+  if (raids.some(r => r.slug === params.raid)) $("#raid").value = params.raid;
+  if (params.type === "roster") $("#kindRoster").checked = true;
+  const backLink = () => { $("#back").href = `./?guild=${encodeURIComponent($("#guild").value)}&raid=${encodeURIComponent($("#raid").value)}`; };
+  backLink();
+
+  const saved = store.get(TOKEN_KEY);
+  if (saved) { $("#token").value = saved; $("#remember").checked = true; $("#forget").hidden = false; }
+  $("#forget").onclick = () => { store.del(TOKEN_KEY); $("#token").value = ""; $("#remember").checked = false; $("#forget").hidden = true; update(); };
+
+  if (!guilds.length || !repo) {
+    $("#check").innerHTML = `<div class="msg bad">The upload settings couldn't be loaded. Run the "Update raid site" action once on GitHub, then reload this page.</div>`;
+  }
+
+  // ---------- reading the file ----------
+  let file = null, info = null;
+  const kind = () => document.querySelector('input[name=kind]:checked').value;
+
+  function parseCSV(text) {
+    const first = text.split(/\r?\n/, 1)[0];
+    const delim = [",", ";", "\t", "|"].sort((a, b) => first.split(b).length - first.split(a).length)[0];
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === delim) { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+      else cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  const NAME = ["name", "playername", "player", "membername", "member", "username", "user", "nickname"];
+  const findCol = (hdr, keys, min = 5) => {
+    for (const k of keys) { const i = hdr.findIndex(h => h === k); if (i >= 0) return i; }
+    for (const k of keys) { if (k.length < min) continue; const i = hdr.findIndex(h => h.includes(k)); if (i >= 0) return i; }
+    return -1;
+  };
+  function inspect(text) {
+    const rows = parseCSV(text.replace(/^﻿/, ""));
+    const hi = rows.slice(0, 20).findIndex(r => r.some(c => NAME.includes(norm(c)) || ["allycode", "ally"].includes(norm(c))));
+    if (hi < 0) return { type: "unknown" };
+    const hdr = rows[hi].map(norm), body = rows.slice(hi + 1).filter(r => r.some(c => c.trim()));
+    const nameI = findCol(hdr, NAME), allyI = findCol(hdr, ["allycode", "ally"]);
+    const unitI = findCol(hdr, ["baseid", "defid", "character", "charactername", "unit", "unitname", "toon"]);
+    const relicI = findCol(hdr, ["reliclevel", "relic", "relictier", "relics"]);
+    const scoreI = findCol(hdr, ["lastactualscore", "actualscore", "score", "raidscore", "totalscore", "damage", "points"]);
+    const dateI = findCol(hdr, ["date", "raiddate", "raidend", "enddate"], 4);
+    const allies = new Set(allyI >= 0 ? body.map(r => (r[allyI] || "").replace(/\D/g, "")).filter(a => a.length === 9) : []);
+    const names = new Set(nameI >= 0 ? body.map(r => (r[nameI] || "").trim()).filter(Boolean) : []);
+    if (unitI >= 0 && relicI >= 0) return { type: "roster", players: names.size || allies.size, allies, units: body.length };
+    if (scoreI >= 0) {
+      const counts = {};
+      if (dateI >= 0) body.forEach(r => { const d = (r[dateI] || "").trim(); if (d) counts[d] = (counts[d] || 0) + 1; });
+      const date = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || null;
+      return { type: "raid", players: names.size, allies, date, scored: body.filter(r => parseFloat((r[scoreI] || "").replace(/,/g, "")) > 0).length };
+    }
+    return { type: "unknown" };
+  }
+  const fmtDate = s => {
+    const m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(s || "") || null;
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    const y = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || "");
+    return y ? new Date(+y[1], +y[2] - 1, +y[3]).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : s;
+  };
+
+  const memberCache = {};
+  async function guildAllies(slug) {
+    if (memberCache[slug]) return memberCache[slug];
+    try {
+      const idx = await fetch("guilds.json", { cache: "no-store" }).then(r => r.json());
+      const g = idx.find(x => x.slug === slug);
+      if (!g) return (memberCache[slug] = null);
+      const d = await fetch(`data/${slug}/${g.default_raid}.json`, { cache: "no-store" }).then(r => r.json());
+      return (memberCache[slug] = new Set(d.players.filter(p => p.current && p.ally).map(p => p.ally)));
+    } catch (e) { return (memberCache[slug] = null); }
+  }
+
+  async function runChecks() {
+    const out = [];
+    if (!file) { $("#check").innerHTML = ""; return; }
+    const isExcel = /\.xlsx?$/i.test(file.name);
+    if (file.size > 50 * 1024 * 1024) out.push(["bad", "This file is over 50 MB, which is too big to upload from here."]);
+    if (isExcel) {
+      out.push(["info", "Excel file: it can't be checked here, but it will be read after uploading. Any problem will show in the Data notes on the site."]);
+    } else {
+      info = inspect(await file.text());
+      const gName = $("#guild").selectedOptions[0]?.text || "this guild";
+      if (info.type === "unknown") out.push(["bad", "This doesn't look like a WookieeBot raid or roster export (no player name and score/relic columns found)."]);
+      else if (info.type !== kind()) out.push(["bad", `This looks like a ${info.type === "raid" ? "raid results" : "roster"} file, but you chose ${kind() === "raid" ? "Raid results" : "Guild roster"}. Change step 2 to match.`]);
+      else if (info.type === "raid") out.push(["ok", `Raid results · ${info.players} players, ${info.scored} with a score${info.date ? ` · raid date ${esc(fmtDate(info.date))}` : ""}`]);
+      else out.push(["ok", `Guild roster · ${info.players} players · ${info.units.toLocaleString("en-GB")} units`]);
+      if (info.type === "raid" && kind() === "raid") {
+        const fn = norm(file.name), picked = $("#raid").value;
+        const named = raids.find(r => (r.match || []).some(m => m && fn.includes(m)));
+        if (named && named.slug !== picked) out.push(["warn", `The file name looks like ${esc(named.name)}, but you picked ${esc($("#raid").selectedOptions[0].text)} in step 3. Is that right?`]);
+      }
+      if (info.type !== "unknown" && info.allies.size) {
+        const members = await guildAllies($("#guild").value);
+        if (members && members.size) {
+          const hits = [...info.allies].filter(a => members.has(a)).length;
+          const share = hits / info.allies.size;
+          if (share < 0.5) out.push(["warn", `Only ${hits} of ${info.allies.size} players in this file are current ${esc(gName)} members. Is this the right guild?`]);
+        }
+      }
+    }
+    $("#check").innerHTML = out.map(([c, t]) => `<div class="msg ${c}">${t}</div>`).join("");
+    update();
+  }
+
+  // ---------- form behaviour ----------
+  function update() {
+    const raidKind = kind() === "raid";
+    $("#raidStep").hidden = !raidKind;
+    $("#fileN").textContent = raidKind ? "4" : "3";
+    $("#tokenN").textContent = raidKind ? "5" : "4";
+    const blocked = !!$("#check .bad");
+    $("#go").disabled = !(file && $("#token").value.trim() && $("#guild").value && (!raidKind || $("#raid").value) && !blocked && repo);
+  }
+  const pick = f => { file = f || null; $("#dropText").innerHTML = file ? `<b>${esc(file.name)}</b> · ${(file.size / 1024).toFixed(0)} KB · <u>change</u>` : `<b>Choose a file</b> or drag it here`; runChecks(); };
+  $("#file").onchange = e => pick(e.target.files[0]);
+  const drop = $("#drop");
+  drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#file").click(); } };
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => pick(e.dataTransfer.files[0]));
+  document.querySelectorAll("input[name=kind]").forEach(r => r.onchange = () => { update(); runChecks(); });
+  $("#guild").onchange = () => { backLink(); runChecks(); };
+  $("#raid").onchange = () => { backLink(); runChecks(); };
+  $("#token").oninput = update;
+  update();
+
+  // ---------- upload ----------
+  function progress(list) {
+    $("#status").hidden = false;
+    $("#progress").innerHTML = list.map(([state, text]) => {
+      const ic = state === "done" ? "✓" : state === "fail" ? "✗" : state === "run" ? '<span class="spin" aria-hidden="true"></span>' : "○";
+      return `<li class="${state}"><span class="ic">${ic}</span><span>${text}</span></li>`;
+    }).join("");
+  }
+  const gh = (path, token, opts = {}) => fetch("https://api.github.com" + path, {
+    ...opts,
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.body ? { "Content-Type": "application/json" } : {}) },
+  });
+  const toBase64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(r.error); r.readAsDataURL(f); });
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const explain = async (res) => {
+    let m = ""; try { m = (await res.json()).message || ""; } catch (e) {}
+    if (res.status === 401) return "GitHub didn't accept the token. Check it was copied in full, and that it hasn't expired.";
+    if (res.status === 404) return `The token can't see the repository. When creating it, choose "Only select repositories" and pick ${esc(repo.split("/")[1])}.`;
+    if (res.status === 403) return `The token isn't allowed to add files. Edit it on GitHub and set Contents to "Read and write". (${esc(m)})`;
+    if (res.status === 422) return `GitHub rejected the file: ${esc(m)}`;
+    return `GitHub said: ${res.status} ${esc(m)}`;
+  };
+
+  $("#form").onsubmit = async e => {
+    e.preventDefault();
+    const token = $("#token").value.trim();
+    if ($("#remember").checked) { store.set(TOKEN_KEY, token); $("#forget").hidden = false; } else store.del(TOKEN_KEY);
+    $("#go").disabled = true;
+    const g = $("#guild").value, gName = $("#guild").selectedOptions[0].text;
+    const isRaid = kind() === "raid", rName = $("#raid").selectedOptions[0]?.text;
+    const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+    const safeName = file.name.replace(/[\\/:*?"<>|#%]+/g, "_");
+    const path = isRaid ? `guilds/${g}/${$("#raid").value}/upload-${stamp} ${safeName}` : `guilds/${g}/roster/upload-${stamp} ${safeName}`;
+    const what = isRaid ? `${gName} ${rName} results` : `${gName} roster`;
+    const list = [["run", `Uploading ${esc(what)}…`], ["todo", "Updating the site"], ["todo", "Done"]];
+    progress(list);
+    try {
+      const content = await toBase64(file);
+      const res = await gh(`/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`, token, {
+        method: "PUT", body: JSON.stringify({ message: `Upload ${what} from the website`, content, branch }),
+      });
+      if (!res.ok) { list[0] = ["fail", await explain(res)]; progress(list); $("#go").disabled = false; return; }
+      const sha = (await res.json()).commit.sha;
+      list[0] = ["done", `Uploaded ${esc(what)}`];
+      list[1] = ["run", "Updating the site (usually about 2 minutes)…"];
+      progress(list);
+
+      const runsUrl = `https://github.com/${repo}/actions`;
+      let run = null;
+      for (let i = 0; i < 45; i++) {          // up to ~6 minutes
+        await sleep(i ? 8000 : 4000);
+        const r = await gh(`/repos/${repo}/actions/runs?head_sha=${sha}&per_page=1`, token);
+        if (r.status === 403 || r.status === 404) {
+          list[1] = ["done", `Upload finished. This token can't follow the update, so <a href="${runsUrl}" target="_blank" rel="noopener">check progress on GitHub</a> (or give the token Actions: Read-only).`];
+          list[2] = ["todo", "Refresh the results in about 2 minutes"]; progress(list); break;
+        }
+        if (!r.ok) continue;
+        run = (await r.json()).workflow_runs?.[0];
+        if (!run) continue;
+        if (run.status === "completed") {
+          if (run.conclusion === "success") {
+            list[1] = ["done", "Site updated"];
+            list[2] = ["done", `Done. <a href="./?guild=${encodeURIComponent(g)}${isRaid ? "&raid=" + encodeURIComponent($("#raid").value) : ""}">View the results</a>${isRaid ? " · a summary has been posted to Discord if a webhook is set up" : ""}.`];
+          } else {
+            list[1] = ["fail", `The site update failed. <a href="${esc(run.html_url)}" target="_blank" rel="noopener">See what went wrong on GitHub</a>.`];
+          }
+          progress(list); break;
+        }
+        list[1] = ["run", run.status === "queued" ? "Waiting for GitHub to start the update…" : "Updating the site…"]; progress(list);
+      }
+      if (!run && list[1][0] === "run") {
+        list[1] = ["done", `Upload finished, but GitHub hasn't started the update yet. <a href="${runsUrl}" target="_blank" rel="noopener">Check on GitHub</a>.`]; progress(list);
+      }
+      if (run && run.status !== "completed") {
+        list[1] = ["done", `Still running on GitHub; <a href="${esc(run.html_url)}" target="_blank" rel="noopener">follow it here</a>.`]; progress(list);
+      }
+    } catch (err) {
+      list[0] = ["fail", `Couldn't reach GitHub (${esc(err.message)}). Check your connection and try again.`]; progress(list);
+    }
+    file = null; $("#file").value = ""; pick(null);
+  };
+})();
+</script>
+</body>
+</html>

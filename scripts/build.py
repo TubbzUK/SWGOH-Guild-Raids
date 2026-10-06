@@ -698,8 +698,17 @@ def main() -> int:
     if not guilds:
         print("No guild folders found in guilds/", file=sys.stderr)
     # Guilds with no files yet are left off the site's guild switcher
-    index = sorted((g for g in guilds if g["has_data"]), key=lambda g: (g.pop("order"), g["name"].lower()))
+    guilds.sort(key=lambda g: (g.pop("order"), g["name"].lower()))
+    index = [g for g in guilds if g["has_data"]]
     (SITE_DIR / "guilds.json").write_text(json.dumps(index, indent=1, ensure_ascii=False), encoding="utf-8")
+    # Settings for the site's upload page: every guild (even ones with no files yet) and raid
+    upload_cfg = {
+        "repository": os.getenv("GITHUB_REPOSITORY"),          # e.g. TubbzUK/SWGOH-Guild-Raids (set by GitHub Actions)
+        "branch": os.getenv("GITHUB_REF_NAME") or "main",
+        "guilds": [{"slug": g["slug"], "name": g["name"]} for g in guilds],
+        "raids": [{"slug": d["slug"], "name": d["name"], "match": d["match"]} for d in defs],
+    }
+    (SITE_DIR / "upload-config.json").write_text(json.dumps(upload_cfg, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"\nWrote site/guilds.json: {', '.join(g['name'] for g in index) or 'no guilds with data'}")
     return 0
 
