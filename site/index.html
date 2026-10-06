@@ -5,78 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guild Raid Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* Layout: summary tiles, then charts and watch lists, then the detailed tables. */
-:root {
-  color-scheme: light;
-  --bg: #f4f3f0; --surface: #fcfcfb; --surface-2: #f0efec; --border: #e3e1dc;
-  --text: #0b0b0b; --text-2: #52514e; --muted: #85837d;
-  --accent: #2a78d6; --series-1: #2a78d6; --series-2: #eb6834; --target: #85837d;
-  --good: #0ca30c; --good-bg: #dff3df; --good-ink: #006300;
-  --warn: #fab219; --warn-bg: #fdf0d2; --warn-ink: #7a5200;
-  --bad: #d03b3b; --bad-bg: #fbe1e1; --bad-ink: #a12424;
-  --none-bg: #ecebe7; --none-ink: #85837d;
-  --grid: #e8e6e1;
-  --r1: #cde2fb; --r2: #9ec5f4; --r3: #6da7ec; --r4: #3987e5; --r5: #256abf; --r6: #184f95;
-  --r-ink-lo: #0b0b0b; --r-ink-hi: #ffffff;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2e2e2b;
-    --text: #ffffff; --text-2: #c3c2b7; --muted: #8d8c84;
-    --accent: #3987e5; --series-1: #3987e5; --series-2: #d95926; --target: #8d8c84;
-    --good-bg: #173a17; --good-ink: #7fdc7f;
-    --warn-bg: #3d3112; --warn-ink: #f6c862;
-    --bad-bg: #431b1b; --bad-ink: #f19a9a;
-    --none-bg: #262624; --none-ink: #77766f;
-    --grid: #2a2a28;
-    --r1: #104281; --r2: #184f95; --r3: #1c5cab; --r4: #2a78d6; --r5: #5598e7; --r6: #9ec5f4;
-    --r-ink-lo: #ffffff; --r-ink-hi: #0b0b0b;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2e2e2b;
-  --text: #ffffff; --text-2: #c3c2b7; --muted: #8d8c84;
-  --accent: #3987e5; --series-1: #3987e5; --series-2: #d95926; --target: #8d8c84;
-  --good-bg: #173a17; --good-ink: #7fdc7f;
-  --warn-bg: #3d3112; --warn-ink: #f6c862;
-  --bad-bg: #431b1b; --bad-ink: #f19a9a;
-  --none-bg: #262624; --none-ink: #77766f;
-  --grid: #2a2a28;
-  --r1: #104281; --r2: #184f95; --r3: #1c5cab; --r4: #2a78d6; --r5: #5598e7; --r6: #9ec5f4;
-    --r-ink-lo: #ffffff; --r-ink-hi: #0b0b0b;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; }
-body { background: var(--bg); color: var(--text); font: 14px/1.5 Inter, system-ui, sans-serif; }
-.num { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+/* Page layout: raid banner, then tabs - summary tiles, charts and watch lists, then the detailed tables. Colours, fonts and the banner live in theme.css. */
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
-header { padding: 28px 0 8px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
-header > div:first-child { min-width: 0; }
-.switches { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-@media (max-width: 600px) { .switches { align-items: flex-start; } }
-.guilds { display: flex; flex-wrap: wrap; gap: 6px; }
-.uplink { font-size: 12.5px; color: var(--text-2); text-decoration: none; border-bottom: 1px dotted var(--muted); }
-.uplink:hover { color: var(--accent); border-color: var(--accent); }
-.raids button { font-weight: 500; padding: 5px 12px; font-size: 12.5px; }
-.guilds.raids button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
-.raids button .soon { opacity: .7; font-weight: 400; }
-.guilds button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font: 600 13px Inter, sans-serif; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
-.guilds button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
-h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
 .sub { color: var(--text-2); font-size: 13px; }
-nav { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; margin: 16px 0 20px; width: fit-content; max-width: 100%; overflow-x: auto; }
-nav button { border: 0; background: transparent; color: var(--text-2); font: 600 13px Inter, sans-serif; padding: 8px 16px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
-nav button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+nav { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); padding: 4px; border-radius: 12px; margin: 0 0 18px; width: fit-content; max-width: 100%; overflow-x: auto; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+nav button { border: 0; background: transparent; color: var(--text-2); font: 700 11.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+nav button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent); }
 button:focus-visible, input:focus-visible, select:focus-visible, tr.click:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; min-width: 0; }
-.kpi .label { color: var(--text-2); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-.kpi .value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.02em; }
+.card { padding: 16px 18px; min-width: 0; }
+.kpi .label { color: var(--text-2); font: 700 10.5px var(--font-display); text-transform: uppercase; letter-spacing: .16em; }
+.kpi .value { font: 700 26px var(--font-display); margin-top: 6px; letter-spacing: .02em; }
+.kpi .value .sub { font: 500 13px var(--font-num); }
 .kpi .note { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
 .up { color: var(--good-ink); } .down { color: var(--bad-ink); }
 .grid2 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -84,7 +31,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, tr.click:focus-
 .grid2 > *, .grid3 > * { min-width: 0; }
 @media (max-width: 960px) { .grid3 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
-h2 { font-size: 15px; margin: 0 0 2px; }
+h2 { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 4px; }
 .card .hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
 .chart { position: relative; height: 260px; }
 .chart.small { height: 200px; }
@@ -97,13 +44,13 @@ ol.list .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-sp
 .chip { background: var(--bad-bg); color: var(--bad-ink); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 500; }
 .chip.soft { background: var(--none-bg); color: var(--text-2); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
-input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px Inter, sans-serif; min-width: 0; }
+input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); min-width: 0; }
 input[type=search] { flex: 1 1 220px; max-width: 320px; }
 label.check { display: flex; gap: 6px; align-items: center; color: var(--text-2); font-size: 13px; }
-.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--glow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 th, td { padding: 9px 12px; text-align: left; white-space: nowrap; }
-th { font-size: 12px; color: var(--text-2); font-weight: 600; background: var(--surface-2); user-select: none; }
+th { font: 700 10.5px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); background: var(--surface-2); user-select: none; }
 th[data-sort] { cursor: pointer; }
 th.r, td.r { text-align: right; }
 th[data-sort]::after { content: " \2195"; color: var(--muted); }
@@ -116,16 +63,16 @@ td.name { font-weight: 600; }
 .below { color: var(--bad-ink); }
 .bar { display: inline-block; width: 56px; height: 6px; background: var(--surface-2); border-radius: 3px; vertical-align: middle; margin-right: 8px; overflow: hidden; }
 .bar i { display: block; height: 100%; border-radius: 3px; background: var(--series-1); }
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; font-family: Inter, sans-serif; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; font-family: var(--font-ui); }
 .b-good { background: var(--good-bg); color: var(--good-ink); }
 .b-warn { background: var(--warn-bg); color: var(--warn-ink); }
 .b-bad { background: var(--bad-bg); color: var(--bad-ink); }
 .b-none { background: var(--none-bg); color: var(--text-2); }
 .spark { vertical-align: middle; margin-left: 8px; }
 .heat td.c { text-align: center; padding: 5px 3px; }
-.heat th.c { text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); height: 170px; padding: 8px 4px; font-weight: 500; vertical-align: bottom; }
-.heat td.name, .heat thead tr:last-child th:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); }
-.heat thead tr:last-child th:first-child { background: var(--surface-2); z-index: 2; }
+.heat th.c { text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); height: 170px; padding: 8px 4px; font: 500 11px var(--font-ui); letter-spacing: .02em; text-transform: none; vertical-align: bottom; }
+.heat td.name, .heat thead tr:last-child th:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface-solid); }
+.heat thead tr:last-child th:first-child { z-index: 2; }
 .heat .team { text-align: center; border-left: 2px solid var(--border); }
 .heat .first { border-left: 2px solid var(--border); }
 .cell { display: inline-block; min-width: 28px; padding: 3px 3px; border-radius: 5px; font-size: 12px; font-weight: 600; font-style: normal; }
@@ -141,28 +88,36 @@ td.name { font-weight: 600; }
 .detail .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .stats div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
-.stats b { display: block; font-size: 16px; }
+.stats b { display: block; font-size: 17px; }
 .stats span { font-size: 12px; color: var(--text-2); }
 .warnings { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
 .warnings summary { cursor: pointer; font-weight: 600; }
 .warnings ul { margin: 6px 0 0; padding-left: 18px; }
-.empty { color: var(--muted); padding: 24px; text-align: center; }
+.empty { color: var(--text-2); padding: 24px; text-align: center; }
 footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
-@media (max-width: 600px) { .kpi .value { font-size: 22px; } .heat td.name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; } }
+@media (max-width: 600px) { nav button { padding: 9px 11px; letter-spacing: .08em; } .kpi .value { font-size: 20px; } .heat td.name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <div class="topbar">
+    <a class="wordmark" href="./"><span data-emblem></span>Raid Tracker</a>
+    <div class="top-actions">
+      <a class="top-link" id="uploadLink" href="upload.html">⬆ Upload results</a>
+      <span data-theme-toggle></span>
+    </div>
+  </div>
+  <header class="banner" id="banner">
+    <div class="art" id="bannerArt"></div>
     <div>
-      <h1 id="guild">Guild Raid Tracker</h1>
+      <div class="eyebrow" id="raidEyebrow"></div>
+      <h1 id="guild">Raid Tracker</h1>
       <div class="sub" id="updated"></div>
     </div>
-    <div class="switches">
-      <a class="uplink" id="uploadLink" href="upload.html">⬆ Upload results</a>
-      <div class="guilds" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
-      <div class="guilds raids" id="raidSwitch" role="group" aria-label="Raid" hidden></div>
+    <div class="banner-switch">
+      <div class="pills" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+      <div class="pills raids" id="raidSwitch" role="group" aria-label="Raid" hidden></div>
     </div>
   </header>
   <nav role="tablist">
@@ -271,16 +226,21 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   const h = location.hash.slice(1); if (h) document.querySelector(`nav button[data-tab="${h}"]`)?.click();
 
   // Chart.js defaults
-  Chart.defaults.font.family = "Inter, system-ui, sans-serif";
-  Chart.defaults.color = css("--text-2");
-  Chart.defaults.borderColor = css("--grid");
-  Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--text"), titleColor: css("--surface"), bodyColor: css("--surface"), padding: 10 });
-  Chart.defaults.maintainAspectRatio = false;
+  function chartTheme() {
+    Chart.defaults.font.family = '"Exo 2", system-ui, sans-serif';
+    Chart.defaults.color = css("--text-2");
+    Chart.defaults.borderColor = css("--grid");
+    Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--surface-solid"), titleColor: css("--text"), bodyColor: css("--text-2"), borderColor: css("--accent"), borderWidth: 1, padding: 10 });
+    Chart.defaults.maintainAspectRatio = false;
+  }
   const axisY = cb => ({ beginAtZero: true, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: cb || (v => fmt(v)) } });
-  const axisX = { grid: { display: false }, border: { color: css("--border") }, ticks: { maxRotation: 0, autoSkipPadding: 12 } };
+  const axisX = () => ({ grid: { display: false }, border: { color: css("--border") }, ticks: { maxRotation: 0, autoSkipPadding: 12 } });
 
+  let openPlayerId = null;   // keeps a player's detail open when the theme changes
   function render(data) {
   Object.values(Chart.instances).forEach(c => c.destroy());
+  chartTheme();
+  currentData = data;
   $("#pDetail").hidden = true;
   $("#warnings").innerHTML = "";
   const raids = data.raids, players = data.players, latest = raids[raids.length - 1], prev = raids[raids.length - 2];
@@ -291,7 +251,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 
   document.title = data.guild_name + " · Raid Tracker";
   $("#guild").textContent = data.guild_name;
-  $("#updated").textContent = latest ? `${data.raid_name} · latest raid ${dfmt(latest.date, true)} · ${raids.length} raids tracked · ${current.length} members` : `${data.raid_name} · no results yet · ${current.length} members`;
+  $("#raidEyebrow").textContent = `${data.raid_name} raid`;
+  RaidTheme.banner($("#bannerArt"), (guildIndexRaid(data) || { slug: data.raid_slug }));
+  $("#updated").textContent = latest ? `Latest raid ${dfmt(latest.date, true)} · ${raids.length} raids tracked · ${current.length} members` : `No results yet · ${current.length} members`;
   $("#footer").textContent = `Updated ${new Date(data.generated_at).toLocaleString("en-GB")}` + (data.roster_file ? ` · roster: ${data.roster_file}` : "");
   if (data.warnings?.length) $("#warnings").innerHTML = `<details class="warnings"><summary>Data notes (${data.warnings.length})</summary><ul>${data.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul></details>`;
 
@@ -323,12 +285,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     new Chart($("#totalChart"), {
       type: "bar",
       data: { labels: raidLabels, datasets: [{ label: "Guild total", data: raids.map(r => r.total), backgroundColor: css("--series-1"), borderRadius: 4, maxBarThickness: 40 }] },
-      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true), label: c => ` Total ${c.parsed.y.toLocaleString("en-GB")}`, afterLabel: c => ` ${raids[c.dataIndex].participants} of ${raids[c.dataIndex].members} scored` } } }, scales: { y: axisY(), x: axisX } }
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true), label: c => ` Total ${c.parsed.y.toLocaleString("en-GB")}`, afterLabel: c => ` ${raids[c.dataIndex].participants} of ${raids[c.dataIndex].members} scored` } } }, scales: { y: axisY(), x: axisX() } }
     });
     new Chart($("#partChart"), {
       type: "line",
       data: { labels: raidLabels, datasets: [{ label: "Scored", data: raids.map(r => r.participants), borderColor: css("--series-1"), backgroundColor: css("--series-1"), borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, tension: 0.25 }] },
-      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y} of ${raids[c.dataIndex].members} members scored` } } }, scales: { y: axisY(v => v), x: axisX } }
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y} of ${raids[c.dataIndex].members} members scored` } } }, scales: { y: axisY(v => v), x: axisX() } }
     });
 
     const top = current.filter(p => p.last > 0).slice(0, 10);
@@ -372,9 +334,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     $("#pTable").innerHTML = `<thead><tr>${pCols.map(([k, l, c]) => `<th data-sort="${k}" class="${c} ${pSort.key === k ? (pSort.dir > 0 ? "asc" : "desc") : ""}">${l}</th>`).join("")}</tr></thead>` +
       `<tbody>${rows.map(p => `<tr class="click ${p.id === selected ? "sel" : ""}" data-id="${p.id}" tabindex="0">${pCols.map(([k, , c, f]) => `<td class="${c} ${k === "name" ? "name" : "num"}">${f(p)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${pCols.length}" class="empty">No players match</td></tr>`}</tbody>`;
     $("#pTable").querySelectorAll("th").forEach(th => th.onclick = () => { const k = th.dataset.sort; pSort = { key: k, dir: pSort.key === k ? -pSort.dir : (k === "name" ? 1 : -1) }; renderPlayers(); });
-    $("#pTable").querySelectorAll("tbody tr.click").forEach(tr => { const open = () => { selected = tr.dataset.id; renderPlayers(); showPlayer(players.find(p => p.id === selected)); }; tr.onclick = open; tr.onkeydown = e => { if (e.key === "Enter") open(); }; });
+    $("#pTable").querySelectorAll("tbody tr.click").forEach(tr => { const open = () => { selected = openPlayerId = tr.dataset.id; renderPlayers(); showPlayer(players.find(p => p.id === selected)); }; tr.onclick = open; tr.onkeydown = e => { if (e.key === "Enter") open(); }; });
   }
-  function showPlayer(p) {
+  function showPlayer(p, quiet) {
     const el = $("#pDetail"); el.hidden = false;
     const r = p.readiness;
     el.innerHTML = `<div class="head"><div><h2>${esc(p.name)} ${trendBadge(p)}</h2><div class="sub">${p.ally ? "Ally code " + p.ally.replace(/(\d{3})(\d{3})(\d{3})/, "$1-$2-$3") + " · " : ""}scored in ${p.played} of ${p.listed} raids while a member</div></div></div>
@@ -396,12 +358,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     if (target) ds.push({ label: "Target", data: raids.map(() => target), borderColor: css("--target"), borderWidth: 1, borderDash: [2, 3], pointRadius: 0, pointHoverRadius: 0 });
     detailChart = new Chart($("#pChart"), {
       type: "line", data: { labels: raidLabels, datasets: ds },
-      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { filter: c => c.dataset.label !== "Target", callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true), label: c => ` ${c.dataset.label}: ${c.parsed.y == null ? "no score" : c.parsed.y.toLocaleString("en-GB")}` } } }, scales: { y: axisY(), x: axisX } }
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { filter: c => c.dataset.label !== "Target", callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true), label: c => ` ${c.dataset.label}: ${c.parsed.y == null ? "no score" : c.parsed.y.toLocaleString("en-GB")}` } } }, scales: { y: axisY(), x: axisX() } }
     });
-    el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+    if (!quiet) el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
   }
   $("#pSearch").oninput = renderPlayers; $("#pCurrent").onchange = renderPlayers; $("#pTrend").onchange = renderPlayers;
   renderPlayers();
+  const reopen = openPlayerId && players.find(p => p.id === openPlayerId);
+  if (reopen) { selected = reopen.id; renderPlayers(); showPlayer(reopen, true); }
 
   // ---------------- readiness
   $("#rBody").hidden = !rsum;
@@ -456,6 +420,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   }
 
   // ---------------- guilds & raids
+  let currentData = null;
+  window.addEventListener("themechange", () => { if (currentData) render(currentData); });
+  function guildIndexRaid(d) { const g = index.find(x => x.slug === d.slug); return g && g.raids.find(r => r.slug === d.raid_slug); }
   const preview = window.__GUILDS__;
   let index = [];
   try { index = preview ? preview.index : await fetch("guilds.json", { cache: "no-store" }).then(r => r.json()); } catch (e) { index = []; }
@@ -483,6 +450,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}` + location.hash); } catch (e) {}
     $("#uploadLink").href = `upload.html?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}`;
     const data = await load(guild.slug, raid);
+    openPlayerId = null;
     render(data);
     // A raid that hasn't started yet: open on readiness unless a tab was chosen
     const onOverview = !document.querySelector("#tab-overview").hidden;

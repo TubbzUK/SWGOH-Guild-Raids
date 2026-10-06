@@ -23,6 +23,7 @@ import io
 import json
 import os
 import re
+import shutil
 import statistics
 import sys
 import unicodedata
@@ -89,7 +90,10 @@ def load_raid_defs() -> list[dict]:
             if p.suffix.lower() not in (".yml", ".yaml") or p.name.startswith(("_", ".")):
                 continue
             d = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+            img = next((RAID_DEFS_DIR / f"{p.stem}{ext}" for ext in (".jpg", ".jpeg", ".png", ".webp")
+                        if (RAID_DEFS_DIR / f"{p.stem}{ext}").exists()), None)
             defs.append({"slug": p.stem, "name": str(d.get("name", p.stem)), "order": d.get("order", 99),
+                         "banner_file": img,
                          "target_score": d.get("target_score"),
                          "match": [norm(m) for m in (d.get("file_names") or [d.get("name", p.stem)])],
                          "cfg": d})
@@ -680,7 +684,8 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         print(f"Wrote site/data/{gdir.name}/{d['slug']}.json: {len(view['raids'])} raids, "
               f"{len(view['players'])} players, {len(view['warnings'])} warnings")
         raids_index.append({"slug": d["slug"], "name": d["name"], "raids": len(view["raids"]),
-                            "latest": view["raids"][-1]["date"] if view["raids"] else None})
+                            "latest": view["raids"][-1]["date"] if view["raids"] else None,
+                            "banner": f"banners/{d['banner_file'].name}" if d["banner_file"] else None})
 
     with_scores = [r for r in raids_index if r["latest"]]
     default = max(with_scores, key=lambda r: r["latest"])["slug"] if with_scores else \
@@ -692,6 +697,14 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
 
 def main() -> int:
     defs = load_raid_defs()
+    # Optional banner pictures: raids/<raid>.jpg|png|webp is shown instead of the drawn artwork
+    banner_dir = SITE_DIR / "banners"
+    shutil.rmtree(banner_dir, ignore_errors=True)
+    for d in defs:
+        if d["banner_file"]:
+            banner_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(d["banner_file"], banner_dir / d["banner_file"].name)
+            print(f"Banner: {d['banner_file'].name}")
     if not defs:
         print("No raid definitions found in raids/", file=sys.stderr)
     guilds = [build_guild(g, defs) for g in guild_dirs()]

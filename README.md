@@ -127,6 +127,15 @@ name, `file_names`, target and characters). Then upload results into the guild f
 name matches `file_names` are moved into `guilds/<guild>/<short-name>/` automatically. (To make the
 folder by hand: in the guild folder **Add file → Create new file**, name it `<short-name>/README.md`.)
 
+## Look and feel
+
+The site has a dark space theme and a light theme. Everyone can switch with the **System / Light /
+Dark** button at the top right; the choice is remembered on their device.
+
+Each raid has its own banner artwork. To use your own picture instead, upload an image named after
+the raid into the `raids/` folder, e.g. `raids/order-66.jpg` or `raids/droid-destruction.png`
+(a wide image, about 1200×260 or larger, works best). Only use images you have the right to share.
+
 ## Changing readiness characters or targets
 
 Edit the raid's file in `raids/` on GitHub (pencil icon). Characters use the **BaseId** from the
