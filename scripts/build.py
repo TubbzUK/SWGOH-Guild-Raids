@@ -90,8 +90,9 @@ def load_raid_defs() -> list[dict]:
             if p.suffix.lower() not in (".yml", ".yaml") or p.name.startswith(("_", ".")):
                 continue
             d = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
-            img = next((RAID_DEFS_DIR / f"{p.stem}{ext}" for ext in (".jpg", ".jpeg", ".png", ".webp")
-                        if (RAID_DEFS_DIR / f"{p.stem}{ext}").exists()), None)
+            # banner picture with the same name as the raid file; capitals don't matter (Order-66.JPG works)
+            img = next((q for q in sorted(RAID_DEFS_DIR.iterdir())
+                        if q.stem.lower() == p.stem.lower() and q.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")), None)
             defs.append({"slug": p.stem, "name": str(d.get("name", p.stem)), "order": d.get("order", 99),
                          "banner_file": img,
                          "target_score": d.get("target_score"),
