@@ -166,6 +166,12 @@ upload into `guilds/<guild>/tb/` on GitHub: name it `2026-10-05 RotE.csv`, or it
   per phase for deployment (green full, amber partly, red none) and short *to work on* tags. Click a
   member for their per-phase breakdown and their points and wave % by TB against the guild median.
 - **Phases** – one phase at a time: points, GP deployed, waves and CM attempts for every member.
+- **Player** – pick a member (or click a name anywhere on the page) for their full summary: a
+  one-line verdict (trending up / level / down, what's improving or falling, which phases are getting
+  stronger or slipping), six measures with change vs their last TB, trend and guild median, charts
+  of points and wave % by TB with a trend line, points and waves by phase for their last 5 TBs, a
+  trend table per phase, charts for any one phase over time, rank by TB, CM attempts and platoons by
+  TB, and their full TB history. Links can be shared: `…/tb.html?guild=oanr&player=taero#player`.
 
 **How it's judged.** *Waves %* = waves completed ÷ the most a member could complete
 (`tb_max_waves` in the guild's `config.yml`; change it if your guild opens different planets).

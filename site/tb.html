@@ -66,6 +66,7 @@ td.focus { white-space: normal; min-width: 140px; max-width: 210px; }
 .bar i { display: block; height: 100%; border-radius: 3px; background: var(--series-1); }
 .dots { display: inline-flex; gap: 3px; vertical-align: middle; }
 .dots i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.d-gap { background: transparent; box-shadow: inset 0 0 0 1px var(--border); }
 .d-full { background: var(--good); } .d-part { background: var(--warn); } .d-none { background: var(--bad); }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -85,8 +86,24 @@ td.focus { white-space: normal; min-width: 140px; max-width: 210px; }
 .warnings { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
 .warnings summary { cursor: pointer; font-weight: 600; }
 .empty { color: var(--text-2); padding: 24px; text-align: center; }
+.picker { display: flex; gap: 6px; align-items: center; flex: 1 1 260px; max-width: 420px; }
+.picker select { flex: 1; min-width: 0; font-weight: 600; }
+.stepbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; width: 36px; height: 36px; font-size: 18px; cursor: pointer; flex: none; }
+.stepbtn:hover { border-color: var(--accent); }
+.phead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.phead h2 { font-size: 22px; margin: 0 0 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.verdict { font-size: 14px; color: var(--text); margin: 6px 0 0; max-width: 70ch; }
+.mkpi .value { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mkpi .note { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.mkpi .badge { font-size: 11px; padding: 1px 7px; }
+.chart.tall { height: 280px; }
+td.sub2 { color: var(--text-2); font-size: 12.5px; }
+.list li.click { cursor: pointer; } .list li.click:hover .who { color: var(--accent); }
+.linkbtn { background: none; border: 1px solid var(--border); color: var(--accent); border-radius: 8px; padding: 6px 12px; font: 600 13px var(--font-ui); cursor: pointer; }
+.linkbtn:hover { border-color: var(--accent); }
+tr.cur-tb td { background: var(--surface-2); }
 footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
-@media (max-width: 600px) { nav.tabs button { padding: 9px 11px; letter-spacing: .08em; } .kpi .value { font-size: 20px; } }
+@media (max-width: 600px) { nav.tabs { max-width: 100%; overflow-x: auto; } nav.tabs button { padding: 9px 8px; letter-spacing: .04em; font-size: 11px; } .kpi .value { font-size: 20px; } }
 </style>
 </head>
 <body>
@@ -116,6 +133,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
     <button role="tab" aria-selected="false" data-tab="members">Members</button>
     <button role="tab" aria-selected="false" data-tab="phases">Phases</button>
+    <button role="tab" aria-selected="false" data-tab="player">Player</button>
   </nav>
   <div id="warnings"></div>
 
@@ -168,6 +186,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <div class="phrow" id="phSwitch" role="group" aria-label="Phase"></div>
     <div class="kpis" id="phKpis"></div>
     <div class="tablewrap"><table id="phTable"></table></div>
+  </section>
+
+  <section class="tab" id="tab-player" hidden>
+    <div class="toolbar">
+      <div class="picker">
+        <button type="button" class="stepbtn" id="pPrev" aria-label="Previous member">‹</button>
+        <select id="pSel" aria-label="Member"></select>
+        <button type="button" class="stepbtn" id="pNext" aria-label="Next member">›</button>
+      </div>
+      <label class="check"><input type="checkbox" id="pCurrent" checked> Current members only</label>
+    </div>
+    <div id="pBody"></div>
   </section>
 
   <footer id="footer"></footer>
@@ -283,12 +313,13 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const p = t.phase[c.dataIndex]; return [` ${p.wave_pct}% of possible waves`, ` ${p.waves} waves · ${p.att} CM attempts`, ` ${p.deployed} fully deployed · ${p.partial} partly · ${p.none} not at all`]; } } } }, scales: { y: { ...axisY(v => v + "%"), max: 100 }, x: axisX() } }
     });
     const att = isLatest ? cur.filter(p => p.status === "partial" || p.status === "inactive").sort((a, b) => (a.status === "inactive" ? -1 : 0) - (b.status === "inactive" ? -1 : 0) || (a.last || 0) - (b.last || 0)) : [];
-    $("#attention").innerHTML = !isLatest ? `<li class="who"><small>Shown for the latest TB only.</small></li>` : att.length ? att.slice(0, 12).map(p => `<li><span class="who">${esc(p.name)}<small>${esc(p.focus[0] || "")}</small></span>${badge(STATUS, p.status)}</li>`).join("") + (att.length > 12 ? `<li><span class="who"><small>and ${att.length - 12} more on the Members tab</small></span></li>` : "") : `<li class="who"><small>Everyone took a full part. 🎉</small></li>`;
+    $("#attention").innerHTML = !isLatest ? `<li class="who"><small>Shown for the latest TB only.</small></li>` : att.length ? att.slice(0, 12).map(p => `<li class="click" data-pid="${esc(p.id)}" tabindex="0"><span class="who">${esc(p.name)}<small>${esc(p.focus[0] || "")}</small></span>${badge(STATUS, p.status)}</li>`).join("") + (att.length > 12 ? `<li><span class="who"><small>and ${att.length - 12} more on the Members tab</small></span></li>` : "") : `<li class="who"><small>Everyone took a full part. 🎉</small></li>`;
     const top = players.map(p => ({ p, r: rowOf(p, sel) })).filter(x => x.r).sort((a, b) => b.r.tp - a.r.tp).slice(0, 10);
     $("#topHint").textContent = dfmt(t.date);
-    $("#top10").innerHTML = top.map((x, i) => `<li><span class="who"><span class="rk num">${i + 1}</span>${esc(x.p.name)}${x.p.current ? "" : '<span class="former">left</span>'}</span><span class="num">${fmt(x.r.tp)}</span></li>`).join("");
+    $("#top10").innerHTML = top.map((x, i) => `<li class="click" data-pid="${esc(x.p.id)}" tabindex="0"><span class="who"><span class="rk num">${i + 1}</span>${esc(x.p.name)}${x.p.current ? "" : '<span class="former">left</span>'}</span><span class="num">${fmt(x.r.tp)}</span></li>`).join("");
 
-    renderMembers(); renderPhase();
+    document.querySelectorAll("#attention li[data-pid], #top10 li[data-pid]").forEach(li => { li.onclick = () => openPlayer(li.dataset.pid); li.onkeydown = e => { if (e.key === "Enter") openPlayer(li.dataset.pid); }; });
+    renderMembers(); renderPhase(); renderPlayer();
   }
 
   // ---- members
@@ -327,7 +358,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     el.hidden = false; detailCharts.forEach(c => c.destroy()); detailCharts = [];
     const todo = isLatest ? (p.focus.length ? `<div class="todo"><b>To work on</b><ul>${p.focus.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : `<div class="todo ok"><b>Nothing flagged.</b> Fully deployed, solid combat and platoons this TB.</div>`) : "";
     const ph = r.phases.map(x => { const mw = t.max_waves[x.p - 1]; return `<tr><td>P${x.p}</td><td>${x.dep ? '<span class="badge b-good">✓ Full</span>' : x.gp > 0 ? '<span class="badge b-warn">● Partial</span>' : '<span class="badge b-bad">✗ None</span>'}</td><td class="r num">${fmt(x.tp)}</td><td class="r num">${fmt(x.gp)}</td><td class="r num">${x.waves} / ${Math.round(mw)}</td><td class="r num">${Math.round(x.waves / mw * 100)}%</td><td class="r num">${x.att}</td><td class="r num">${x.spec}</td></tr>`; }).join("");
-    el.innerHTML = `<div class="head"><div><h2>${esc(p.name)} ${isLatest ? badge(STATUS, p.status) : ""} ${badge(TREND, p.trend)}</h2><div class="hint" style="margin:0">${dfmt(t.date)} · took part in ${p.tbs_played} of ${tbs.length} TBs tracked</div></div></div>
+    el.innerHTML = `<div class="head"><div><h2>${esc(p.name)} ${isLatest ? badge(STATUS, p.status) : ""} ${badge(TREND, p.trend)}</h2><div class="hint" style="margin:0">${dfmt(t.date)} · took part in ${p.tbs_played} of ${tbs.length} TBs tracked</div></div><button type="button" class="linkbtn" data-open-player="${esc(p.id)}">Full player summary →</button></div>
       <div class="stats">
         <div><b class="num">${fmt(r.tp)}</b><span>Points · #${r.rank} of ${t.members}</span></div>
         <div><b class="num">${r.wave_pct.toFixed(0)}%</b><span>Waves (${r.waves} of ${Math.round(t.max_waves.reduce((a, b) => a + b, 0))})</span></div>
@@ -350,6 +381,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       line("#dTp", p.tp.map(v => v || null), tbs.map(x => x.median_tp));
       line("#dWv", p.wave_pct, tbs.map(x => x.median_wave_pct), v => v + "%", 100);
     }
+    el.querySelector("[data-open-player]").onclick = () => openPlayer(p.id);
     if (!quiet) el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
   }
   $("#mSearch").oninput = renderMembers; $("#mCurrent").onchange = renderMembers; $("#mStatus").onchange = renderMembers;
@@ -375,6 +407,188 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     $("#phTable").innerHTML = `<thead><tr>${th("name", "Member")}${th("dep", "Deployed")}${th("tp", "Points", "r")}${th("gp", "GP deployed", "r")}${th("waves", "Waves", "r")}${th("att", "CM attempts", "r")}${th("spec", "Special", "r")}</tr></thead><tbody>${rows.map(o => `<tr><td class="name">${esc(o.p.name)}${o.p.current ? "" : '<span class="former">left</span>'}</td><td>${o.x.dep ? '<span class="badge b-good">✓ Full</span>' : o.x.gp > 0 ? '<span class="badge b-warn">● Partial</span>' : '<span class="badge b-bad">✗ None</span>'}</td><td class="r num">${fmt(o.x.tp)}</td><td class="r num">${fmt(o.x.gp)}</td><td class="r num"><span class="bar"><i style="width:${Math.min(100, o.x.waves / mw * 100)}%"></i></span>${o.x.waves} / ${Math.round(mw)}</td><td class="r num">${o.x.att}</td><td class="r num">${o.x.spec}</td></tr>`).join("")}</tbody>`;
     $("#phTable").querySelectorAll("th").forEach(h => h.onclick = () => { const k = h.dataset.sort; phSort = { k, d: phSort.k === k ? -phSort.d : (k === "name" ? 1 : -1) }; renderPhase(); });
   }
+
+
+  // ---- player summary
+  const thr = data.trend_threshold_pct ?? 3, trendN = data.trend_over_last || 5;
+  function trendOf(vals) {             // same rule as the build: least-squares slope as % of the average, per TB
+    const v = vals.filter(x => x != null).slice(-trendN), n = v.length;
+    if (n < 3) return { pct: null, label: "new" };
+    const xm = (n - 1) / 2, ym = v.reduce((a, b) => a + b, 0) / n;
+    const den = v.reduce((a, _, i) => a + (i - xm) ** 2, 0), slope = v.reduce((a, y, i) => a + (i - xm) * (y - ym), 0) / den;
+    const pct = ym ? slope / ym * 100 : 0;
+    return { pct: Math.round(pct * 10) / 10, label: pct >= thr ? "improving" : pct <= -thr ? "declining" : "level" };
+  }
+  function fitLine(ys) {               // straight line through the last few values, drawn on the chart
+    const pts = ys.map((y, i) => [i, y]).filter(([, y]) => y != null).slice(-trendN);
+    if (pts.length < 2) return ys.map(() => null);
+    const n = pts.length, xm = pts.reduce((a, p) => a + p[0], 0) / n, ym = pts.reduce((a, p) => a + p[1], 0) / n;
+    const den = pts.reduce((a, p) => a + (p[0] - xm) ** 2, 0) || 1, m = pts.reduce((a, p) => a + (p[0] - xm) * (p[1] - ym), 0) / den;
+    return ys.map((_, i) => i >= pts[0][0] ? ym + m * (i - xm) : null);
+  }
+  const sparkV = (vals, w = 64, hgt = 18) => {
+    const v = vals.filter(x => x != null).slice(-8); if (v.length < 2) return "";
+    const mn = Math.min(...v), mx = Math.max(...v), sx = (w - 4) / (v.length - 1), sy = mx > mn ? (hgt - 4) / (mx - mn) : 0;
+    const pts = v.map((y, i) => [2 + i * sx, hgt - 2 - (y - mn) * sy]); const [lx, ly] = pts[pts.length - 1];
+    return `<svg class="spark" width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}" aria-hidden="true"><polyline fill="none" stroke="${css("--series-1")}" stroke-width="1.5" stroke-linejoin="round" points="${pts.map(p => p.join(",")).join(" ")}"/><circle cx="${lx}" cy="${ly}" r="2.5" fill="${css("--series-1")}"/></svg>`;
+  };
+  const tbadge = tr => tr.label === "new" ? `<span class="badge b-none" title="Needs 3 TBs for a trend">● New</span>` : `<span class="badge ${TREND[tr.label][0]}" title="${signedPct(tr.pct)} per TB over the last ${trendN} TBs">${TREND[tr.label][1]} ${signedPct(tr.pct)}</span>`;
+  const depCls = x => !x ? "" : x.dep ? "d-full" : x.gp > 0 ? "d-part" : "d-none";
+  let pId = params.player || null, pPhase = 1, playerCharts = [];
+  if (pId && players.some(p => p.id === pId && !p.current)) $("#pCurrent").checked = false;
+
+  function openPlayer(id) {
+    pId = id;
+    const p = players.find(x => x.id === id);
+    if (p && !p.current) $("#pCurrent").checked = false;
+    document.querySelector('nav.tabs button[data-tab="player"]').click();
+    renderPlayer();
+    window.scrollTo({ top: $("nav.tabs").offsetTop - 8, behavior: "auto" });
+  }
+
+  function renderPlayer() {
+    playerCharts.forEach(c => c.destroy()); playerCharts = [];
+    const list = players.filter(p => !$("#pCurrent").checked || p.current).slice().sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+    if (!list.length) { $("#pBody").innerHTML = `<div class="card empty">No members to show.</div>`; return; }
+    if (!list.some(p => p.id === pId)) pId = (list.slice().sort((a, b) => (b.last || 0) - (a.last || 0))[0]).id;
+    $("#pSel").innerHTML = list.map(p => `<option value="${esc(p.id)}" ${p.id === pId ? "selected" : ""}>${esc(p.name)}${p.current ? "" : " (left)"}</option>`).join("");
+    const k = list.findIndex(p => p.id === pId);
+    $("#pPrev").onclick = () => { pId = list[(k - 1 + list.length) % list.length].id; renderPlayer(); };
+    $("#pNext").onclick = () => { pId = list[(k + 1) % list.length].id; renderPlayer(); };
+    try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}${sel !== latestI ? "&tb=" + encodeURIComponent(tbs[sel].id) : ""}&player=${encodeURIComponent(pId)}${location.hash}`); } catch (e) {}
+
+    const p = list[k];
+    const R = tbs.map((_, i) => rowOf(p, i));               // this member's row in each TB (null = not in that TB)
+    const played = R.map((r, i) => r ? i : -1).filter(i => i >= 0);
+    const li = played[played.length - 1], pi = played[played.length - 2];
+    const L = R[li], P = pi != null ? R[pi] : null, T = tbs[li];
+    const labels = tbs.map(x => dshort(x.date));
+    const many = tbs.length > 1;
+
+    // metric tiles: latest, vs previous TB, trend, guild median
+    const M = [
+      ["Territory points", r => r.tp, t => t.median_tp, v => fmt(v)],
+      ["Wave completion", r => r.wave_pct, t => t.median_wave_pct, v => Math.round(v) + "%"],
+      ["CM attempts", r => r.att, t => t.median_att, v => fmt(v)],
+      ["Platoon units", r => r.platoons, t => t.median_platoons, v => fmt(v)],
+      ["Phases fully deployed", r => r.full_deploys, t => t.median_deploys, (v, t) => `${Math.round(v)}<span class="sub"> / ${t.phases}</span>`],
+      ["Special missions", r => r.spec, t => t.median_spec, v => fmt(v)],
+    ].map(([label, get, med, f]) => {
+      const vals = R.map(r => r ? get(r) : null), tr = trendOf(vals), cur = get(L), pv = P ? get(P) : null;
+      const d = pv != null ? cur - pv : null, m = med(T);
+      return { label, tr, vals, html: `<div class="card kpi mkpi"><div class="label">${label}</div><div class="value num">${f(cur, T)}${sparkV(vals)}</div>
+        <div class="note">${d == null ? "" : `<span class="${dcls(d)}">${d > 0 ? "+" : d < 0 ? "−" : "±"}${f(Math.abs(d), T).replace(/<[^>]+>.*$/, "")}</span> vs prev`}${tbadge(tr)}</div>
+        <div class="note">Guild median ${f(m ?? 0, T).replace(/<[^>]+>.*$/, "")} · <span class="${dcls(cur - (m ?? 0))}">${cur >= (m ?? 0) ? "above" : "below"}</span></div></div>` };
+    });
+
+    // per-phase trend
+    const nPh = Math.max(...tbs.map(t => t.phases));
+    const phases = Array.from({ length: nPh }, (_, j) => {
+      const xs = R.map(r => r ? r.phases.find(x => x.p === j + 1) || null : null);
+      const pts = xs.map(x => x ? x.tp : null), wv = xs.map((x, i) => x ? x.waves / tbs[i].max_waves[j] * 100 : null);
+      const lx = xs[li], mw = T.max_waves[j], medW = T.phase[j]?.median_waves ?? 0;
+      return { p: j + 1, xs, pts, wv, lx, mw, medW, trP: trendOf(pts), trW: trendOf(wv) };
+    });
+    const ups = M.filter(m => m.tr.label === "improving").map(m => m.label.toLowerCase()), downs = M.filter(m => m.tr.label === "declining").map(m => m.label.toLowerCase());
+    const lab = x => [x.trP.label, x.trW.label];
+    const phUp = phases.filter(x => lab(x).includes("improving") && !lab(x).includes("declining")).map(x => "P" + x.p);
+    const phDown = phases.filter(x => lab(x).includes("declining") && !lab(x).includes("improving")).map(x => "P" + x.p);
+    const phMix = phases.filter(x => lab(x).includes("declining") && lab(x).includes("improving")).map(x => "P" + x.p);
+    const joinL = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+    const ptr = M[0].tr;
+    const verdict = played.length < 3
+      ? `${played.length === 1 ? "Only one TB" : "Two TBs"} so far, so there's no trend yet (it needs 3).${P ? ` Points ${L.tp >= P.tp ? "up" : "down"} ${Math.abs((L.tp - P.tp) / (P.tp || 1) * 100).toFixed(0)}% on the previous TB.` : ""}`
+      : `Overall <b>${ptr.label === "improving" ? "trending up" : ptr.label === "declining" ? "trending down" : "holding level"}</b>: points ${signedPct(ptr.pct)} per TB over the last ${Math.min(trendN, played.length)} TBs.`
+        + (ups.length ? ` Improving: ${joinL(ups)}.` : "") + (downs.length ? ` Falling: ${joinL(downs)}.` : "")
+        + (phUp.length ? ` Getting stronger in ${joinL(phUp)}.` : "") + (phDown.length ? ` Slipping in ${joinL(phDown)}.` : "")
+        + (phMix.length ? ` Mixed in ${joinL(phMix)} (points and waves moving in opposite directions).` : "");
+    const ranks = played.map(i => R[i].rank), best = played.reduce((b, i) => !b || R[i].tp > b.tp ? { tp: R[i].tp, i } : b, null);
+    const missed = tbs.length - played.length;
+
+    const phRows = phases.map(x => {
+      const l = x.lx, dw = l ? l.waves - x.medW : null;
+      return `<tr class="click" data-ph="${x.p}" tabindex="0"><td><b>P${x.p}</b></td>
+        <td><span class="dots">${x.xs.map((y, i) => `<i class="${depCls(y) || "d-gap"}" title="${dshort(tbs[i].date)}: ${!y ? "not in this TB" : y.dep ? "fully deployed" : y.gp > 0 ? "partly deployed" : "didn't deploy"}"></i>`).join("")}</span></td>
+        <td class="r num">${l ? fmt(l.tp) : "–"}</td><td>${sparkV(x.pts)}</td><td>${tbadge(x.trP)}</td>
+        <td class="r num">${l ? `${l.waves} / ${Math.round(x.mw)}` : "–"}</td><td>${sparkV(x.wv)}</td><td>${tbadge(x.trW)}</td>
+        <td class="r num"><span class="${dcls(dw)}">${dw == null ? "–" : (dw > 0 ? "+" : dw < 0 ? "−" : "±") + Math.abs(Math.round(dw))}</span></td>
+        <td class="r num">${l ? l.att : "–"}</td></tr>`;
+    }).join("");
+
+    const hist = played.slice().reverse().map(i => {
+      const r = R[i], t = tbs[i], prevI = played[played.indexOf(i) - 1], d = prevI != null && R[prevI].tp ? (r.tp - R[prevI].tp) / R[prevI].tp * 100 : null;
+      return `<tr class="${i === sel ? "cur-tb" : ""}"><td>${dfmt(t.date)}</td><td class="r num">${r.rank} <span class="sub2">/ ${t.members}</span></td><td class="r num">${fmt(r.tp)}</td>
+        <td class="r num"><span class="${dcls(d)}">${signedPct(d)}</span></td><td class="r num">${r.wave_pct.toFixed(0)}%</td><td class="r num">${r.att}</td>
+        <td class="r num">${r.platoons}</td><td class="r num">${r.spec}</td><td>${dots(r.phases)}</td></tr>`;
+    }).join("");
+
+    const legend = (...items) => `<div class="legend">${items.map(([c, l, dash]) => `<span><i class="swatch" style="background:${dash ? `repeating-linear-gradient(90deg,${c} 0 4px,transparent 4px 7px)` : c}"></i>${esc(l)}</span>`).join("")}</div>`;
+    const recent = played.slice(-5), ramp = ["--r2", "--r3", "--r4", "--r5", "--r6"].slice(-recent.length).map(css);
+    $("#pBody").innerHTML = `
+      <div class="card" style="margin-bottom:12px">
+        <div class="phead"><div>
+          <h2>${esc(p.name)} ${p.current ? "" : '<span class="former">left the guild</span>'} ${li === latestI ? badge(STATUS, p.status) : ""} ${badge(TREND, p.trend)}</h2>
+          <div class="hint" style="margin:0">Took part in ${played.length} of ${tbs.length} TB${tbs.length > 1 ? "s" : ""}${missed ? ` (missed ${missed})` : ""} · latest ${dfmt(T.date)}, ranked #${L.rank} of ${T.members}
+            · best ${fmt(best.tp)} on ${dfmt(tbs[best.i].date)}${ranks.length > 1 ? ` · average rank #${Math.round(ranks.reduce((a, b) => a + b, 0) / ranks.length)}` : ""}</div>
+          <p class="verdict">${verdict}</p>
+        </div></div>
+        ${li === latestI && p.focus.length ? `<div class="todo" style="margin:0"><b>To work on</b><ul>${p.focus.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : li === latestI ? `<div class="todo ok" style="margin:0"><b>Nothing flagged</b> in the latest TB.</div>` : `<div class="todo" style="margin:0">Not in the latest TB (${dfmt(tbs[latestI].date)}).</div>`}
+      </div>
+      <div class="kpis">${M.map(m => m.html).join("")}</div>
+      <div class="grid2">
+        <div class="card"><h2>Territory points by TB</h2>${legend([css("--series-1"), p.name], [css("--series-2"), "Guild median", 1], [css("--muted"), "Trend", 1])}<div class="chart"><canvas id="pTp"></canvas></div></div>
+        <div class="card"><h2>Wave completion by TB</h2>${legend([css("--series-1"), p.name], [css("--series-2"), "Guild median", 1], [css("--muted"), "Trend", 1])}<div class="chart"><canvas id="pWv"></canvas></div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>Points by phase</h2><p class="hint">Each bar is one TB, oldest to newest (last ${recent.length})</p>${legend(...recent.map((i, j) => [ramp[j], dshort(tbs[i].date)]), [css("--series-2"), "Guild median, latest"])}<div class="chart tall"><canvas id="pPhTp"></canvas></div></div>
+        <div class="card"><h2>Waves completed by phase</h2><p class="hint">% of the waves possible in each phase</p>${legend(...recent.map((i, j) => [ramp[j], dshort(tbs[i].date)]), [css("--series-2"), "Guild median, latest"])}<div class="chart tall"><canvas id="pPhWv"></canvas></div></div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <h2>Trend by phase</h2><p class="hint">Squares show deployment in each TB (oldest to newest). Trend needs 3 TBs. "vs median" is waves compared with the guild median in the latest TB. Click a phase for its charts.</p>
+        <div class="tablewrap"><table><thead><tr><th>Phase</th><th>Deployed</th><th class="r">Points</th><th></th><th>Points trend</th><th class="r">Waves</th><th></th><th>Waves trend</th><th class="r">vs median</th><th class="r">CMs</th></tr></thead><tbody id="pPhRows">${phRows}</tbody></table></div>
+      </div>
+      <div class="phrow" id="pPhSwitch" role="group" aria-label="Phase">${phases.map(x => `<button type="button" aria-pressed="${x.p === pPhase}" data-p="${x.p}">Phase ${x.p}</button>`).join("")}</div>
+      <div class="grid2">
+        <div class="card"><h2>Phase ${pPhase} points by TB</h2>${legend([css("--series-1"), p.name], [css("--series-2"), "Guild median", 1])}<div class="chart"><canvas id="pOneTp"></canvas></div></div>
+        <div class="card"><h2>Phase ${pPhase} waves by TB</h2>${legend([css("--series-1"), p.name], [css("--series-2"), "Guild median", 1], [css("--muted"), "Most possible", 1])}<div class="chart"><canvas id="pOneWv"></canvas></div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>Rank by TB</h2><p class="hint">Position in the guild by territory points (1 = top)</p><div class="chart"><canvas id="pRank"></canvas></div></div>
+        <div class="card"><h2>Combat and platoons by TB</h2>${legend([css("--series-1"), "CM attempts"], [css("--series-2"), "Platoon units"])}<div class="chart"><canvas id="pAct"></canvas></div></div>
+      </div>
+      <div class="card"><h2>TB history</h2>
+        <div class="tablewrap"><table><thead><tr><th>TB</th><th class="r">Rank</th><th class="r">Points</th><th class="r">vs prev</th><th class="r">Waves</th><th class="r">CMs</th><th class="r">Platoons</th><th class="r">Special</th><th>Deployed</th></tr></thead><tbody>${hist}</tbody></table></div>
+      </div>
+      ${many ? "" : `<p class="hint" style="margin-top:12px">Trend lines appear once more than one TB has been uploaded.</p>`}`;
+
+    $("#pPhRows").querySelectorAll("tr[data-ph]").forEach(tr => { const go = () => { pPhase = +tr.dataset.ph; renderPlayer(); $("#pPhSwitch").scrollIntoView({ block: "start", behavior: "auto" }); }; tr.onclick = go; tr.onkeydown = e => { if (e.key === "Enter") go(); }; });
+    $("#pPhSwitch").querySelectorAll("button").forEach(b => b.onclick = () => { pPhase = +b.dataset.p; renderPlayer(); });
+
+    const S1 = css("--series-1"), S2 = css("--series-2"), MU = css("--muted");
+    const lineDs = (label, data, color, extra = {}) => ({ label, data, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 3, spanGaps: true, tension: .2, ...extra });
+    const medDs = data => lineDs("Guild median", data, S2, { borderDash: [5, 4], pointRadius: 0 });
+    const trendDs = data => lineDs("Trend", data, MU, { borderDash: [2, 4], pointRadius: 0, borderWidth: 1.5, tension: 0 });
+    const opts = (cb, extra = {}) => ({ interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { filter: i => i.dataset.label !== "Trend" && i.raw != null, callbacks: { label: c => ` ${c.dataset.label}: ${cb ? cb(c.raw) : fmt(c.raw)}` } } }, scales: { y: { ...axisY(cb), ...extra }, x: axisX() } });
+    const add = (id, cfg) => playerCharts.push(new Chart($(id), cfg));
+    const tpV = R.map(r => r ? r.tp : null), wvV = R.map(r => r ? r.wave_pct : null);
+    const pct = v => Math.round(v) + "%";
+    add("#pTp", { type: "line", data: { labels, datasets: [lineDs(p.name, tpV, S1), medDs(tbs.map(t => t.median_tp)), trendDs(fitLine(tpV))] }, options: opts() });
+    add("#pWv", { type: "line", data: { labels, datasets: [lineDs(p.name, wvV, S1), medDs(tbs.map(t => t.median_wave_pct)), trendDs(fitLine(wvV))] }, options: opts(pct, { max: 100 }) });
+
+    const phL = phases.map(x => "P" + x.p);
+    const medLine = data => ({ type: "line", label: "Guild median, latest", data, borderColor: S2, backgroundColor: S2, showLine: false, pointStyle: "line", pointRadius: 12, pointBorderWidth: 3, order: -1 });
+    const barSets = get => recent.map((i, j) => ({ type: "bar", label: dshort(tbs[i].date), data: phases.map(x => x.xs[i] ? get(x.xs[i]) : null), backgroundColor: ramp[j], borderRadius: 3, maxBarThickness: 22 }));
+    add("#pPhTp", { type: "bar", data: { labels: phL, datasets: [...barSets(x => x.tp), medLine(phases.map(x => T.phase[x.p - 1]?.median_tp ?? null))] }, options: opts() });
+    add("#pPhWv", { type: "bar", data: { labels: phL, datasets: [...recent.map((i, j) => ({ type: "bar", label: dshort(tbs[i].date), data: phases.map(x => x.wv[i]), backgroundColor: ramp[j], borderRadius: 3, maxBarThickness: 22 })), medLine(phases.map(x => x.medW / x.mw * 100))] }, options: opts(pct, { max: 100 }) });
+
+    const one = phases[pPhase - 1] || phases[0];
+    add("#pOneTp", { type: "line", data: { labels, datasets: [lineDs(p.name, one.pts, S1), medDs(tbs.map(t => t.phase[one.p - 1]?.median_tp ?? null))] }, options: opts() });
+    add("#pOneWv", { type: "line", data: { labels, datasets: [lineDs(p.name, one.xs.map(x => x ? x.waves : null), S1), medDs(tbs.map(t => t.phase[one.p - 1]?.median_waves ?? null)), lineDs("Most possible", tbs.map(t => t.max_waves[one.p - 1] ?? null), MU, { borderDash: [2, 4], pointRadius: 0, borderWidth: 1.5 })] }, options: opts(v => Math.round(v)) });
+    add("#pRank", { type: "line", data: { labels, datasets: [lineDs("Rank", R.map(r => r ? r.rank : null), S1)] }, options: opts(v => "#" + Math.round(v), { reverse: true, beginAtZero: false, min: 1, ticks: { precision: 0, callback: v => "#" + v } }) });
+    add("#pAct", { type: "bar", data: { labels, datasets: [{ label: "CM attempts", data: R.map(r => r ? r.att : null), backgroundColor: S1, borderRadius: 3, maxBarThickness: 28 }, { label: "Platoon units", data: R.map(r => r ? r.platoons : null), backgroundColor: S2, borderRadius: 3, maxBarThickness: 28 }] }, options: opts() });
+  }
+  $("#pSel").onchange = e => { pId = e.target.value; renderPlayer(); };
+  $("#pCurrent").onchange = renderPlayer;
 
   window.addEventListener("themechange", render);
   render();

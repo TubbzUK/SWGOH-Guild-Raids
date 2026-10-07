@@ -125,6 +125,9 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
                               "spec": sum(x["spec"] for x in ph), "deployed": sum(x["dep"] for x in ph),
                               "partial": sum((not x["dep"]) and x["gp"] > 0 for x in ph),
                               "none": sum(x["gp"] <= 0 for x in ph), "max_waves": maxw[p - 1], "estimated": est[p - 1],
+                              "median_tp": statistics.median([x["tp"] for x in ph]) if ph else 0,
+                              "median_waves": statistics.median([x["waves"] for x in ph]) if ph else 0,
+                              "median_att": statistics.median([x["att"] for x in ph]) if ph else 0,
                               "wave_pct": round(sum(x["waves"] for x in ph) / (maxw[p - 1] * len(ph)) * 100, 1) if ph else 0})
         for r in rows:
             r["wave_pct"] = round(r["waves"] / total_max * 100, 1) if total_max else 0
@@ -148,6 +151,8 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
             "all_deployed": sum(r["full_deploys"] == n for r in rows),
             "no_combat": sum(r["waves"] == 0 for r in rows),
             "median_tp": med_tp, "median_platoons": med_pl, "median_spec": med_spec, "median_wave_pct": med_wave,
+            "median_att": statistics.median([r["att"] for r in rows]) if rows else 0,
+            "median_deploys": statistics.median([sum(x["dep"] for x in r["phases"]) for r in rows]) if rows else 0,
             "phase": phase_tot,
         })
 
@@ -209,7 +214,7 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
         })
     players.sort(key=lambda p: (-(p["last"] or 0), p["name"].lower()))
     cur = [p for p in players if p["current"] and p["status"]]
-    return {"tbs": tbs_out, "players": players, "trend_over_last": trend_n,
+    return {"tbs": tbs_out, "players": players, "trend_over_last": trend_n, "trend_threshold_pct": trend_thr,
             "status": {s: sum(p["status"] == s for p in cur) for s in ("active", "partial", "inactive")},
             "max_waves_from_config": bool(cfg_max)}
 
