@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Guild Raid Tracker</title>
+<title>Guild Statistics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -47,6 +47,14 @@ ol.list .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-sp
 input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); min-width: 0; }
 input[type=search] { flex: 1 1 220px; max-width: 320px; }
 label.check { display: flex; gap: 6px; align-items: center; color: var(--text-2); font-size: 13px; }
+/* scrollbar above the readiness matrix, kept in step with the table's own one; sticks to the top of the screen */
+.topscroll { overflow-x: auto; overflow-y: hidden; height: 16px; margin-bottom: 4px; position: sticky; top: 0; z-index: 3; border-radius: 8px; background: var(--surface); }
+.topscroll > div { height: 1px; }
+.topscroll { scrollbar-color: var(--accent) var(--surface-2); scrollbar-width: auto; }
+.topscroll::-webkit-scrollbar { height: 12px; }
+.topscroll::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 8px; }
+.topscroll::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; border: 2px solid var(--surface-2); }
+.topscroll[hidden] { display: none !important; }
 .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--glow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 th, td { padding: 9px 12px; text-align: left; white-space: nowrap; }
@@ -108,9 +116,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 <body>
 <div class="wrap">
   <div class="topbar">
-    <a class="wordmark" href="./"><span data-emblem></span>Raid Tracker</a>
+    <a class="wordmark" href="./"><span data-emblem></span>Guild Statistics</a>
     <div class="top-actions">
       <a class="top-link" id="tbLink" href="tb.html" hidden>◈ Territory battles</a>
+      <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
       <a class="top-link" id="uploadLink" href="upload.html">⬆ Upload results</a>
       <span data-theme-toggle></span>
@@ -120,7 +129,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <div class="art" id="bannerArt"></div>
     <div>
       <div class="eyebrow" id="raidEyebrow"></div>
-      <h1 id="guild">Raid Tracker</h1>
+      <h1 id="guild">Guild Statistics</h1>
       <div class="sub" id="updated"></div>
     </div>
     <div class="banner-switch">
@@ -210,7 +219,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       <button type="button" class="scheme-btn" id="schemeBtn" title="Change the relic colours"></button>
     </div>
     <div class="legend" id="rLegend"></div>
-    <div class="tablewrap"><table class="heat" id="rTable"></table></div>
+    <div class="topscroll" id="rTopScroll" aria-hidden="true"><div></div></div>
+    <div class="tablewrap" id="rWrap"><table class="heat" id="rTable"></table></div>
     </div>
   </section>
 
@@ -258,7 +268,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   const raidLabels = raids.map(r => multiYear ? new Date(r.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" }) : dfmt(r.date));
   const current = players.filter(p => p.current);
 
-  document.title = data.guild_name + " · Raid Tracker";
+  document.title = data.guild_name + " · Guild Statistics";
   $("#guild").textContent = data.guild_name;
   $("#raidEyebrow").textContent = `${data.raid_name} raid`;
   RaidTheme.banner($("#bannerArt"), (guildIndexRaid(data) || { slug: data.raid_slug }));
@@ -434,7 +444,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     drawScheme();
     const ST = { ready: ["b-good", "✓ Ready"], close: ["b-warn", "● Close"], building: ["b-bad", "○ Building"] };
     let rSort = { key: "score", dir: -1 };
-    function renderReady() {
+    // Top scrollbar for the readiness matrix: same width as the table, scrolls with it both ways
+  const topS = document.getElementById("rTopScroll"), wrapS = document.getElementById("rWrap");
+  topS.addEventListener("scroll", () => { if (wrapS.scrollLeft !== topS.scrollLeft) wrapS.scrollLeft = topS.scrollLeft; });
+  wrapS.addEventListener("scroll", () => { if (topS.scrollLeft !== wrapS.scrollLeft) topS.scrollLeft = wrapS.scrollLeft; });
+  function syncTopScroll() {
+    const t = document.getElementById("rTable");
+    topS.firstElementChild.style.width = t.scrollWidth + "px";
+    topS.hidden = t.scrollWidth <= wrapS.clientWidth + 1;
+    topS.scrollLeft = wrapS.scrollLeft;
+  }
+  if (window.ResizeObserver) new ResizeObserver(syncTopScroll).observe(wrapS);
+  function renderReady() {
       const q = $("#rSearch").value.toLowerCase();
       const rows = current.filter(p => p.readiness && p.name.toLowerCase().includes(q))
         .sort((a, b) => rSort.key === "name" ? a.name.localeCompare(b.name) * rSort.dir : ((a.readiness.score - b.readiness.score) * rSort.dir || a.name.localeCompare(b.name)));
@@ -446,6 +467,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       }).join("");
       const missing = current.filter(p => !p.readiness).map(p => esc(p.name));
       $("#rTable").innerHTML = `<thead>${head1}${head2}</thead><tbody>${body}${missing.length ? `<tr><td colspan="${chars.length + 3}" class="sub" style="white-space:normal">Not in the roster export yet: ${missing.join(", ")}</td></tr>` : ""}</tbody>`;
+      syncTopScroll();
       $("#rTable").querySelectorAll("th[data-sort]").forEach(th => th.onclick = () => { const k = th.dataset.sort; rSort = { key: k, dir: rSort.key === k ? -rSort.dir : (k === "name" ? 1 : -1) }; renderReady(); });
     }
     $("#rSearch").oninput = renderReady;
@@ -462,7 +484,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   try { index = preview ? preview.index : await fetch("guilds.json", { cache: "no-store" }).then(r => r.json()); } catch (e) { index = []; }
   const load = (g, r) => preview ? Promise.resolve(preview.data[g + "/" + r]) : fetch(`data/${g}/${r}.json`, { cache: "no-store" }).then(x => x.json());
   if (!index.length) {
-    $("#guild").textContent = "Raid Tracker";
+    $("#guild").textContent = "Guild Statistics";
     $("#updated").textContent = "No guild has any files yet. Upload a WookieeBot export into a folder in guilds/.";
     return;
   }
@@ -487,6 +509,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     $("#platoonLink").hidden = !(guild.platoons && (guild.platoons.roster || guild.platoons.saved));
     $("#tbLink").href = `tb.html?guild=${encodeURIComponent(guild.slug)}`;
     $("#tbLink").hidden = !(guild.tb && guild.tb.count);
+    $("#effLink").href = "effectiveness.html?guild=" + encodeURIComponent(guild.slug);
     const data = await load(guild.slug, raid);
     openPlayerId = null;
     render(data);

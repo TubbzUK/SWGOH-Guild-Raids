@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guild Effectiveness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js" defer></script>
+<script src="tbscore.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: banner with guild and TB pickers, then tabs - summary tiles and charts, the member table with a
+   per-member detail panel, and a per-phase view. Colours and fonts come from theme.css. */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
+nav.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); padding: 4px; border-radius: 12px; margin: 0 0 18px; width: fit-content; max-width: 100%; overflow-x: auto; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+nav.tabs button { border: 0; background: transparent; color: var(--text-2); font: 700 11.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.card { padding: 16px 18px; min-width: 0; }
+.kpi .label { color: var(--text-2); font: 700 10.5px var(--font-display); text-transform: uppercase; letter-spacing: .16em; }
+.kpi .value { font: 700 26px var(--font-display); margin-top: 6px; letter-spacing: .02em; }
+.kpi .value .sub { font: 500 13px var(--font-num); color: var(--text-2); }
+.kpi .note { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+.up { color: var(--good-ink); } .down { color: var(--bad-ink); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid2 > * { min-width: 0; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+h2 { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 4px; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.chart { position: relative; height: 240px; }
+ol.list { margin: 0; padding: 0; list-style: none; }
+ol.list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+ol.list li:last-child { border-bottom: 0; }
+ol.list .who { min-width: 0; }
+ol.list .who small { display: block; color: var(--text-2); font-size: 12px; }
+ol.list .rk { color: var(--muted); width: 22px; display: inline-block; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); min-width: 0; }
+input[type=search] { flex: 1 1 220px; max-width: 320px; }
+label.check { display: flex; gap: 6px; align-items: center; color: var(--text-2); font-size: 13px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--glow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 9px; text-align: left; white-space: nowrap; }
+th { font: 700 10.5px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); background: var(--surface-2); user-select: none; }
+th[data-sort] { cursor: pointer; }
+th[data-sort]::after { content: " \2195"; color: var(--muted); }
+th.asc::after { content: " \2191"; color: var(--text); } th.desc::after { content: " \2193"; color: var(--text); }
+th.r, td.r { text-align: right; }
+tbody tr { border-top: 1px solid var(--border); }
+tbody tr.click { cursor: pointer; } tbody tr.click:hover { background: var(--surface-2); }
+tbody tr.sel { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+td.name { font-weight: 600; }
+td.focus { white-space: normal; min-width: 140px; max-width: 210px; }
+.tag { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border-radius: 999px; font-size: 11.5px; white-space: nowrap; color: var(--text-2); border: 1px solid var(--border); background: var(--surface-2, transparent); }
+.former { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font: 600 12px var(--font-ui); }
+.b-good { background: var(--good-bg); color: var(--good-ink); }
+.b-warn { background: var(--warn-bg); color: var(--warn-ink); }
+.b-bad { background: var(--bad-bg); color: var(--bad-ink); }
+.b-none { background: var(--none-bg); color: var(--text-2); }
+.spark { vertical-align: middle; margin-left: 8px; }
+.bar { display: inline-block; width: 56px; height: 6px; background: var(--surface-2); border-radius: 3px; vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 3px; background: var(--series-1); }
+.dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+.dots i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.d-gap { background: transparent; box-shadow: inset 0 0 0 1px var(--border); }
+.d-full { background: var(--good); } .d-part { background: var(--warn); } .d-none { background: var(--bad); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.phrow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.phrow button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font: 600 13px var(--font-ui); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.phrow button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.detail { margin-top: 12px; }
+.detail .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stats div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+.stats b { display: block; font-size: 17px; }
+.stats span { font-size: 12px; color: var(--text-2); }
+.todo { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); }
+.todo.ok { background: var(--good-bg); color: var(--good-ink); }
+.todo ul { margin: 6px 0 0; padding-left: 18px; }
+.warnings { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+.warnings summary { cursor: pointer; font-weight: 600; }
+.empty { color: var(--text-2); padding: 24px; text-align: center; }
+.picker { display: flex; gap: 6px; align-items: center; flex: 1 1 260px; max-width: 420px; }
+.picker select { flex: 1; min-width: 0; font-weight: 600; }
+.stepbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; width: 36px; height: 36px; font-size: 18px; cursor: pointer; flex: none; }
+.stepbtn:hover { border-color: var(--accent); }
+.phead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.phead h2 { font-size: 22px; margin: 0 0 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.verdict { font-size: 14px; color: var(--text); margin: 6px 0 0; max-width: 70ch; }
+.mkpi .value { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mkpi .note { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.mkpi .badge { font-size: 11px; padding: 1px 7px; }
+.chart.tall { height: 280px; }
+td.sub2 { color: var(--text-2); font-size: 12.5px; }
+.list li.click { cursor: pointer; } .list li.click:hover .who { color: var(--accent); }
+.linkbtn { background: none; border: 1px solid var(--border); color: var(--accent); border-radius: 8px; padding: 6px 12px; font: 600 13px var(--font-ui); cursor: pointer; }
+.linkbtn:hover { border-color: var(--accent); }
+tr.cur-tb td { background: var(--surface-2); }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+@media (max-width: 600px) { nav.tabs { max-width: 100%; overflow-x: auto; } nav.tabs button { padding: 9px 8px; letter-spacing: .04em; font-size: 11px; } .kpi .value { font-size: 20px; } }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Ranking page extras */
+:root { --c-dep: #1f9d55; --c-cm: #1d5fd1; --c-spec: #c2410c; --c-plat: #8b5cf6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c-dep: #4ade80; --c-cm: #4cc9f0; --c-spec: #ff9f43; --c-plat: #c4a1ff; } }
+:root[data-theme="dark"] { --c-dep: #4ade80; --c-cm: #4cc9f0; --c-spec: #ff9f43; --c-plat: #c4a1ff; }
+.settings-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; margin-bottom: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; color: var(--text-2); }
+.settings-line b { color: var(--text); }
+.settings-line .grow { flex: 1 1 auto; }
+.chip { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font: 600 12px var(--font-ui); border: 1px solid var(--border); }
+.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip.off { color: var(--muted); text-decoration: line-through; }
+.preview { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; }
+.preview b { color: inherit; }
+.btn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 7px 14px; font: 600 13px var(--font-ui); cursor: pointer; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { color: var(--accent-ink); filter: brightness(1.08); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.pct { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.pbar { width: 64px; height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; display: inline-flex; }
+.pbar i { display: block; height: 100%; }
+td.heat { text-align: center; font: 600 12.5px var(--font-num); border-left: 1px solid var(--border); min-width: 48px; }
+td.dim, th.dim { color: var(--muted); }
+th.grp { text-align: center; border-left: 1px solid var(--border); }
+.chart.rank { height: auto; }
+.legend .sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface-solid); color: var(--text); padding: 0; width: min(520px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+dialog::backdrop { background: rgba(3, 5, 11, .6); }
+dialog form, dialog .inner { padding: 18px 20px; }
+dialog h2 { margin-bottom: 6px; }
+dialog p { font-size: 13.5px; color: var(--text-2); margin: 0 0 12px; }
+dialog input[type=password], dialog input[type=number] { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: 14px var(--font-ui); width: 100%; }
+dialog .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 14px; }
+dialog .row .grow { flex: 1; }
+.phase-toggles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.phase-toggles label, .weights label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 14px; }
+.phase-toggles label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.weights { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+.weights label { cursor: default; justify-content: space-between; }
+.weights input { width: 72px !important; text-align: right; }
+.msg { border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
+.msg.err { background: var(--bad-bg); color: var(--bad-ink); } .msg.ok { background: var(--good-bg); color: var(--good-ink); } .msg.info { background: var(--surface-2); color: var(--text-2); }
+.mhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.mhead h2 { font-size: 18px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.picker { display: flex; gap: 6px; align-items: center; flex: 0 1 340px; min-width: 0; }
+.picker select { flex: 1; min-width: 0; font-weight: 600; }
+.stepbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; width: 34px; height: 34px; font-size: 18px; cursor: pointer; flex: none; }
+.stepbtn:hover { border-color: var(--accent); }
+tr.click { cursor: pointer; } tr.click:hover { background: var(--surface-2); }
+tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.how { font-size: 13px; color: var(--text-2); }
+.how summary { cursor: pointer; font-weight: 600; color: var(--text); }
+.how ul { margin: 8px 0 0; padding-left: 18px; }
+.how li { margin-bottom: 4px; }
+
+.quad { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin: 0 0 12px; }
+.quad div { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; color: var(--text-2); }
+.quad b { display: block; font: 700 18px var(--font-display); color: var(--text); }
+.chart.scatter { height: 420px; }
+.split { display: flex; gap: 6px; align-items: center; }
+.split input[type=range] { flex: 1; }
+.mlinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.mlinks a { font-size: 13px; color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="wordmark" href="./"><span data-emblem></span>Guild Statistics</a>
+    <div class="top-actions">
+      <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
+      <a class="top-link" id="tbLink" href="tb.html">◈ Territory battles</a>
+      <a class="top-link" id="rankLink" href="ranking.html">★ Contribution</a>
+      <span data-theme-toggle></span>
+    </div>
+  </div>
+  <header class="banner">
+    <div class="art" id="bannerArt"></div>
+    <div>
+      <div class="eyebrow">Guild effectiveness</div>
+      <h1 id="guild">Effectiveness</h1>
+      <div class="sub" id="updated"></div>
+    </div>
+    <div class="banner-switch">
+      <div class="pills" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+    </div>
+  </header>
+
+  <div class="settings-line" id="settingsLine"></div>
+  <div id="warnings"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h2>Raids vs territory battles</h2>
+    <p class="hint">Each dot is a member. The dashed lines are the guild medians, so the four corners show who is strong in both, stronger in one, or below the median in both. Click a dot for that member.</p>
+    <div class="quad" id="quad"></div>
+    <div class="chart scatter"><canvas id="scatter" aria-label="Raid score against TB score for each member"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h2>Effectiveness ranking</h2>
+    <p class="hint" id="rankHint"></p>
+    <div class="legend" id="rankLegend"></div>
+    <div class="chart rank" id="rankBox"><canvas id="rankChart" aria-label="Effectiveness ranking"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px" id="memberCard" hidden>
+    <div class="mhead">
+      <div><h2 id="mName">Member</h2><div class="hint" id="mInfo" style="margin:0"></div></div>
+      <div class="picker"><button type="button" class="stepbtn" id="mPrev" aria-label="Previous member">‹</button><select id="mSel" aria-label="Member"></select><button type="button" class="stepbtn" id="mNext" aria-label="Next member">›</button></div>
+    </div>
+    <div class="kpis" id="mKpis" style="margin-top:12px"></div>
+    <div class="grid2" style="margin:0">
+      <div><h2>Raid score by raid</h2><p class="hint" style="margin:0 0 6px">Score as % of the guild's best score in each raid (red = didn't score)</p><div class="chart"><canvas id="mRaid" aria-label="Raid score by raid"></canvas></div></div>
+      <div><h2>TB contribution by TB</h2><p class="hint" style="margin:0 0 6px">Overall contribution score, using the officers' TB settings</p><div class="chart"><canvas id="mTb" aria-label="TB contribution by TB"></canvas></div></div>
+    </div>
+    <div class="mlinks" id="mLinks"></div>
+  </div>
+
+  <div class="toolbar" style="margin-top:4px">
+    <input type="search" id="search" placeholder="Search members&hellip;" aria-label="Search members">
+    <label class="check"><input type="checkbox" id="curOnly" checked> Current members only</label>
+  </div>
+  <div class="tablewrap"><table id="table"></table></div>
+
+  <details class="card how" style="margin-top:12px">
+    <summary>How effectiveness is worked out</summary>
+    <ul id="howList"></ul>
+  </details>
+  <footer id="footer"></footer>
+</div>
+
+<dialog id="gate">
+  <form id="gateForm" method="dialog">
+    <h2>Officer settings</h2>
+    <p id="gateNote">Only officers can change how effectiveness is weighted. Enter the officer password (the same one as the upload page).</p>
+    <label class="vh" for="pw" id="pwLabel">Officer password</label>
+    <input type="password" id="pw" autocomplete="current-password" spellcheck="false">
+    <label class="check" style="margin-top:10px"><input type="checkbox" id="pwRemember" checked> Remember on this device</label>
+    <div id="gateMsg"></div>
+    <div class="row"><button type="button" class="btn" id="gateCancel">Cancel</button><button type="submit" class="btn primary" id="gateGo">Unlock</button></div>
+  </form>
+</dialog>
+
+<dialog id="menu">
+  <div class="inner">
+    <h2>Officer settings</h2>
+    <p>How much raids and territory battles each count, and how many recent ones to look at. <b>Preview</b> changes the page for you only; <b>Save for everyone</b> makes it what all members see (about two minutes later). Which TB phases count is set on the Contribution page.</p>
+    <div class="weights">
+      <label>Raids weight (%) <input type="number" id="wRaid" min="0" max="100" step="5"></label>
+      <label>TBs weight (%) <input type="number" id="wTb" min="0" max="100" step="5"></label>
+      <label>Recent raids counted <input type="number" id="nRaid" min="1" max="30" step="1"></label>
+      <label>Recent TBs counted <input type="number" id="nTb" min="1" max="20" step="1"></label>
+    </div>
+    <div class="hint" id="wSum" style="margin:4px 0 0"></div>
+    <div id="menuMsg"></div>
+    <div class="row">
+      <button type="button" class="btn" id="lock">Lock</button>
+      <span class="grow"></span>
+      <button type="button" class="btn" id="resetBtn">Use saved</button>
+      <button type="button" class="btn" id="previewBtn">Preview</button>
+      <button type="button" class="btn primary" id="saveBtn">Save for everyone</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = s => String(s ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const dfmt = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const dshort = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" });
+  const getJSON = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+  const { median, quant } = TBScore;
+  const P = v => v == null ? "–" : Math.round(v) + "%";
+  const mean = a => { const v = a.filter(x => x != null); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
+  const slopeOf = ys => {   // points per step, line of best fit
+    const pts = ys.map((y, i) => [i, y]).filter(([, y]) => y != null);
+    if (pts.length < 2) return null;
+    const n = pts.length, xm = pts.reduce((a, p) => a + p[0], 0) / n, ym = pts.reduce((a, p) => a + p[1], 0) / n;
+    const den = pts.reduce((a, p) => a + (p[0] - xm) ** 2, 0) || 1;
+    return pts.reduce((a, p) => a + (p[0] - xm) * (p[1] - ym), 0) / den;
+  };
+
+  // ---------- data ----------
+  const [index, cfg, keyBlob] = await Promise.all([getJSON("guilds.json"), getJSON("upload-config.json"), getJSON("upload-key.json")]);
+  const ready = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tb" }) : setTimeout(ready, 30);
+  ready();
+  const guilds = (index || []).filter(g => (g.tb && g.tb.count) || (g.raids || []).some(r => r.raids));
+  let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  if (!guilds.length) { $("#updated").textContent = "No raid or territory battle results uploaded yet."; return; }
+  const guild = guilds.find(g => g.slug === params.guild) || guilds[0];
+  const enc = encodeURIComponent, G = enc(guild.slug);
+  const raidDefs = (guild.raids || []).filter(r => r.raids);
+  const [tbData, tbSettings, saved0, ...raidData] = await Promise.all([
+    guild.tb && guild.tb.count ? getJSON(`data/${G}/tb.json`) : null, getJSON(`data/${G}/tb-settings.json`), getJSON(`data/${G}/stats-settings.json`),
+    ...raidDefs.map(r => getJSON(`data/${G}/${enc(r.slug)}.json`))]);
+  document.title = guild.name + " · Guild effectiveness";
+  $("#guild").textContent = guild.name;
+  $("#raidLink").href = "./?guild=" + G; $("#tbLink").href = "tb.html?guild=" + G; $("#rankLink").href = "ranking.html?guild=" + G;
+  $("#tbLink").hidden = $("#rankLink").hidden = !tbData;
+  const gp = $("#guildSwitch"); gp.hidden = guilds.length < 2;
+  gp.innerHTML = guilds.map(g => `<button type="button" aria-pressed="${g.slug === guild.slug}" data-id="${esc(g.slug)}">${esc(g.name)}</button>`).join("");
+  gp.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.id !== guild.slug) location.search = "?guild=" + enc(b.dataset.id); });
+  const notes = [...(tbData?.warnings || []), ...raidData.flatMap(d => d?.warnings || [])].filter((w, i, a) => a.indexOf(w) === i);
+  if (notes.length) $("#warnings").innerHTML = `<details class="warnings"><summary>Data notes (${notes.length})</summary><ul>${notes.map(w => `<li>${esc(w)}</li>`).join("")}</ul></details>`;
+
+  const tbs = tbData?.tbs || [];
+  const nPh = tbs.length ? Math.max(...tbs.map(t => t.phases)) : 6;
+  const TBS = TBScore.clean(tbSettings, nPh);
+  const tbCache = tbs.map((_, i) => TBScore.scoreTB(tbData, TBS, i));
+
+  // every raid of every type with results, oldest first
+  const raids = raidData.flatMap((d, k) => d ? d.raids.map((r, i) => ({ ...r, raid: raidDefs[k].name, slug: raidDefs[k].slug, i, d })) : [])
+    .sort((a, b) => a.date.localeCompare(b.date) || a.raid.localeCompare(b.raid));
+  raids.forEach(r => { r.ref = Math.max(1, ...r.d.players.map(p => p.scores[r.i] || 0)); });   // the guild's best score in that raid = 100%
+
+  // ---------- members (matched across raid and TB files by name) ----------
+  const people = new Map();
+  const person = (name, current) => {
+    const k = norm(name);
+    if (!people.has(k)) people.set(k, { id: k, name, current: false, raid: {}, tb: {} });
+    const p = people.get(k); if (current) { p.current = true; p.name = name; }
+    return p;
+  };
+  raidData.forEach((d, k) => d && d.players.forEach(pl => { const p = person(pl.name, pl.current); p.raid[raidDefs[k].slug] = pl; }));
+  (tbData?.players || []).forEach(pl => { const p = person(pl.name, pl.current); p.tbId = pl.id; });
+
+  const DEF = { weights: { raids: 50, tbs: 50 }, raids_last: 5, tbs_last: 3 };
+  const cleanS = s => ({
+    weights: { raids: Math.max(0, +(s?.weights?.raids ?? DEF.weights.raids) || 0), tbs: Math.max(0, +(s?.weights?.tbs ?? DEF.weights.tbs) || 0) },
+    raids_last: Math.max(1, Math.round(+(s?.raids_last ?? DEF.raids_last) || DEF.raids_last)),
+    tbs_last: Math.max(1, Math.round(+(s?.tbs_last ?? DEF.tbs_last) || DEF.tbs_last)),
+  });
+  const SAVED = cleanS(saved0);
+  let S = cleanS(SAVED), previewing = false;
+  let selId = params.player ? norm(params.player) : null, charts = [], mCharts = [], sortK = { k: "eff", d: -1 };
+
+  function compute() {
+    const recentRaids = raids.slice(-S.raids_last), recentTbs = tbs.map((t, i) => i).slice(-S.tbs_last);
+    const out = [];
+    people.forEach(p => {
+      // raids: % of the guild's top quarter in each raid; a raid they missed after first appearing counts 0
+      const rs = raids.map(r => { const pl = p.raid[r.slug]; const v = pl ? pl.scores[r.i] : null; return v == null ? null : Math.min(100, Math.max(0, v) / r.ref * 100); });
+      const first = rs.findIndex(v => v != null);
+      const rsFilled = rs.map((v, i) => first >= 0 && i >= first ? (v ?? 0) : null);
+      const rRecent = rsFilled.slice(-recentRaids.length);
+      const raidPct = mean(rRecent);
+      // TBs: contribution score; a TB they missed after first appearing counts 0
+      const ts = tbs.map((_, i) => p.tbId ? tbCache[i].out.get(p.tbId)?.overall ?? null : null);
+      const tfirst = ts.findIndex(v => v != null);
+      const tsFilled = ts.map((v, i) => tfirst >= 0 && i >= tfirst ? (v ?? 0) : null);
+      const tRecent = recentTbs.map(i => tsFilled[i]);
+      const tbPct = mean(tRecent);
+      if (raidPct == null && tbPct == null) return;
+      const w = S.weights, parts = [["raids", raidPct], ["tbs", tbPct]].filter(([, v]) => v != null);
+      const ws = parts.reduce((a, [k]) => a + w[k], 0);
+      const eff = ws ? parts.reduce((a, [k, v]) => a + w[k] * v, 0) / ws : mean(parts.map(x => x[1]));
+      const share = Object.fromEntries(parts.map(([k, v]) => [k, ws ? w[k] * v / ws : 0]));
+      out.push({ p, raidPct, tbPct, eff, share, partial: parts.length < 2, rs: rsFilled, ts: tsFilled,
+        raidsPlayed: rRecent.filter(v => v > 0).length, raidsCounted: rRecent.filter(v => v != null).length,
+        tbsPlayed: recentTbs.filter(i => ts[i] != null).length, tbsCounted: tRecent.filter(v => v != null).length,
+        raidTrend: slopeOf(rRecent), tbTrend: slopeOf(tRecent) });
+    });
+    return out;
+  }
+
+  function render() {
+    charts.forEach(c => c.destroy()); charts = [];
+    Chart.defaults.font.family = '"Exo 2", system-ui, sans-serif'; Chart.defaults.color = css("--text-2"); Chart.defaults.borderColor = css("--grid"); Chart.defaults.maintainAspectRatio = false;
+    Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--surface-solid"), titleColor: css("--text"), bodyColor: css("--text-2"), borderColor: css("--accent"), borderWidth: 1, padding: 10 });
+    const curOnly = $("#curOnly").checked, q = $("#search").value.trim().toLowerCase();
+    const all = compute(), listed = all.filter(x => !curOnly || x.p.current);
+    // with both kinds of results in the guild, only members who have both are ranked (new members show at the bottom of the table)
+    const needBoth = raids.length > 0 && tbs.length > 0;
+    listed.forEach(x => x.ranked = !needBoth || !x.partial);
+    const rows = listed.filter(x => x.ranked), unranked = listed.filter(x => !x.ranked);
+    const order = rows.slice().sort((a, b) => b.eff - a.eff), rank = new Map(order.map((x, i) => [x.p.id, i + 1]));
+    const lastRaid = raids[raids.length - 1], lastTb = tbs[tbs.length - 1];
+    $("#updated").textContent = `Last ${Math.min(S.raids_last, raids.length)} raid${raids.length === 1 ? "" : "s"}${lastRaid ? ` (to ${dfmt(lastRaid.date)})` : ""} and last ${Math.min(S.tbs_last, tbs.length)} TB${tbs.length === 1 ? "" : "s"}${lastTb ? ` (to ${dfmt(lastTb.date)})` : ""}`;
+    $("#footer").textContent = `Raids: ${raidDefs.map(r => r.name).join(", ") || "none yet"} · TBs: ${tbs.length}`;
+
+    // settings line
+    const ws = S.weights.raids + S.weights.tbs || 1;
+    const line = $("#settingsLine");
+    line.className = "settings-line" + (previewing ? " preview" : "");
+    line.innerHTML = `<span><b>${previewing ? "Preview (not saved):" : "Weighting:"}</b></span> <span class="chip on">Raids ${Math.round(S.weights.raids / ws * 100)}%</span> <span class="chip on">TBs ${Math.round(S.weights.tbs / ws * 100)}%</span>
+      <span class="grow">Last ${S.raids_last} raids · last ${S.tbs_last} TBs · TB phases: ${TBS.phases.map(n => "P" + n).join(", ")}</span>
+      ${previewing ? `<button type="button" class="btn" id="cancelPrev">Back to saved</button>` : ""}<button type="button" class="btn" id="openMenu">⚙ Officer settings</button>`;
+    $("#openMenu").onclick = openMenu;
+    if (previewing) $("#cancelPrev").onclick = () => { S = cleanS(SAVED); previewing = false; render(); };
+
+    // KPIs
+    const effs = rows.map(x => x.eff), med = median(effs);
+    const band = (lo, hi) => rows.filter(x => x.eff >= lo && x.eff < hi).length;
+    $("#kpis").innerHTML = [
+      ["Median effectiveness", P(med), `${rows.length} members`],
+      ["75% or more", `${band(75, 101)}<span class="sub"> / ${rows.length}</span>`, "Highly effective"],
+      ["50 – 74%", `${band(50, 75)}<span class="sub"> / ${rows.length}</span>`, "Solid, room to grow"],
+      ["Under 50%", `${band(0, 50)}<span class="sub"> / ${rows.length}</span>`, "Need support"],
+      ["Most effective", order[0] ? P(order[0].eff) : "–", order[0] ? esc(order[0].p.name) : ""],
+    ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+
+    // scatter: raids (x) vs TBs (y)
+    const both = rows.filter(x => x.raidPct != null && x.tbPct != null);
+    const mx = median(both.map(x => x.raidPct)), my = median(both.map(x => x.tbPct));
+    const qd = x => x.raidPct >= mx ? (x.tbPct >= my ? 0 : 1) : (x.tbPct >= my ? 2 : 3);
+    const QN = [["Strong in both", "--good"], ["Raids stronger", "--series-1"], ["TBs stronger", "--series-2"], ["Below median in both", "--bad"]];
+    const counts = [0, 0, 0, 0]; both.forEach(x => counts[qd(x)]++);
+    $("#quad").innerHTML = QN.map(([l, c], i) => `<div style="border-left:4px solid ${css(c)}"><b>${counts[i]}</b>${l}</div>`).join("");
+    const medLines = { id: "medLines", afterDraw(c) {
+      if (mx == null) return;
+      const { ctx, chartArea: a, scales: { x, y } } = c; ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = css("--muted"); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x.getPixelForValue(mx), a.top); ctx.lineTo(x.getPixelForValue(mx), a.bottom); ctx.moveTo(a.left, y.getPixelForValue(my)); ctx.lineTo(a.right, y.getPixelForValue(my)); ctx.stroke(); ctx.restore();
+    } };
+    const sc = new Chart($("#scatter"), {
+      type: "scatter",
+      data: { datasets: [{ data: both.map(x => ({ x: x.raidPct, y: x.tbPct })), pointBackgroundColor: both.map(x => css(QN[qd(x)][1])), pointBorderColor: both.map(x => x.p.id === selId ? css("--text") : "transparent"), pointBorderWidth: both.map(x => x.p.id === selId ? 2.5 : 0), pointRadius: both.map(x => x.p.id === selId ? 8 : 5.5), pointHoverRadius: 8, clip: 10 }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const x = both[c.dataIndex]; return [` ${x.p.name}`, ` Raids ${P(x.raidPct)} · TBs ${P(x.tbPct)}`, ` Effectiveness ${P(x.eff)}`]; } } } },
+        onClick: (e, els) => { if (els.length) { const id = both[els[0].index].p.id; setTimeout(() => select(id, true)); } },
+        onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+        scales: { x: { min: 0, max: 100, title: { display: true, text: "Raid score" }, grid: { color: css("--grid") }, ticks: { callback: v => v + "%" } },
+                  y: { min: 0, max: 100, title: { display: true, text: "TB contribution" }, grid: { color: css("--grid") }, ticks: { callback: v => v + "%" } } } },
+      plugins: [medLines],
+    });
+    charts.push(sc);
+
+    // ranking chart
+    const CL = [["raids", "Raids", "--series-1"], ["tbs", "Territory battles", "--series-2"]];
+    $("#rankLegend").innerHTML = CL.map(([, l, c]) => `<span><i class="sq" style="background:${css(c)}"></i>${l}</span>`).join("");
+    $("#rankHint").textContent = "Each bar is a member's effectiveness; the colours show how much raids and TBs added. Click a bar for that member.";
+    $("#rankBox").style.height = Math.max(160, order.length * 20 + 40) + "px";
+    charts.push(new Chart($("#rankChart"), {
+      type: "bar",
+      data: { labels: order.map((x, i) => `${i + 1}. ${x.p.name}`), datasets: CL.map(([k, l, c]) => ({ label: l, data: order.map(x => x.share[k] || 0), backgroundColor: css(c), barThickness: 13 })) },
+      options: { indexAxis: "y", interaction: { mode: "index", intersect: false },
+        onClick: (e, els) => { if (els.length) { const id = order[els[0].index].p.id; setTimeout(() => select(id, true)); } },
+        onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `${order[i[0].dataIndex].p.name} · ${P(order[i[0].dataIndex].eff)}`, label: c => { const x = order[c.dataIndex]; return ` ${c.dataset.label}: ${P(c.datasetIndex ? x.tbPct : x.raidPct)} (adds ${c.raw.toFixed(1)})`; } } } },
+        scales: { x: { stacked: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, font: { size: 11.5 } } } } },
+    }));
+
+    // table
+    const val = (x, k) => k === "name" ? x.p.name.toLowerCase() : k === "rank" ? -rank.get(x.p.id) : (x[k] ?? -999);
+    const sorter = (a, b) => { const A = val(a, sortK.k), B = val(b, sortK.k); return (A > B ? 1 : A < B ? -1 : 0) * sortK.d || a.p.name.localeCompare(b.p.name); };
+    const match = x => !q || x.p.name.toLowerCase().includes(q);
+    const shown = [...rows.filter(match).sort(sorter), ...unranked.filter(match).sort((a, b) => a.p.name.localeCompare(b.p.name))];
+    const th = (k, l, c = "") => `<th data-sort="${k}" class="${c} ${sortK.k === k ? (sortK.d > 0 ? "asc" : "desc") : ""}">${l}</th>`;
+    const tr = v => v == null ? `<span class="badge b-none">–</span>` : v >= 2 ? `<span class="badge b-good">▲ +${v.toFixed(1)}</span>` : v <= -2 ? `<span class="badge b-bad">▼ ${v.toFixed(1)}</span>` : `<span class="badge b-none">■ ${v >= 0 ? "+" : ""}${v.toFixed(1)}</span>`;
+    const pbar = (v, c) => `<span class="pct"><span class="pbar"><i style="width:${Math.max(0, Math.min(100, v || 0))}%;background:${c}"></i></span><span class="num">${P(v)}</span></span>`;
+    const qLabel = x => x.raidPct == null ? "TB results only (not ranked yet)" : x.tbPct == null ? "Raid results only (not ranked yet)" : QN[qd(x)][0];
+    $("#table").innerHTML = `<thead><tr>${th("rank", "#", "r")}${th("name", "Member")}${th("eff", "Effectiveness", "r")}${th("raidPct", "Raids", "r")}${th("raidTrend", "Raid trend")}${th("raidsPlayed", "Raids played", "r")}${th("tbPct", "TBs", "r")}${th("tbTrend", "TB trend")}${th("tbsPlayed", "TBs played", "r")}<th>Profile</th></tr></thead>
+      <tbody>${shown.map(x => `<tr class="click ${x.p.id === selId ? "sel" : ""}" data-id="${esc(x.p.id)}" tabindex="0"><td class="r num">${rank.get(x.p.id) ?? "–"}</td><td class="name">${esc(x.p.name)}${x.p.current ? "" : '<span class="former">left</span>'}</td>
+        <td class="r">${pbar(x.eff, css("--accent"))}</td><td class="r num">${P(x.raidPct)}</td><td>${tr(x.raidTrend)}</td><td class="r num">${x.raidPct == null ? "–" : `${x.raidsPlayed} / ${x.raidsCounted}`}</td>
+        <td class="r num">${P(x.tbPct)}</td><td>${tr(x.tbTrend)}</td><td class="r num">${x.tbPct == null ? "–" : `${x.tbsPlayed} / ${x.tbsCounted}`}</td><td class="sub2">${qLabel(x)}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">No members match</td></tr>`}</tbody>`;
+    $("#table").querySelectorAll("tr[data-id]").forEach(r => { r.onclick = () => select(r.dataset.id, true); r.onkeydown = e => { if (e.key === "Enter") select(r.dataset.id, true); }; });
+    $("#table").querySelectorAll("th[data-sort]").forEach(h => h.onclick = () => { const k = h.dataset.sort; sortK = { k, d: sortK.k === k ? -sortK.d : (k === "name" ? 1 : -1) }; render(); });
+
+    $("#howList").innerHTML = [
+      `<b>Raid score</b>: in each of the last ${S.raids_last} raids (${raidDefs.map(r => esc(r.name)).join(", ") || "none yet"}), the member's score as a % of the best score in the guild that raid. A raid they didn't score in counts as 0 once they'd joined.`,
+      `<b>TB contribution</b>: the overall contribution score from the Contribution page (deployment, combat missions, special missions and platoons, using the phases and weighting officers chose there), averaged over the last ${S.tbs_last} TBs. A TB they missed counts as 0 once they'd joined.`,
+      `<b>Effectiveness</b> = raids ${Math.round(S.weights.raids / ws * 100)}% + TBs ${Math.round(S.weights.tbs / ws * 100)}%. New members with only raid or only TB results so far are listed at the bottom of the table but not ranked until they have both.`,
+      `<b>Trends</b> are points gained or lost per raid or per TB (line of best fit over the recent ones counted). ±2 or more is shown as rising or falling.`,
+      `Members are matched between raid and TB files by name, so a member who changes their name appears twice until the older files age out.`,
+    ].map(x => `<li>${x}</li>`).join("");
+
+    renderMember(listed);
+  }
+
+  function select(id, scroll) {
+    selId = id; render();
+    if (scroll) $("#memberCard").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
+  function renderMember(rows) {
+    mCharts.forEach(c => c.destroy()); mCharts = [];
+    const sorted = rows.slice().sort((a, b) => a.p.name.localeCompare(b.p.name, "en", { sensitivity: "base" }));
+    const x = sorted.find(r => r.p.id === selId);
+    if (!x) { $("#memberCard").hidden = true; return; }
+    $("#memberCard").hidden = false;
+    $("#mSel").innerHTML = sorted.map(r => `<option value="${esc(r.p.id)}" ${r.p.id === selId ? "selected" : ""}>${esc(r.p.name)}${r.p.current ? "" : " (left)"}</option>`).join("");
+    const k = sorted.indexOf(x);
+    $("#mSel").onchange = e => select(e.target.value);
+    $("#mPrev").onclick = () => select(sorted[(k - 1 + sorted.length) % sorted.length].p.id);
+    $("#mNext").onclick = () => select(sorted[(k + 1) % sorted.length].p.id);
+    try { history.replaceState(null, "", `?guild=${G}&player=${enc(selId)}`); } catch (e) {}
+    const band = x.eff >= 75 ? ["b-good", "Highly effective"] : x.eff >= 50 ? ["b-none", "Solid"] : ["b-bad", "Needs support"];
+    $("#mName").innerHTML = `${esc(x.p.name)} ${x.p.current ? "" : '<span class="former">left</span>'} <span class="badge ${band[0]}">${P(x.eff)} · ${band[1]}</span>`;
+    const tr = v => v == null ? "not enough data for a trend" : v >= 2 ? `rising ${v.toFixed(1)} per` : v <= -2 ? `falling ${Math.abs(v).toFixed(1)} per` : "steady per";
+    $("#mInfo").textContent = `Raids ${P(x.raidPct)}${x.raidTrend != null ? ` (${tr(x.raidTrend)} raid)` : ""} · TBs ${P(x.tbPct)}${x.tbTrend != null ? ` (${tr(x.tbTrend)} TB)` : ""}`;
+    $("#mKpis").innerHTML = [
+      ["Effectiveness", P(x.eff), x.ranked ? `#${order(x)} of ${rows.filter(r => r.ranked).length} in the guild` : "Not ranked until they have raid and TB results"],
+      ["Raid score", P(x.raidPct), x.raidPct == null ? "No raid results" : `Scored in ${x.raidsPlayed} of the last ${x.raidsCounted} raids`],
+      ["TB contribution", P(x.tbPct), x.tbPct == null ? "No TB results" : `Took part in ${x.tbsPlayed} of the last ${x.tbsCounted} TBs`],
+    ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+    const rr = raids.map((r, i) => ({ r, v: x.rs[i] })).filter(o => o.v != null).slice(-12);
+    const opts = cb => ({ plugins: { legend: { display: false }, tooltip: { callbacks: { label: cb } } }, scales: { y: { beginAtZero: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } } });
+    if (rr.length) mCharts.push(new Chart($("#mRaid"), { type: "bar", data: { labels: rr.map(o => dshort(o.r.date)), datasets: [{ data: rr.map(o => o.v), backgroundColor: rr.map(o => o.v === 0 ? css("--bad") : css("--series-1")), borderRadius: 3, maxBarThickness: 26, minBarLength: 3 }] },
+      options: opts(c => { const o = rr[c.dataIndex]; const pl = x.p.raid[o.r.slug]; const s = pl ? pl.scores[o.r.i] : null; return [` ${o.r.raid}: ${P(o.v)}`, ` Score ${s ? s.toLocaleString("en-GB") : "none"}`]; }) }));
+    const tt = tbs.map((t, i) => ({ t, v: x.ts[i] })).filter(o => o.v != null);
+    if (tt.length) mCharts.push(new Chart($("#mTb"), { type: "bar", data: { labels: tt.map(o => dshort(o.t.date)), datasets: [{ data: tt.map(o => o.v), backgroundColor: tt.map(o => o.v === 0 ? css("--bad") : css("--series-2")), borderRadius: 3, maxBarThickness: 26, minBarLength: 3 }] },
+      options: opts(c => ` Contribution ${P(c.raw)}`) }));
+    const rp = Object.values(x.p.raid)[0];
+    $("#mLinks").innerHTML = [rp ? `<a href="./?guild=${G}&raid=${enc(Object.keys(x.p.raid)[0])}#players">Raid results →</a>` : "", x.p.tbId ? `<a href="tb.html?guild=${G}&player=${enc(x.p.tbId)}#player">TB player summary →</a>` : "", x.p.tbId ? `<a href="ranking.html?guild=${G}&player=${enc(x.p.tbId)}">TB contribution →</a>` : ""].filter(Boolean).join("");
+    function order(r) { const o = rows.filter(z => z.ranked).sort((a, b) => b.eff - a.eff); return o.indexOf(r) + 1; }
+  }
+  $("#search").oninput = render; $("#curOnly").onchange = render;
+  window.addEventListener("themechange", render);
+
+  // ---------- officer settings ----------
+  let TOKEN = null;
+  const te = new TextEncoder(), td = new TextDecoder(), unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  async function unlockBlob(blob, pw) {
+    try {
+      const base = await crypto.subtle.importKey("raw", te.encode(pw), "PBKDF2", false, ["deriveKey"]);
+      const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: unb64(blob.salt), iterations: blob.iterations, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      return td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(blob.iv) }, key, unb64(blob.data)));
+    } catch (e) { return null; }
+  }
+  const KB = keyBlob && keyBlob.data ? keyBlob : null;
+  const login = async secret => { if (KB) { const t = await unlockBlob(KB, secret); if (t) return { t, kind: "pw" }; } return /^(github_pat_|ghp_)/.test(secret) ? { t: secret, kind: "tok" } : null; };
+  const remembered = async () => { const pw = store.get("raidTrackerPassword"), tk = store.get("raidTrackerToken"); if (pw && KB) { const t = await unlockBlob(KB, pw); if (t) return t; } return tk || null; };
+  const showMsg = (sel, cls, text) => { $(sel).innerHTML = cls ? `<div class="msg ${cls}">${text}</div>` : ""; };
+  const dlg = el => el.showModal ? el.showModal() : el.setAttribute("open", ""), close = el => el.close ? el.close() : el.removeAttribute("open");
+  async function openMenu() {
+    if (!TOKEN) TOKEN = await remembered();
+    if (!TOKEN) {
+      $("#pwLabel").textContent = KB ? "Officer password" : "GitHub access token";
+      $("#gateNote").textContent = KB ? "Only officers can change how effectiveness is weighted. Enter the officer password (the same one as the upload page)." : "No officer password has been set up yet. Enter a GitHub access token, or set up the officer password on the upload page.";
+      $("#pw").value = ""; showMsg("#gateMsg"); dlg($("#gate")); $("#pw").focus(); return;
+    }
+    fill(S); showMsg("#menuMsg"); dlg($("#menu"));
+  }
+  $("#gateForm").onsubmit = async e => {
+    e.preventDefault(); const secret = $("#pw").value.trim(); if (!secret) return;
+    $("#gateGo").disabled = true; showMsg("#gateMsg", "info", "Checking…");
+    const r = await login(secret); $("#gateGo").disabled = false;
+    if (!r) { showMsg("#gateMsg", "err", KB ? "That password isn't right." : "That doesn't look like a GitHub token (they start github_pat_)."); return; }
+    TOKEN = r.t; if ($("#pwRemember").checked) store.set(r.kind === "pw" ? "raidTrackerPassword" : "raidTrackerToken", secret);
+    close($("#gate")); openMenu();
+  };
+  $("#gateCancel").onclick = () => close($("#gate"));
+  $("#lock").onclick = () => { TOKEN = null; store.del("raidTrackerPassword"); store.del("raidTrackerToken"); close($("#menu")); };
+  function fill(v) { $("#wRaid").value = v.weights.raids; $("#wTb").value = v.weights.tbs; $("#nRaid").value = v.raids_last; $("#nTb").value = v.tbs_last; check(); }
+  const values = () => cleanS({ weights: { raids: +$("#wRaid").value, tbs: +$("#wTb").value }, raids_last: +$("#nRaid").value, tbs_last: +$("#nTb").value });
+  function check() {
+    const a = Math.max(0, +$("#wRaid").value || 0), b = Math.max(0, +$("#wTb").value || 0);
+    $("#wSum").textContent = a + b ? `Raids ${Math.round(a / (a + b) * 100)}% · TBs ${Math.round(b / (a + b) * 100)}%` : "";
+    const bad = !(a + b) ? "At least one weighting must be above 0." : "";
+    $("#previewBtn").disabled = $("#saveBtn").disabled = !!bad; showMsg("#menuMsg", bad ? "err" : null, bad);
+  }
+  $("#menu").addEventListener("input", check);
+  $("#resetBtn").onclick = () => fill(SAVED);
+  $("#previewBtn").onclick = () => { S = values(); previewing = JSON.stringify(S) !== JSON.stringify(SAVED); close($("#menu")); render(); };
+  $("#saveBtn").onclick = async () => {
+    const v = values(), repo = cfg?.repository, branch = cfg?.branch || "main";
+    if (!repo) { showMsg("#menuMsg", "err", "The site settings haven't loaded, so it doesn't know which repository to save to."); return; }
+    $("#saveBtn").disabled = true; showMsg("#menuMsg", "info", "Saving…");
+    const gh = (path, opts = {}) => fetch("https://api.github.com" + path, { ...opts, headers: { Authorization: `Bearer ${TOKEN}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.body ? { "Content-Type": "application/json" } : {}) } });
+    try {
+      const path = `guilds/${guild.slug}/stats-settings.json`, url = `/repos/${repo}/contents/${path.split("/").map(enc).join("/")}`;
+      const cur = await gh(url + "?ref=" + enc(branch)); const sha = cur.ok ? (await cur.json()).sha : undefined;
+      const bytes = te.encode(JSON.stringify({ ...v, saved_at: new Date().toISOString() }, null, 1)); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+      const res = await gh(url, { method: "PUT", body: JSON.stringify({ message: `Save ${guild.name} effectiveness settings`, content: btoa(bin), branch, ...(sha ? { sha } : {}) }) });
+      if (!res.ok) { showMsg("#menuMsg", "err", res.status === 401 ? "GitHub didn't accept the login (the token behind the officer password may have expired)." : res.status === 403 || res.status === 404 ? "The GitHub token isn't allowed to save to this repository." : `GitHub said ${res.status}.`); $("#saveBtn").disabled = false; return; }
+      Object.assign(SAVED, v); S = cleanS(v); previewing = false;
+      showMsg("#menuMsg", "ok", "Saved. Everyone sees these settings once the site updates (about two minutes)."); $("#saveBtn").disabled = false; render();
+    } catch (e) { showMsg("#menuMsg", "err", `Couldn't reach GitHub (${esc(e.message)}).`); $("#saveBtn").disabled = false; }
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

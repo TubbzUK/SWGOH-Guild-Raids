@@ -138,7 +138,7 @@ def post_guild(slug, raid, hook):
     }
     if site:
         embed["url"] = site
-    body = json.dumps({"username": "Raid Tracker", "embeds": [embed]}).encode()
+    body = json.dumps({"username": "Guild Statistics", "embeds": [embed]}).encode()
     req = urllib.request.Request(hook, data=body, method="POST",
                                  headers={"Content-Type": "application/json",
                                           "User-Agent": "swgoh-guild-raids (github actions)"})

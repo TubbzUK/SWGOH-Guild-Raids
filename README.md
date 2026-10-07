@@ -1,4 +1,4 @@
-# SWGOH Guild Raid Tracker
+# SWGOH Guild Statistics
 
 Drop a WookieeBot raid export into a folder → the website updates itself → a summary posts to that
 guild's Discord. No copy-and-paste and no formulas. It does what the raid management workbook did
@@ -200,6 +200,25 @@ Officers press **⚙ Officer settings** (officer password) to choose which phase
 Phase 1) and how much each part is worth. **Preview** changes only their own view; **Save for
 everyone** saves to `guilds/<guild>/tb-settings.json` and every member sees it about two minutes
 later. Anyone with the link can view the ranking; only officers can change the settings.
+
+## Guild effectiveness (raids + territory battles)
+
+**◎ Effectiveness** (`…/effectiveness.html?guild=oanr`) combines raid and TB performance into one
+score per member.
+
+- **Raid score** – in each of the last 5 raids (every raid type with results), the member's score as a
+  % of the guild's best score in that raid, averaged. A raid they didn't score in counts as 0 once
+  they'd joined.
+- **TB contribution** – the overall score from the Contribution page (same phases and weighting the
+  officers chose there), averaged over the last 3 TBs. A missed TB counts as 0 once they'd joined.
+- **Effectiveness** = raids 50% + TBs 50% by default.
+
+The page shows a raids-vs-TBs chart (strong in both, stronger in one, or below the guild median in
+both), a ranking, and a table with each member's raid and TB scores, trends and attendance. Click
+a member for their raid scores and TB contribution over time. New members with only raid or only TB
+results are listed but not ranked until they have both. Officers can change the weighting and how
+many recent raids and TBs count under **⚙ Officer settings** (saved to
+`guilds/<guild>/stats-settings.json`).
 
 ## Look and feel
 
