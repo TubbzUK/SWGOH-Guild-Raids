@@ -110,6 +110,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   <div class="topbar">
     <a class="wordmark" href="./"><span data-emblem></span>Raid Tracker</a>
     <div class="top-actions">
+      <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
       <a class="top-link" id="uploadLink" href="upload.html">⬆ Upload results</a>
       <span data-theme-toggle></span>
     </div>
@@ -481,6 +482,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     pills($("#raidSwitch"), guild.raids, raid, r => esc(r.name) + (r.raids ? "" : ' <span class="soon">· no results yet</span>'), s => { raid = s; show(); });
     try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}` + location.hash); } catch (e) {}
     $("#uploadLink").href = `upload.html?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}`;
+    $("#platoonLink").href = `platoons.html?guild=${encodeURIComponent(guild.slug)}`;
+    $("#platoonLink").hidden = !(guild.platoons && (guild.platoons.roster || guild.platoons.saved));
     const data = await load(guild.slug, raid);
     openPlayerId = null;
     render(data);

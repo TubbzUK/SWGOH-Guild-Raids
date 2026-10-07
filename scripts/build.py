@@ -35,6 +35,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 RAID_DEFS_DIR = ROOT / "raids"        # one .yml per raid type, shared by every guild
+PLATOON_PLAN = ROOT / "guilds" / "_platoons" / "rote-plan.csv"   # RotE operations plan, shared by every guild
 GUILDS_DIR = ROOT / "guilds"          # guilds/<guild>/{config.yml, roster/, <raid>/ ...}
 SITE_DIR = ROOT / "site"
 # Set per guild by use_guild()
@@ -56,6 +57,7 @@ YMD_RE = re.compile(r"(\d{4})[-_./ ](\d{1,2})[-_./ ](\d{1,2})")
 DMY_RE = re.compile(r"(\d{1,2})[-_./ ](\d{1,2})[-_./ ](\d{4})")
 
 WARNINGS: list[str] = []
+PLAN_KEYS: set[str] | None = None
 
 
 def warn(msg: str) -> None:
@@ -516,6 +518,99 @@ def trend_of(values: list[float], threshold_pct: float):
     return round(pct, 1), label
 
 
+# ---------------------------------------------------------------- platoons
+def plan_unit_keys() -> set[str] | None:
+    """Unit keys (BaseId and name) used by the RotE plan, to keep the platoon roster small."""
+    if not PLATOON_PLAN.exists():
+        return None
+    df = with_header(read_raw(PLATOON_PLAN), ["phase"])
+    if df is None:
+        return None
+    keys = set()
+    for col in df.columns:
+        if norm(col) in ("baseid", "charactername", "unitname", "character", "unit", "toon", "ship", "name"):
+            keys |= {norm(v) for v in df[col] if cell(v)}
+    return keys or None
+
+
+def platoon_roster(path: Path, keep: set[str] | None) -> dict | None:
+    """The planner's roster format: players, GP and each player's units with relic/stars/gear.
+    Mirrors the planner's own reading of a WookieeBot roster export."""
+    raw = read_raw(path)
+    df = with_header(raw, NAME_KEYS + ALLY_KEYS)
+    if df is None:
+        return None
+    cols = {norm(c): c for c in df.columns}
+    name_c, ally_c = cols.get("name"), cols.get("allycode")
+    base_c = cols.get("baseid")
+    relic_c = find_col(df, ["reliclevel", "relic"])
+    stars_c = find_col(df, ["stars", "rarity"])
+    gear_c = find_col(df, ["gearlevel", "gear"])
+    type_c = find_col(df, ["combattype"])
+    power_c = cols.get("power")
+    if not (name_c and base_c):
+        return None
+
+    def ival(v):
+        n = to_number(v)
+        return int(n) if n is not None else None
+
+    ids, taken, players, gp = {}, {}, {}, {}
+    max_rel, g13min, low_gear_one = -1, 10 ** 9, False
+    better = lambda a, b: ((a.get("relic") or -1), (a.get("gear") or -1), (a.get("stars") or -1)) > \
+                          ((b.get("relic") or -1), (b.get("gear") or -1), (b.get("stars") or -1))
+    for _, r in df.iterrows():
+        nm = cell(r[name_c])
+        if not nm:
+            continue
+        code = clean_ally(r[ally_c]) if ally_c else None
+        pid = "#" + code if code else "@" + nm
+        if pid not in ids:
+            disp = nm if taken.get(nm, pid) == pid else f"{nm} ({pid[-3:]})"
+            taken[disp] = pid
+            ids[pid] = disp
+        p = ids[pid]
+        units = players.setdefault(p, {})
+        if power_c:
+            gp[p] = gp.get(p, 0) + (to_number(r[power_c]) or 0)
+        key = norm(r[base_c])
+        if not key:
+            continue
+        lvl = {}
+        if relic_c and cell(r[relic_c]) != "":
+            lvl["relic"] = ival(r[relic_c])
+        if stars_c and cell(r[stars_c]) != "":
+            lvl["stars"] = ival(r[stars_c])
+        if gear_c and cell(r[gear_c]) != "":
+            lvl["gear"] = ival(r[gear_c])
+        if type_c and "ship" in cell(r[type_c]).lower():
+            lvl["ship"] = True
+            lvl.pop("relic", None)
+        if not lvl:
+            lvl["unknown"] = True
+        if not lvl.get("ship") and lvl.get("relic") is not None:
+            max_rel = max(max_rel, lvl["relic"])
+            if lvl.get("gear") == 13:
+                g13min = min(g13min, lvl["relic"])
+            elif lvl.get("gear") is not None and lvl["relic"] == 1:
+                low_gear_one = True
+        if keep is not None and key not in keep:
+            continue
+        prev = units.get(key)
+        if prev is None or better(lvl, prev):
+            units[key] = lvl
+    raw_scale = max_rel >= 11 or (2 <= g13min < 10 ** 9 and low_gear_one)
+    if raw_scale:
+        for units in players.values():
+            for l in units.values():
+                if l.get("relic") is not None:
+                    l["relic"] = max(0, l["relic"] - 2)
+    names = list(players)
+    return {"players": names, "roster": [players[n] for n in names],
+            "gp": [round(gp.get(n, 0)) for n in names], "raw": False,
+            "file": path.name}
+
+
 # ---------------------------------------------------------------- main
 def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict, roster_file,
               players: Players, current: set) -> dict:
@@ -677,6 +772,26 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
 
     out_dir = SITE_DIR / "data" / gdir.name
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Platoon planner: this guild's roster in the planner's format, and its saved assignments
+    has_platoon_roster = False
+    roster_files = data_files(ROSTER_DIR)
+    if roster_files:
+        newest = max(roster_files, key=lambda p: (name_date(p)[0] or dt.date.fromtimestamp(p.stat().st_mtime), p.name))
+        pr = platoon_roster(newest, PLAN_KEYS)
+        if pr:
+            pr["updated"] = (roster_date or dt.date.today()).isoformat()
+            (out_dir / "platoon-roster.json").write_text(json.dumps(pr, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+            has_platoon_roster = True
+            print(f"Platoon roster: {len(pr['players'])} players")
+    saved = gdir / "platoons.json"
+    platoons_saved = None
+    if saved.exists():
+        shutil.copy2(saved, out_dir / "platoons.json")
+        try:
+            platoons_saved = json.loads(saved.read_text(encoding="utf-8")).get("savedAt")
+        except (ValueError, AttributeError):
+            warn("platoons.json couldn't be read")
     raids_index = []
     for d in defs:
         WARNINGS[:] = guild_warn + raid_warn[d["slug"]]
@@ -693,10 +808,16 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         (raids_index[0]["slug"] if raids_index else None)
     return {"slug": gdir.name, "name": cfg.get("guild_name", gdir.name), "members": len(current),
             "raids": raids_index, "default_raid": default,
-            "has_data": bool(with_scores or roster), "order": cfg.get("site_order", 99)}
+            "has_data": bool(with_scores or roster), "order": cfg.get("site_order", 99),
+            "platoons": {"roster": has_platoon_roster, "saved": platoons_saved}}
 
 
 def main() -> int:
+    global PLAN_KEYS
+    PLAN_KEYS = plan_unit_keys()
+    if PLATOON_PLAN.exists():
+        (SITE_DIR / "data" / "platoons").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(PLATOON_PLAN, SITE_DIR / "data" / "platoons" / "rote-plan.csv")
     defs = load_raid_defs()
     # Optional banner pictures: raids/<raid>.jpg|png|webp is shown instead of the drawn artwork
     banner_dir = SITE_DIR / "banners"

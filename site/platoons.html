@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RotE Platoon Planner</title>
+<meta name="robots" content="noindex">
+<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&amp;family=Oxanium:wght@500;600;700&amp;family=Exo+2:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+/* Hoth (light) */
+:root{
+  --bg:#E8EEF5;--panel:#FFFFFF;--ink:#0B1426;--muted:#4D5B73;--line:#C5D0DE;
+  --amber:#7A6200;--amber-bg:#FFF6C2;--holo:#0A6FA8;--holo-bg:#DDF0FB;
+  --bad:#B3261E;--bad-bg:#FCE3E1;--ok:#1F7A45;--track:#D3DCE7;
+  --gold:#FFD60A;--gold-ink:#0B0B0B;--saber:#1E9BE0;--glow:rgba(10,111,168,.25);
+  --stars:none;--panel-bg:#FFFFFF;
+  --f-display:Orbitron,"Eurostile","Arial Black",system-ui,sans-serif;
+  --f-head:Oxanium,"Arial Narrow",system-ui,sans-serif;
+  --f-body:"Exo 2",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+/* Deep space (dark) */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#04060C;--panel:#0B111E;--ink:#E6ECF5;--muted:#8C9AB3;--line:#1E2A41;
+  --amber:#FFE81F;--amber-bg:rgba(255,232,31,.12);--holo:#4FC3F7;--holo-bg:rgba(79,195,247,.12);
+  --bad:#FF5252;--bad-bg:rgba(255,82,82,.14);--ok:#5BFF8F;--track:#131B2D;
+  --gold:#FFE81F;--gold-ink:#0A0A0A;--saber:#4FC3F7;--glow:rgba(79,195,247,.45);
+  --panel-bg:rgba(11,17,30,.9);
+  --stars:radial-gradient(1px 1px at 20px 30px,#fff8,transparent),radial-gradient(1px 1px at 120px 80px,#fff6,transparent),radial-gradient(1.5px 1.5px at 200px 160px,#fffa,transparent),radial-gradient(1px 1px at 60px 210px,#fff5,transparent),radial-gradient(1px 1px at 260px 40px,#9cf8,transparent),radial-gradient(1px 1px at 300px 240px,#fff6,transparent),radial-gradient(1.5px 1.5px at 160px 280px,#ffe8,transparent);}}
+:root[data-theme="dark"]{
+  --bg:#04060C;--panel:#0B111E;--ink:#E6ECF5;--muted:#8C9AB3;--line:#1E2A41;
+  --amber:#FFE81F;--amber-bg:rgba(255,232,31,.12);--holo:#4FC3F7;--holo-bg:rgba(79,195,247,.12);
+  --bad:#FF5252;--bad-bg:rgba(255,82,82,.14);--ok:#5BFF8F;--track:#131B2D;
+  --gold:#FFE81F;--gold-ink:#0A0A0A;--saber:#4FC3F7;--glow:rgba(79,195,247,.45);
+  --panel-bg:rgba(11,17,30,.9);
+  --stars:radial-gradient(1px 1px at 20px 30px,#fff8,transparent),radial-gradient(1px 1px at 120px 80px,#fff6,transparent),radial-gradient(1.5px 1.5px at 200px 160px,#fffa,transparent),radial-gradient(1px 1px at 60px 210px,#fff5,transparent),radial-gradient(1px 1px at 260px 40px,#9cf8,transparent),radial-gradient(1px 1px at 300px 240px,#fff6,transparent),radial-gradient(1.5px 1.5px at 160px 280px,#ffe8,transparent);}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 60px)}
+[hidden]{display:none!important}
+.ls{display:none}
+@media (max-width:560px){.lw{display:none}.ls{display:inline}}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+main{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+h1,h2,h3{font-family:var(--f-head);line-height:1.1;margin:0}
+h1{font-size:clamp(34px,7vw,52px);font-weight:700;letter-spacing:.01em}
+h2{font-size:24px;font-weight:600;margin-bottom:10px}
+h3{font-size:18px;font-weight:600}
+p{margin:0 0 10px}
+.lede{color:var(--muted);max-width:62ch;margin-top:6px}
+/* phase track: the hero */
+.track{position:relative;z-index:0;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:22px 0 26px}
+.ph{appearance:none;border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.ph:disabled{cursor:default}
+.ph .bar{height:38px;background:var(--track);position:relative;overflow:hidden;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%,10px 50%)}
+.ph:first-child .bar{clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%)}
+.ph .fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--amber);transition:width .6s ease}
+.ph.part .fill{background:var(--holo)}
+.ph .lab{font-family:var(--f-head);font-weight:600;font-size:15px;margin-top:4px;display:flex;justify-content:space-between;gap:4px}
+.ph .lab>span:last-child{color:var(--muted);font-weight:500}
+.ph[aria-pressed="true"] .lab{color:var(--amber)}
+.ph[aria-pressed="true"] .bar{outline:2px solid var(--amber);outline-offset:2px}
+section.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:720px){.grid2{grid-template-columns:1fr}}
+label{display:block;font-weight:500;font-size:14px;margin:10px 0 4px}
+input[type=text],input[type=url],input[type=number],textarea,select{width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+textarea{min-height:110px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--holo);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>input{flex:1;min-width:180px}
+button.btn{font:inherit;font-weight:600;font-size:14px;border-radius:4px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+button.primary{background:var(--amber);border-color:var(--amber);color:#1A1406}
+button.big{font-family:var(--f-head);font-size:20px;padding:10px 22px}
+button.btn:disabled{opacity:.5;cursor:default}
+.file{font-size:13px}
+.note{font-size:13px;color:var(--muted)}
+.msg{font-size:13px;padding:8px 10px;border-radius:4px;margin-top:8px}
+.msg.ok{background:var(--holo-bg);color:var(--ink)}
+.msg.err{background:var(--bad-bg);color:var(--ink)}
+.msg a{color:var(--holo)}
+details{margin-top:10px}
+summary{cursor:pointer;font-size:13px;color:var(--holo);font-weight:500}
+details pre{font-size:12px;background:var(--bg);padding:8px;border-radius:4px;overflow-x:auto}
+.relics{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.relics label{margin:0 0 2px;font-size:12px;color:var(--muted)}
+.check{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px}
+.check input{margin-top:4px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tabs button{font:inherit;font-weight:500;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--amber)}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px}
+.stat b{font-family:var(--f-head);font-size:28px;display:block;line-height:1}
+.stat span{font-size:13px;color:var(--muted)}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.pc{border:1px solid var(--line);border-radius:4px;padding:10px 12px}
+.pc h3{display:flex;justify-content:space-between;gap:8px}
+.pc h3 .n{color:var(--amber)}
+.pc h3 .n.over{color:var(--bad)}
+.tag{font-size:11px;font-weight:600;color:var(--bad);background:var(--bad-bg);padding:0 5px;border-radius:3px;margin-left:4px}
+.pc ul{list-style:none;margin:6px 0 0;padding:0;font-size:13px}
+.pc li{padding:2px 0;border-top:1px dashed var(--line)}
+.pc li small{color:var(--muted)}
+.gl{font-size:11px;font-weight:600;color:var(--amber);background:var(--amber-bg);padding:0 5px;border-radius:3px;margin-left:4px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--muted)}
+td.empty{color:var(--bad);font-weight:500}
+.opblock{margin-bottom:16px}
+.opblock h3{margin-bottom:4px}
+.warn{background:var(--bad-bg);border-radius:4px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+@media (prefers-reduced-motion:reduce){.ph .fill{transition:none}}
+.opsph{margin-bottom:14px}
+.opsph h3{margin-bottom:6px}
+.oprow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0;border-top:1px dashed var(--line)}
+.oprow .pl{font:inherit;font-size:14px;font-weight:500;background:none;border:0;color:var(--ink);cursor:pointer;min-width:190px;text-align:left;padding:4px 0}
+.oprow .pl small{color:var(--muted);font-weight:400}
+.opb{font:inherit;font-size:13px;font-weight:600;width:34px;height:30px;border-radius:4px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
+.opb[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#1A1406}
+.opsbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.brand{font-family:var(--f-head);font-weight:700;font-size:20px}
+.menubtn{display:inline-flex;align-items:center;gap:8px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+dialog.drawer{position:fixed;inset:0 0 0 auto;margin:0;width:min(620px,100%);max-width:100%;height:100%;max-height:100%;border:0;border-left:1px solid var(--line);padding:0;background:var(--panel);color:var(--ink)}
+dialog.drawer[open]{display:flex;flex-direction:column}
+dialog.drawer::backdrop{background:rgba(10,14,22,.55)}
+.dhead{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 0;border-bottom:1px solid var(--line)}
+.dtabs{display:flex;gap:2px;overflow-x:auto}
+.dtabs button{font:inherit;font-weight:500;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;padding:10px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.dtabs button[aria-selected="true"]{color:var(--ink);border-color:var(--amber)}
+.dhead #menuClose{margin-bottom:8px}
+.dbody{flex:1;overflow-y:auto;padding:18px 16px}
+.dbody .grid2{grid-template-columns:1fr}
+.dbody .pane>h2{margin-bottom:12px}
+.dfoot{display:flex;flex-direction:column;gap:4px;align-items:stretch;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);border-top:1px solid var(--line)}
+.reshead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.reshead h2{margin:0}
+.who{display:flex;align-items:center;gap:8px}
+.who label{margin:0}
+.who select{min-width:180px}
+.phrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.phchip{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:4px;padding:4px 10px;background:var(--bg);color:var(--ink);cursor:pointer}
+.phchip[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-bg)}
+.phchip[data-scope] b{display:none}
+.phchip b{font-family:var(--f-head);font-size:16px;margin-left:4px}
+.task{border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin-bottom:10px}
+.task h3{margin-bottom:6px}
+.task ul{list-style:none;margin:0;padding:0;font-size:14px}
+.task li{padding:3px 0;border-top:1px dashed var(--line)}
+.task li small{color:var(--muted)}
+.gate{border:1px solid var(--line);border-radius:6px;padding:20px;width:min(380px,calc(100% - 32px));background:var(--panel);color:var(--ink)}
+.gate::backdrop{background:rgba(10,14,22,.55)}
+.gate h2{margin-bottom:8px}
+#empty{margin-top:4px}
+.savebar{font-size:14px;padding:10px 12px;border-radius:4px;margin-bottom:12px;background:var(--holo-bg);display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.savebar.dirty{background:var(--amber-bg)}
+.modebox{border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-top:14px}
+.tier{font-size:11px;font-weight:600;padding:0 5px;border-radius:3px;margin-left:6px;background:var(--holo-bg);color:var(--holo);vertical-align:middle;font-family:var(--f-body)}
+.btn[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-bg)}
+#mainbar{gap:6px;flex-wrap:wrap}
+#mainbar .btn{flex:1 1 0;min-width:0;padding:8px 6px;line-height:1.2;max-width:200px}
+@media (max-width:520px){#mainbar .btn{flex:1 1 calc(50% - 3px);max-width:none}}
+.sumtable th,.sumtable td{text-align:right}
+.sumtable .stick{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1}
+.sumtable th.grp{text-align:center;color:var(--ink);border-bottom:1px solid var(--line)}
+.sumtable .gs{border-left:1px solid var(--line)}
+.sumtable th.sort button{font:inherit;font-weight:600;color:var(--muted);background:none;border:0;padding:0;cursor:pointer}
+.sumtable th.sort[aria-sort="ascending"] button,.sumtable th.sort[aria-sort="descending"] button{color:var(--ink)}
+.sumtable tfoot td{font-weight:600;border-top:2px solid var(--line);border-bottom:0}
+.sumtable .z{color:var(--muted);opacity:.6}
+.sumtable tbody tr:hover td{background:var(--bg)}
+
+/* ===== Galactic theme ===== */
+body{background-color:var(--bg);background-image:var(--stars);background-size:320px 320px;background-attachment:fixed}
+h1{font-family:var(--f-display);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:clamp(26px,6vw,44px);line-height:1.15;color:var(--amber)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) h1{text-shadow:0 0 18px rgba(255,232,31,.35)}}
+:root[data-theme="dark"] h1{text-shadow:0 0 18px rgba(255,232,31,.35)}
+h2{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:20px;font-weight:700}
+h3{font-family:var(--f-head);letter-spacing:.03em}
+.lede{font-size:15px}
+.topbar{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--glow)}
+.brand{font-family:var(--f-display);font-weight:800;font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+section.panel,.pc,.task,.pane .modebox{border-radius:2px}
+section.panel{position:relative;background:var(--panel-bg);border:1px solid var(--line)}
+section.panel::before,section.panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--saber);pointer-events:none}
+section.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+section.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.pc,.task{background:color-mix(in srgb,var(--panel) 70%,var(--bg));border-left:2px solid var(--saber)}
+button.btn{border-radius:2px;font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:13px;font-weight:600;transition:box-shadow .15s,border-color .15s}
+button.btn:hover:not(:disabled){border-color:var(--saber);box-shadow:0 0 0 1px var(--saber),0 0 12px var(--glow)}
+button.primary{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+button.primary:hover:not(:disabled){border-color:var(--gold);box-shadow:0 0 16px rgba(255,214,10,.55)}
+.btn[aria-pressed="true"]{border-color:var(--gold);background:var(--amber-bg);color:var(--ink);box-shadow:inset 0 -2px 0 var(--gold)}
+input[type=text],input[type=url],input[type=number],input[type=password],textarea,select{border-radius:2px;background:color-mix(in srgb,var(--bg) 70%,var(--panel))}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--saber);outline-offset:2px;box-shadow:0 0 12px var(--glow)}
+label{font-family:var(--f-head);letter-spacing:.03em}
+/* phase track as lightsaber blades */
+.ph .bar{background:var(--track)}
+.ph .fill{background:linear-gradient(180deg,#fff 0%,var(--gold) 30%,var(--gold) 70%,#fff 100%);box-shadow:0 0 14px var(--gold)}
+.ph.part .fill{background:linear-gradient(180deg,#fff 0%,var(--saber) 30%,var(--saber) 70%,#fff 100%);box-shadow:0 0 14px var(--saber)}
+.ph .lab{text-transform:uppercase;letter-spacing:.08em;font-size:13px}
+.ph[aria-pressed="true"] .bar{outline:1px solid var(--gold);outline-offset:3px}
+/* stats as HUD readouts */
+.stat b{font-family:var(--f-display);font-weight:800;font-size:24px;letter-spacing:.02em;color:var(--amber)}
+.stat span{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+.tabs button,.dtabs button{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:13px}
+.tabs button[aria-selected="true"],.dtabs button[aria-selected="true"]{border-color:var(--gold);box-shadow:0 2px 8px -4px var(--gold)}
+th{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+.sumtable th.sort button{text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+.sumtable .stick{background:var(--panel)}
+.phchip{border-radius:2px;font-family:var(--f-head);letter-spacing:.04em}
+.phchip[aria-pressed="true"]{border-color:var(--gold);background:var(--amber-bg)}
+.gl{background:var(--gold);color:var(--gold-ink);border-radius:2px;letter-spacing:.06em}
+.tier{background:transparent;color:var(--saber);border:1px solid var(--saber);border-radius:2px;font-family:var(--f-head);letter-spacing:.06em}
+.tag{border-radius:2px;letter-spacing:.04em}
+.msg{border-radius:2px;border-left:3px solid var(--saber)}
+.msg.err{border-left-color:var(--bad)}
+.savebar{border-radius:2px;border-left:3px solid var(--saber)}
+.savebar.dirty{border-left-color:var(--gold)}
+.warn{border-radius:2px;border-left:3px solid var(--bad)}
+dialog.drawer{background:var(--panel);border-left:1px solid var(--saber);box-shadow:-8px 0 30px var(--glow)}
+dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filter:blur(2px)}
+.gate{border-radius:2px;border:1px solid var(--saber);box-shadow:0 0 30px var(--glow)}
+.opb{border-radius:2px;font-family:var(--f-head)}
+.opb[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--gold-ink);box-shadow:0 0 8px rgba(255,214,10,.4)}
+.modebox{border-radius:2px;border-color:var(--saber)}
+@media (prefers-reduced-motion:reduce){button.btn{transition:none}}
+.oprow .pl{flex-basis:100%;min-width:0}
+.oprow{padding:6px 0}
+.opb{position:relative;width:40px;height:36px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.opb small{font-size:9px;font-weight:600;margin-top:2px;letter-spacing:.04em}
+.opb.else{border-style:dashed;color:var(--muted)}
+.carry{font-size:11px;font-weight:600;color:var(--saber);border:1px dashed var(--saber);border-radius:2px;padding:0 5px;margin-left:6px;font-family:var(--f-head);letter-spacing:.04em;vertical-align:middle;white-space:nowrap}
+.reqphase{margin-bottom:22px}
+.reqph{font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:12px}
+.reqplanet{margin-bottom:18px;padding-left:10px;border-left:2px solid var(--saber)}
+.reqplanet h3{margin-bottom:4px}
+.reqtable td,.reqtable th{text-align:right}
+.reqtable .nm,.reqtable th:first-child{text-align:left;white-space:normal;min-width:120px}
+.reqtable th{white-space:normal;line-height:1.2;vertical-align:bottom;letter-spacing:.02em;font-size:10px}
+.reqtable td{font-size:13px}
+.reqtable td,.reqtable th{padding:6px 5px}
+.reqtable small{color:var(--muted)}
+.reqtable .neg,.neg{color:var(--bad)}
+.reqtable .pos{color:var(--ok)}
+.reqtable tr.isneg td{background:var(--bad-bg)}
+.reqtable .z{color:var(--muted);opacity:.6}
+
+/* ===== site navigation (raid tracker integration) ===== */
+.topbar{flex-wrap:wrap}
+.navr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.navlink{font-family:var(--f-head);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:2px;padding:7px 10px}
+.navlink:hover{color:var(--ink);border-color:var(--saber)}
+.gsel{width:auto;min-width:0;padding:6px 8px;font-family:var(--f-head);font-size:13px}
+.themebtn{display:inline-flex;align-items:center;gap:6px}
+.themebtn svg{width:14px;height:14px}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.datacard{border:1px solid var(--line);border-left:2px solid var(--saber);padding:10px 12px;margin-bottom:12px}
+.datacard h3{margin-bottom:4px}
+.datacard a{color:var(--holo)}
+@media (max-width:560px){.navlink .lw{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="brand">RotE platoons</span>
+  <div class="navr">
+  <a class="navlink" id="raidLink" href="./">⟵ <span class="lw">Raid </span>results</a>
+  <label class="vh" for="guildSel">Guild</label><select id="guildSel" class="gsel" hidden></select>
+  <button class="btn themebtn" id="themeBtn" type="button"></button>
+  <button class="btn menubtn" id="menuBtn" aria-haspopup="dialog" aria-controls="menu"><svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"></path></svg>Menu</button>
+  </div>
+</header>
+<main>
+  <h1>Rise of the Empire platoons</h1>
+  <div class="sub" id="guildLine"></div>
+  <p class="lede">Every operation slot, assigned across the guild as evenly as possible. Officers pick the operations and set the rules from the menu; everyone else sees the saved assignments.</p>
+
+  <div class="track" id="track" role="group" aria-label="Phases"></div>
+
+  <section class="panel" id="empty">
+    <h2>No assignments yet</h2>
+    <p>Officers choose the operations and assign platoons from the menu.</p>
+    <button class="btn" data-open="ops">Open the menu</button>
+  </section>
+
+  <div class="savebar" id="savedInfo" hidden=""></div>
+  <div class="row" id="mainbar" hidden="" style="margin-bottom:12px"><button class="btn" id="assignBtn" aria-pressed="true">Assignments</button><button class="btn" id="summaryBtn" aria-pressed="false">Summary</button><button class="btn" id="reqBtn" aria-pressed="false">Requirements</button><button class="btn" id="missingBtn" aria-pressed="false">Missing platoons</button></div>
+
+  <section class="panel" id="req" hidden="">
+    <h2>Requirements</h2>
+    <p class="note">Every character needed for the operations you’ve chosen, by phase and planet. Have counts members with the character at the planet’s required level. Diff is Have minus what the whole phase needs, since a member can only place a character once per phase; a minus number is how many more members need to upgrade it. Can upgrade counts members who own it but are below the required level.</p>
+    <div class="phrow" id="reqPhase" role="group" aria-label="Phase"></div>
+    <div class="phrow" id="reqFilter" role="group" aria-label="Show">
+      <button class="phchip" data-f="all" aria-pressed="true">All characters</button>
+      <button class="phchip" data-f="short" aria-pressed="false">Short only</button>
+    </div>
+    <div class="stats" id="reqStats"></div>
+    <div class="toolbar"><button class="btn" id="reqCopy">Copy requirements for Sheets</button></div>
+    <div id="reqMsg"></div>
+    <div id="reqView"></div>
+  </section>
+
+  <section class="panel" id="summary" hidden="">
+    <h2>Summary</h2>
+    <div class="stats" id="sumStats"></div>
+    <div class="toolbar"><button class="btn" id="sumCopy">Copy summary for Sheets</button></div>
+    <div id="sumMsg"></div>
+    <p class="note">Tap a column heading to sort.</p>
+    <div class="scroll" id="sumView"></div>
+  </section>
+
+  <section class="panel" id="missing" hidden="">
+    <h2>Missing platoons</h2>
+    <div class="phrow" id="mScope" role="group" aria-label="Which operations">
+      <button class="phchip" data-scope="on" aria-pressed="true">Operations switched on</button>
+      <button class="phchip" data-scope="all" aria-pressed="false">All operations</button>
+    </div>
+    <div class="phrow" id="mPhase" role="group" aria-label="Phase"></div>
+    <div class="stats" id="mStats"></div>
+    <div id="mView"></div>
+  </section>
+
+  <section class="panel" id="results" hidden="">
+    <div class="reshead"><h2 id="resTitle">Assignments</h2>
+      <div class="who"><label for="who">Show</label><select id="who"><option value="">Everyone</option></select></div></div>
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <button class="btn" id="copyDiscord">Copy phase for Discord</button>
+      <button class="btn" id="dlCsv">Download all as CSV</button>
+      <button class="btn" id="copyTsv">Copy all for Sheets</button>
+    </div>
+    <div id="toolMsg"></div>
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-view="players" aria-selected="true">By member</button>
+      <button role="tab" data-view="ops" aria-selected="false">By operation</button>
+      <button role="tab" data-view="unfilled" aria-selected="false">Unfilled</button>
+      <button role="tab" data-view="totals" aria-selected="false">Totals, all phases</button>
+    </div>
+    <div id="view"></div>
+  </section>
+</main>
+<dialog id="menu" class="drawer" aria-labelledby="menuTitle">
+  <div class="dhead">
+    <h2 id="menuTitle" class="vh">Menu</h2>
+    <div class="dtabs" role="tablist">
+      <button role="tab" data-pane="sheets" aria-selected="true">Data</button>
+      <button role="tab" data-pane="ops" aria-selected="false">Operations to fill</button>
+      <button role="tab" data-pane="rules" aria-selected="false">Rules</button>
+    </div>
+    <button class="btn" id="menuClose">Close</button>
+  </div>
+  <div class="dbody">
+    <section class="pane" data-pane="sheets">
+      <h2>Data</h2>
+      <div class="datacard">
+        <h3>Guild roster</h3>
+        <div id="rosterInfo" class="note">Loading…</div>
+        <p class="note" style="margin-top:6px">This is the guild's latest WookieeBot roster export, the same one the raid readiness pages use. To refresh it, <a id="rosterUpLink" href="upload.html?type=roster">upload a new roster</a>; the planner picks it up about two minutes later.</p>
+      </div>
+      <div class="datacard">
+        <h3>Operations plan</h3>
+        <div id="planInfo" class="note">Loading…</div>
+        <label for="planFile">Replace the plan for every guild</label>
+        <input class="file" type="file" id="planFile" accept=".csv,.tsv,.txt">
+        <p class="note" style="margin-top:6px">One row per slot: alignment, phase, planet, operation, row, slot, character_name, baseId. Units are matched on BaseId. An optional Count column repeats a row; an optional Relic column overrides the phase minimum.</p>
+        <div id="planUpMsg"></div>
+      </div>
+      <details>
+        <summary>Use a different roster or plan just for this run</summary>
+        <p class="note" style="margin-top:8px">Paste a sheet or choose a CSV file. It is used only in this browser until you clear it; saved assignments still go to the site as usual.</p>
+        <label for="rText">Roster</label>
+        <textarea id="rText" spellcheck="false" placeholder="AllyCode,Name,UnitId,BaseId,CombatType,…,RelicLevel"></textarea>
+        <input class="file" type="file" accept=".csv,.tsv,.txt" data-file="r" aria-label="Upload roster CSV">
+        <div id="rMsg"></div>
+        <label for="pText">Operations plan</label>
+        <textarea id="pText" spellcheck="false" placeholder="alignment,phase,planet,operation,row,slot,character_name,baseId"></textarea>
+        <input class="file" type="file" accept=".csv,.tsv,.txt" data-file="p" aria-label="Upload plan CSV">
+        <div id="pMsg"></div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="clearPaste" type="button">Clear and use the site's data</button></div>
+      </details>
+    </section>
+    <section class="pane" data-pane="ops" hidden="">
+      <h2>Operations to fill</h2>
+      <p class="note" id="opsEmpty">The operations plan hasn't loaded. Check the Data tab.</p>
+      <div id="opsPanel" hidden="">
+    <p class="note">Pick a phase, then choose the planets and operations your guild fills in that phase. A planet stays available in later phases, so you can carry it over or split its operations across two phases to preload it.</p>
+    <div class="phrow" id="opsPh" role="group" aria-label="Phase being planned"></div>
+    <div class="opsbar"><button class="btn" id="opsAll">Reset to each planet’s own phase</button><button class="btn" id="opsNone">Clear this phase</button></div>
+    <p class="note" id="opsHint"></p>
+    <div id="ops"></div>
+      </div>
+    </section>
+    <section class="pane" data-pane="rules" hidden="">
+      <h2>Rules</h2>
+    <div class="grid2">
+      <div>
+        <label>Minimum relic for characters, by phase</label>
+        <div class="relics" id="relics"></div>
+        <p class="note" style="margin-top:6px">Preset to R5 through R9. Check against the current in-game requirements; a Relic column in the plan overrides these.</p>
+        <label for="scale">Relic numbers in the roster</label>
+        <select id="scale"><option value="auto">Detect automatically</option><option value="actual">Actual relic tier (R7 is 7)</option><option value="raw">Raw game value (R7 is 9)</option></select>
+        <label for="stars">Minimum stars for ships</label>
+        <input type="number" id="stars" min="1" max="7" value="7" style="max-width:90px">
+        <label for="plain">In a one-column-per-unit roster, plain numbers mean</label>
+        <select id="plain"><option value="relic">Relic level</option><option value="stars">Stars</option><option value="gear">Gear level</option></select>
+      </div>
+      <div>
+        <label for="cap">Aim for at most this many units per member, per phase</label>
+        <input type="number" id="cap" min="1" max="60" value="10" style="max-width:90px">
+        <div class="check"><input type="checkbox" id="oneGL" checked=""><label for="oneGL" style="margin:0">Aim for max 1 Galactic Legend per member, per phase</label></div>
+        <div class="check"><input type="checkbox" id="relaxGL" checked=""><label for="relaxGL" style="margin:0">Allow a second GL when it’s the only way to fill a slot</label></div>
+        <div class="modebox">
+          <div class="check" style="margin-top:0"><input type="checkbox" id="tierMode"><label for="tierMode" style="margin:0"><b>Player tier balancing</b></label></div>
+          <p class="note" style="margin:6px 0 0">Ranks members by total GP into four equal tiers, tier 1 being the highest. GL slots go to tier 1 first, then down the tiers. Tier 1 gets slightly more platoons than tier 4 (about 20% above an even share for tier 1, 10% for tier 2, an even share for tier 3, 10% below for tier 4), and the per-member limit scales the same way.</p>
+          <div id="tierInfo" class="note" style="margin-top:6px"></div>
+        </div>
+        <p class="note" style="margin-top:6px">Every slot is filled first within these limits. Any slot still empty is then refilled from whoever qualifies, going over the limits only where needed and spreading the extra as evenly as possible.</p>
+        <label for="gls">Galactic Legends (name or BaseId, one per line)</label>
+        <textarea id="gls" spellcheck="false" style="min-height:170px"></textarea>
+      </div>
+    </div>
+    </section>
+  </div>
+  <div class="dfoot">
+    <div class="row">
+      <button class="btn primary" id="run">Assign platoons</button>
+      <button class="btn" id="reshuffle" disabled="">Try a different spread</button>
+      <button class="btn primary" id="saveShare" disabled="">Save and share</button>
+      <button class="btn" id="lock">Lock menu</button>
+    </div>
+    <div id="runMsg"></div>
+  </div>
+</dialog>
+<dialog id="gate" class="gate" aria-labelledby="gateTitle">
+  <form id="gateForm" method="dialog">
+    <h2 id="gateTitle">Officer access</h2>
+    <p class="note" id="gateNote">The menu is for officers. Enter the officer password to continue.</p>
+    <label for="pw" id="pwLabel">Officer password</label>
+    <input type="password" id="pw" autocomplete="current-password" required="">
+    <div class="check"><input type="checkbox" id="pwRemember"><label for="pwRemember" style="margin:0">Remember on this device</label></div>
+    <div id="gateMsg"></div>
+    <div class="row" style="margin-top:14px"><button class="btn primary" id="gateGo" type="submit">Unlock</button><button class="btn" type="button" id="gateCancel">Cancel</button></div>
+  </form>
+</dialog>
+<script>
+/* ---------- Site integration ---------- */
+let GUILD=(()=>{try{return new URLSearchParams(location.search).get('guild')||''}catch(e){return''}})();
+const K=k=>k+':'+GUILD;   // settings are kept per guild
+let LIVE={roster:null,plan:null,rosterInfo:null};
+let SITE={guilds:[],cfg:{},keyBlob:null};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
+const DEFAULT_GL=['Supreme Leader Kylo Ren','Rey (GLREY)','Jedi Master Luke Skywalker','Sith Eternal Emperor','Jedi Master Kenobi','Lord Vader','Jabba the Hutt','Leia Organa (GLLEIA)'];
+const DEFAULT_RELIC={1:5,2:6,3:7,4:8,5:9,6:9};
+let RESULT=null, PHASE=null, VIEW='players', SEED=1, WHO='';
+let OFF=new Set(JSON.parse(store.get(K('rote-off'))||'[]'));
+// DEPLOY: operation id -> TB phase it is filled in (0 = not filled). Missing ids default to the planet's own phase.
+let DEPLOY=new Map(Object.entries(JSON.parse(store.get(K('rote-deploy'))||'{}')).map(([k,v])=>[k,+v]));
+const deployOf=s=>{const k=opId(s);if(DEPLOY.has(k))return DEPLOY.get(k);return OFF.has(k)?0:(s.zone??s.phase)};
+
+/* ---------- CSV ---------- */
+function parseCSV(text){
+  text=String(text||'').replace(/^\uFEFF/,'');
+  const first=text.slice(0,text.indexOf('\n')>=0?text.indexOf('\n'):text.length);
+  const d=first.includes('\t')?'\t':',';
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"'&&f==='')q=true;
+    else if(c===d){row.push(f);f=''}
+    else if(c==='\n'){row.push(f);rows.push(row);row=[];f=''}
+    else if(c!=='\r')f+=c;}
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  return rows.map(r=>r.map(x=>x.trim())).filter(r=>r.some(x=>x!==''));
+}
+const findCol=(h,pats,skip=[])=>h.findIndex((x,i)=>!skip.includes(i)&&pats.some(p=>p instanceof RegExp?p.test(x):x.includes(p)));
+const num=v=>{const m=String(v??'').match(/-?\d+/);return m?+m[0]:null};
+const has=v=>v!=null&&String(v).trim()!=='';
+// GL names may carry a BaseId in brackets: "Rey (GLREY)"
+const glKeys=lines=>{const s=new Set();lines.forEach(l=>{const m=l.match(/\(([A-Za-z0-9_]+)\)\s*$/);if(m){s.add(norm(m[1]))}s.add(norm(l))});s.delete('');return s};
+
+/* ---------- Roster ---------- */
+function parseLevel(cell,mode){
+  const s=String(cell??'').trim();
+  if(!s||/^(-|no|n|false|none)$/i.test(s))return null;
+  let m;
+  if(m=s.match(/^r\s*(\d+)/i))return{relic:+m[1]};
+  if(m=s.match(/^g\s*(\d+)/i))return{gear:+m[1]};
+  if(m=s.match(/(\d)\s*(\*|★|star)/i))return{stars:+m[1]};
+  if(/^\d+$/.test(s))return{[mode]:+s};
+  return{unknown:true};
+}
+function parseRoster(text,mode,scale){
+  const rows=parseCSV(text);
+  if(rows.length<2)throw new Error('The roster needs a header row and at least one member.');
+  const h=rows[0].map(norm);
+  const skipU=h.map((x,i)=>x==='unitid'?i:-1).filter(i=>i>=0);
+  const bi=h.indexOf('baseid');
+  const ni=findCol(h,['unitname','character','toon','charname',/^unit$/,/^ship$/],[...skipU,bi]);
+  const ai=h.indexOf('allycode');
+  let pi=findCol(h,['player','member','username','gamer'],[bi,ni]);
+  if(pi<0)pi=h.findIndex((x,i)=>x==='name'&&i!==ni);
+  if(pi<0)pi=ai;
+  const players=new Map(),names=new Map();
+  if((bi>=0||ni>=0)&&pi>=0){
+    const ri=findCol(h,['relic']),si=findCol(h,['star','rarity']),gi=findCol(h,['gear']),ti=findCol(h,['combattype',/^type$/]);
+    const idName=new Map(),taken=new Map();
+    // Ally codes are only trusted when they are whole 9-digit numbers. Sheets often show them as 5.85E+08,
+    // which loses digits and makes different members look identical, so then members are matched by name.
+    const cleanCode=v=>{const d=String(v||'').replace(/[\s-]/g,'');return /^\d{9}$/.test(d)?d:null};
+    let badCodes=0;
+    const nameFor=r=>{
+      const code=ai>=0?cleanCode(r[ai]):null;if(ai>=0&&r[ai]&&!code)badCodes++;
+      const id=code?'#'+code:'@'+(r[pi]||'');
+      if(idName.has(id))return idName.get(id);
+      let n=r[pi]||id;
+      if(taken.has(n)&&taken.get(n)!==id)n=`${n} (${String(id).slice(-3)})`;
+      taken.set(n,id);idName.set(id,n);return n;
+    };
+    let g13min=Infinity,lowGearOne=false,maxRel=-Infinity;
+    const pwi=h.indexOf('power'),gpi=pwi>=0?-1:findCol(h,['galacticpower',/^gp$/,'totalgp']);
+    const gp=new Map(),pow=new Map();let dups=0;const dupWho=new Map();
+    const better=(a,b)=>(a.relic??-1)-(b.relic??-1)||(a.gear??-1)-(b.gear??-1)||(a.stars??-1)-(b.stars??-1);
+    for(const r of rows.slice(1)){
+      if(!r[pi])continue;
+      const p=nameFor(r);
+      const rowPow=pwi>=0||gpi>=0?parseFloat(String(r[pwi>=0?pwi:gpi]).replace(/[^0-9.]/g,''))||0:0;
+      if(gpi>=0)gp.set(p,Math.max(gp.get(p)||0,rowPow));
+      if(!players.has(p))players.set(p,new Map());
+      const key=norm(bi>=0&&r[bi]?r[bi]:r[ni]);if(!key)continue;
+      const lvl={};
+      if(ri>=0&&has(r[ri]))lvl.relic=num(r[ri]);
+      if(si>=0&&has(r[si]))lvl.stars=num(r[si]);
+      if(gi>=0&&has(r[gi]))lvl.gear=num(r[gi]);
+      if(ti>=0&&/ship/i.test(r[ti]||''))lvl.ship=true;
+      if(lvl.ship)delete lvl.relic;
+      if(!Object.keys(lvl).length)lvl.unknown=true;
+      if(!lvl.ship&&lvl.relic!=null){
+        maxRel=Math.max(maxRel,lvl.relic);
+        if(lvl.gear===13)g13min=Math.min(g13min,lvl.relic);
+        else if(lvl.gear!=null&&lvl.relic===1)lowGearOne=true;
+      }
+      // The same member and character listed twice usually means old rows were left in the sheet:
+      // keep the higher level, since a character can't go down.
+      const prev=players.get(p).get(key);
+      if(prev){dups++;dupWho.set(p,(dupWho.get(p)||0)+1);if(better(lvl,prev)>0){players.get(p).set(key,lvl);if(pwi>=0)pow.set(p+'\u0000'+key,rowPow)}}
+      else{players.get(p).set(key,lvl);if(pwi>=0)pow.set(p+'\u0000'+key,rowPow)}
+      if(ni>=0&&r[ni])names.set(key,r[ni]);else names.set(key,r[bi]);
+    }
+    if(pwi>=0)pow.forEach((v,k)=>{const p=k.split('\u0000')[0];gp.set(p,(gp.get(p)||0)+v)});
+    const raw=scale==='raw'||(scale==='auto'&&(maxRel>=11||(g13min>=2&&g13min!==Infinity&&lowGearOne)));
+    if(raw)players.forEach(m=>m.forEach(l=>{if(l.relic!=null)l.relic=Math.max(0,l.relic-2)}));
+    return{players,names,layout:'one row per unit',raw,gp,badCodes,dups,dupWho};
+  }
+  const pcol=pi>=0?pi:0;
+  const meta=h.map((x,i)=>i===pcol||/allycode|^gp$|galacticpower|guild|^id$|discord|rank|role/.test(x));
+  const gpc=findCol(h,['galacticpower',/^gp$/,'totalgp']),gp=new Map();
+  for(const r of rows.slice(1)){
+    const p=r[pcol];if(!p)continue;
+    if(gpc>=0)gp.set(p,parseFloat(String(r[gpc]).replace(/[^0-9.]/g,''))||0);
+    if(!players.has(p))players.set(p,new Map());
+    rows[0].forEach((uName,i)=>{if(meta[i])return;const k=norm(uName),l=parseLevel(r[i],mode);if(k&&l){players.get(p).set(k,l);names.set(k,uName)}});
+  }
+  return{players,names,layout:'one column per unit',raw:false,gp};
+}
+
+/* ---------- Plan ---------- */
+function parsePlan(text){
+  const rows=parseCSV(text);
+  if(rows.length<2)throw new Error('The plan needs a header row and at least one row.');
+  const h=rows[0].map(norm);
+  const phi=findCol(h,['phase']);
+  if(phi<0)throw new Error('The plan needs a Phase column.');
+  const bi=h.indexOf('baseid');
+  const ali=findCol(h,[/^alignment$/,/^side$/],[phi,bi]);
+  const pli=findCol(h,['planet','territory','sector'],[phi,bi,ali]);
+  const opi=findCol(h,[/^op/,'operation','platoon'],[phi,pli,bi,ali]);
+  const rwi=h.indexOf('row'),sli=h.indexOf('slot');
+  const ui=findCol(h,['charactername','unitname','character','unit','toon','ship','name'],[phi,pli,opi,bi,ali,rwi,sli]);
+  const used=[phi,pli,opi,bi,ali,rwi,sli,ui];
+  const ci=findCol(h,['count','qty','quantity','needed','amount'],used);
+  const ri=findCol(h,['relic'],[...used,ci]);
+  const si=findCol(h,['star','rarity'],[...used,ci,ri]);
+  const ti=findCol(h,[/^type$/,'combattype'],[...used,ci,ri,si]);
+  const slots=[],names=new Map();
+  const push=(r,uName,baseId,count)=>{
+    const phase=num(r[phi]);const nameKey=norm(uName),key=norm(baseId)||nameKey;if(phase==null||!key)return;
+    names.set(key,uName||baseId);
+    const planet=(pli>=0?(r[pli]||'—'):'—')+(ali>=0&&r[ali]?` (${r[ali]})`:'');
+    for(let c=0;c<Math.max(1,count);c++)slots.push({phase,planet,op:opi>=0?(r[opi]||'—'):'—',row:rwi>=0?num(r[rwi]):null,slot:sli>=0?num(r[sli]):null,
+      unit:uName||baseId,key,nameKey,minRelic:ri>=0&&has(r[ri])?num(r[ri]):null,minStars:si>=0&&has(r[si])?num(r[si]):null,ship:ti>=0&&/ship|fleet/i.test(r[ti]||'')});
+  };
+  if(ui>=0||bi>=0){
+    for(const r of rows.slice(1)){const cnt=ci>=0&&has(r[ci])?num(r[ci]):1;push(r,ui>=0?r[ui]:'',bi>=0?r[bi]:'',cnt??1)}
+  }else{
+    const u2=[phi,pli,opi,ci,ri,si,ti,ali];
+    for(const r of rows.slice(1))r.forEach((cell,i)=>{if(!u2.includes(i)&&cell)push(r,cell,'',1)});
+  }
+  if(!slots.length)throw new Error('No platoon slots found. Check the Phase and unit columns.');
+  return{slots,names};
+}
+const opId=s=>`${s.zone??s.phase}|${s.planet}|${s.op}`;
+const cmpOp=(a,b)=>(num(a)??0)-(num(b)??0)||String(a).localeCompare(String(b));
+
+/* ---------- Assignment ---------- */
+function hash(s){let x=2166136261;for(const c of s){x^=c.charCodeAt(0);x=Math.imul(x,16777619)}return x>>>0}
+function qualifies(u,s,o){
+  if(!u)return false;
+  if(u.unknown)return true;
+  const minStars=s.minStars??o.minStars;
+  if(u.ship||s.ship)return u.stars==null||u.stars>=minStars;
+  if(u.gear!=null&&u.gear<13)return false;
+  const minRelic=s.minRelic??o.relic[s.zone??s.phase]??0;
+  if(u.relic!=null)return u.relic>=minRelic;
+  if(u.gear!=null)return false;
+  if(u.stars!=null)return u.stars>=minStars;
+  return true;
+}
+function tiersOf(roster){
+  const gp=roster.gp;if(!gp||![...gp.values()].some(v=>v>0))return null;
+  const ps=[...roster.players.keys()].sort((a,b)=>(gp.get(b)||0)-(gp.get(a)||0)||a.localeCompare(b));
+  return new Map(ps.map((p,i)=>[p,1+Math.floor(i*4/ps.length)]));
+}
+const TIER_W={1:1.2,2:1.1,3:1,4:0.9};
+const fmtGP=v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?Math.round(v/1e3)+'k':String(Math.round(v||0));
+const unitOf=(roster,p,s)=>{const m=roster.players.get(p);return m.get(s.key)||m.get(s.nameKey)};
+function assign(roster,plan,o,includeOff=false){
+  const gl=glKeys(o.gl);
+  const players=[...roster.players.keys()];
+  const rank=new Map(players.map(p=>[p,hash(p+'#'+o.seed)]));
+  const tiers=o.tierMode?tiersOf(roster):null;
+  const tier=p=>tiers?tiers.get(p)||4:1,W=p=>tiers?TIER_W[tier(p)]:1;
+  const total=new Map(players.map(p=>[p,0]));
+  const slots=plan.slots.map((s,i)=>{const d=deployOf(s);return{...s,pi:i,zone:s.phase,phase:d>0?d:(includeOff?s.phase:0)}}).filter(s=>s.phase>0);
+  const phases=[...new Set(slots.map(s=>s.phase))].sort((a,b)=>a-b);
+  const unit=(p,s)=>{const m=roster.players.get(p);return m.get(s.key)||m.get(s.nameKey)};
+  for(const ph of phases){
+    const ps=slots.filter(s=>s.phase===ph);
+    const load=new Map(players.map(p=>[p,0])),used=new Map(players.map(p=>[p,new Set()])),glc=new Map(players.map(p=>[p,0]));
+    const capOf=p=>o.cap>0?Math.max(1,Math.round(o.cap*W(p))):Infinity;
+    // tier balancing: compare load relative to each member's share, so tier 1 ends up with slightly more
+    const cmp=(a,b)=>load.get(a)/W(a)-load.get(b)/W(b)||total.get(a)/W(a)-total.get(b)/W(b)||tier(a)-tier(b)||rank.get(a)-rank.get(b);
+    const glCmp=(a,b)=>(tiers?tier(a)-tier(b):0)||cmp(a,b);
+    const give=(s,p,refill)=>{
+      if(refill){if(load.get(p)>=capOf(p))s.overCap=true;if(s.gl&&glc.get(p)>=1)s.extraGL=true}
+      s.player=p;load.set(p,load.get(p)+1);total.set(p,total.get(p)+1);used.get(p).add(s.key);if(s.gl)glc.set(p,glc.get(p)+1)};
+    const demand=new Map();
+    ps.forEach(s=>{s.player=null;s.gl=gl.has(s.key)||gl.has(s.nameKey);s.elig=players.filter(p=>qualifies(unit(p,s),s,o));demand.set(s.key,(demand.get(s.key)||0)+1)});
+    const slack=s=>s.elig.length-demand.get(s.key);
+    const order=(a,b)=>slack(a)-slack(b)||a.key.localeCompare(b.key);
+    // Pass 1: keep every rule. GL slots first, as a maximum matching (one GL each).
+    if(o.oneGL){
+      const gls=ps.filter(s=>s.gl).sort(order),holder=new Map();
+      const tryA=(s,seen)=>{for(const p of [...s.elig].sort(glCmp)){if(seen.has(p))continue;seen.add(p);const cur=holder.get(p);
+        if(!cur||tryA(cur,seen)){holder.set(p,s);s.player=p;return true}}return false};
+      gls.forEach(s=>tryA(s,new Set()));
+      for(const[p,s]of holder)give(s,p,false);
+    }
+    for(const s of ps.filter(s=>!s.player&&!(o.oneGL&&s.gl)).sort(order)){
+      const c=s.elig.filter(p=>!used.get(p).has(s.key)&&load.get(p)<capOf(p));
+      if(c.length){c.sort(s.gl?glCmp:cmp);give(s,c[0],false)}
+    }
+    // Pass 2: refill anything still empty, going past the soft limits only where needed.
+    for(const s of ps.filter(s=>!s.player).sort(order)){
+      let c=s.elig.filter(p=>!used.get(p).has(s.key));
+      if(s.gl&&o.oneGL&&!o.relaxGL)c=c.filter(p=>glc.get(p)===0);
+      if(c.length){c.sort((a,b)=>(s.gl?glc.get(a)-glc.get(b)||(tiers?tier(a)-tier(b):0):0)||cmp(a,b));give(s,c[0],true);continue}
+      s.reason=!s.elig.length?'Nobody has it at the required level'
+        :s.gl&&o.oneGL&&!o.relaxGL?`${s.elig.length>1?`All ${s.elig.length} qualifying members already have`:'The only qualifying member already has'} a GL this phase (rule kept strict)`
+        :`Only ${s.elig.length} member${s.elig.length>1?'s have':' has'} it at the required level, and ${s.elig.length>1?'all are':'they are'} already placing it`;
+    }
+  }
+  return{slots,phases,players,tiers};
+}
+
+/* ---------- Setup and persistence ---------- */
+const relBox=$('#relics');
+for(let i=1;i<=6;i++)relBox.insertAdjacentHTML('beforeend',`<div><label for="rel${i}">P${i}</label><input type="number" id="rel${i}" min="0" max="10" value="${DEFAULT_RELIC[i]}"></div>`);
+const settings=['gls','stars','plain','scale','oneGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
+function restore(){
+  let saved={};try{saved=JSON.parse(store.get(K('rote-settings'))||'{}')}catch(e){}
+  $('#gls').value=DEFAULT_GL.join('\n');
+  for(const f of settings){if(saved[f]==null)continue;const el=$('#'+f);if(el.type==='checkbox')el.checked=saved[f];else el.value=saved[f]}
+}
+function saveSettings(){const o={};for(const f of settings){const el=$('#'+f);o[f]=el.type==='checkbox'?el.checked:el.value}store.set(K('rote-settings'),JSON.stringify(o))}
+function saveText(w){}
+restore();
+document.addEventListener('change',e=>{if(['rText','pText','planFile','pw','pwRemember','guildSel'].includes(e.target.id)||e.target.dataset.file)return;saveSettings()});
+
+function showMsg(id,kind,html){$(id).innerHTML=html?`<div class="msg ${kind}">${html}</div>`:''}
+function describe(w){
+  try{
+    if(w==='r'){const r=parseRoster($('#rText').value,$('#plain').value,$('#scale').value);let u=0;r.players.forEach(m=>u+=m.size);
+      return`${r.players.size} members, ${u} units. Relic values read as ${r.raw?'raw game values (2 is R0)':'actual relic tiers'}.${r.badCodes?' Ally codes in this sheet are rounded (like 5.85E+08), so members are matched by name instead.':''}${r.dups?` <b>${r.dups} duplicate rows</b> found (the same member and character listed more than once), most for ${[...r.dupWho].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([n])=>esc(n)).join(', ')}. The highest level was used. This usually means old rows are left at the bottom of the sheet.`:''} Loaded ${new Date().toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}.`}
+    const p=parsePlan($('#pText').value);const ph=new Set(p.slots.map(s=>s.phase));const ops=new Set(p.slots.map(opId));
+    return`${ph.size} phase${ph.size>1?'s':''}, ${ops.size} operations, ${p.slots.length} slots.`;
+  }catch(e){return esc(e.message)}
+}
+function textLoaded(w,label){
+  saveText(w);
+  showMsg('#'+w+'Msg','ok',(label?label+' ':'')+describe(w));
+  if(w==='p')renderOps();
+}
+
+document.querySelectorAll('[data-file]').forEach(inp=>inp.addEventListener('change',()=>{
+  const f=inp.files[0];if(!f)return;const w=inp.dataset.file;
+  const fr=new FileReader();fr.onload=()=>{$('#'+w+'Text').value=fr.result;textLoaded(w,'Loaded '+esc(f.name)+'.')};fr.readAsText(f);
+}));
+['r','p'].forEach(w=>$('#'+w+'Text').addEventListener('input',()=>{clearTimeout(window['t'+w]);window['t'+w]=setTimeout(()=>{if($('#'+w+'Text').value.trim())textLoaded(w);else showMsg('#'+w+'Msg')},600)}));
+$('#scale').addEventListener('change',()=>{if($('#rText').value.trim())showMsg('#rMsg','ok',describe('r'))});
+
+/* ---------- Operations picker ---------- */
+let OPSPH=1;
+function opsPlan(){if($('#pText').value.trim())return parsePlan($('#pText').value);if(LIVE.plan)return LIVE.plan;if(SHARED&&SHARED.plan)return SHARED.plan;return parsePlan('')}
+function planets(plan){
+  const m=new Map();
+  plan.slots.forEach(s=>{const k=s.phase+'|'+s.planet;if(!m.has(k))m.set(k,{zone:s.phase,planet:s.planet,ops:new Set()});m.get(k).ops.add(s.op)});
+  return[...m.values()].map(p=>({...p,ops:[...p.ops].sort(cmpOp)}));
+}
+const dOf=(zone,planet,op)=>deployOf({zone,planet,op});
+function renderOps(){
+  let plan;try{plan=opsPlan()}catch(e){$('#opsPanel').hidden=true;$('#opsEmpty').hidden=false;return}
+  const pls=planets(plan),maxPh=Math.max(6,...pls.map(p=>p.zone));
+  if(OPSPH>maxPh)OPSPH=1;
+  $('#opsPh').innerHTML=Array.from({length:maxPh},(_,i)=>i+1).map(ph=>{
+    const n=pls.reduce((a,p)=>a+p.ops.filter(op=>dOf(p.zone,p.planet,op)===ph).length,0);
+    return`<button class="phchip" data-ph="${ph}" aria-pressed="${ph===OPSPH}">Phase ${ph}<b>${n}</b></button>`}).join('');
+  const avail=pls.filter(p=>p.zone<=OPSPH).sort((a,b)=>b.zone-a.zone||a.planet.localeCompare(b.planet));
+  const row=p=>{
+    const here=p.ops.filter(op=>dOf(p.zone,p.planet,op)===OPSPH).length;
+    return`<div class="oprow"><button class="pl" data-planet="${esc(p.zone+'|'+p.planet)}">${esc(p.planet)} <small>${here}/${p.ops.length}</small></button>`+
+      p.ops.map(op=>{const d=dOf(p.zone,p.planet,op);const id=`${p.zone}|${p.planet}|${op}`;
+        const lab=d===OPSPH?`in phase ${OPSPH}`:d?`done in phase ${d}`:'not filled';
+        return`<button class="opb${d&&d!==OPSPH?' else':''}" data-op="${esc(id)}" aria-pressed="${d===OPSPH}" aria-label="${esc(p.planet)} operation ${esc(op)}, ${lab}" title="${esc(lab)}">${esc(op)}${d&&d!==OPSPH?`<small>P${d}</small>`:''}</button>`}).join('')+'</div>'};
+  const fresh=avail.filter(p=>p.zone===OPSPH),old=avail.filter(p=>p.zone<OPSPH);
+  let html='';
+  if(fresh.length)html+=`<div class="opsph"><h3>Unlocked in phase ${OPSPH}</h3>${fresh.map(row).join('')}</div>`;
+  if(old.length)html+=`<div class="opsph"><h3>Carried over from earlier phases</h3>${old.map(row).join('')}</div>`;
+  if(!html)html='<p class="note">No planets are open in this phase.</p>';
+  $('#ops').innerHTML=html;
+  $('#opsHint').textContent='Gold operations are filled in this phase. Ones marked P1 to P6 are filled in that other phase; tap one to move it here. Tap a planet name to add or remove all of its operations.';
+  $('#opsPanel').hidden=false;$('#opsEmpty').hidden=true;
+}
+function saveDeploy(){store.set(K('rote-deploy'),JSON.stringify(Object.fromEntries(DEPLOY)));renderOps()}
+function setD(id,ph){DEPLOY.set(id,ph);OFF.delete(id)}
+$('#opsPh').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){OPSPH=+b.dataset.ph;renderOps()}});
+$('#ops').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.op){const k=b.dataset.op;const[z,pl,op]=[+k.split('|')[0],k.split('|').slice(1,-1).join('|'),k.split('|').pop()];
+    setD(k,dOf(z,pl,op)===OPSPH?0:OPSPH);saveDeploy();return}
+  if(b.dataset.planet){
+    const[z,...rest]=b.dataset.planet.split('|');const pl=rest.join('|');
+    const p=planets(opsPlan()).find(x=>x.zone===+z&&x.planet===pl);if(!p)return;
+    const ids=p.ops.map(op=>[`${z}|${pl}|${op}`,dOf(+z,pl,op)]);
+    if(ids.some(([,d])=>d===OPSPH))ids.forEach(([id,d])=>{if(d===OPSPH)setD(id,0)});
+    else{const free=ids.filter(([,d])=>!d);(free.length?free:ids).forEach(([id])=>setD(id,OPSPH))}
+    saveDeploy();
+  }
+});
+$('#opsAll').addEventListener('click',()=>{DEPLOY.clear();OFF.clear();store.set(K('rote-off'),'[]');saveDeploy()});
+$('#opsNone').addEventListener('click',()=>{let plan;try{plan=opsPlan()}catch(e){return}
+  planets(plan).forEach(p=>p.ops.forEach(op=>{if(dOf(p.zone,p.planet,op)===OPSPH)setD(`${p.zone}|${p.planet}|${op}`,0)}));saveDeploy()});
+
+/* ---------- Run ---------- */
+function opts(){return{gl:$('#gls').value.split('\n'),oneGL:$('#oneGL').checked,relaxGL:$('#relaxGL').checked,tierMode:$('#tierMode').checked,cap:+$('#cap').value||0,minStars:+$('#stars').value||7,
+  relic:Object.fromEntries([1,2,3,4,5,6].map(i=>[i,+$('#rel'+i).value||0])),seed:SEED}}
+let DIRTY=false,SHARED=null,OK=false,MISSING=false,MSCOPE='on',MPHASE=0;
+function run(){OK=false;
+  let roster,plan;
+  if(!$('#rText').value.trim()&&(LIVE.roster||SHARED))roster=LIVE.roster||SHARED.roster;
+  else try{roster=parseRoster($('#rText').value,$('#plain').value,$('#scale').value)}catch(e){showMsg('#runMsg','err','Roster: '+esc(e.message));return}
+  if(!$('#pText').value.trim()&&(LIVE.plan||SHARED))plan=LIVE.plan||SHARED.plan;
+  else try{plan=parsePlan($('#pText').value)}catch(e){showMsg('#runMsg','err','Plan: '+esc(e.message));return}
+  if(!roster.players.size){showMsg('#runMsg','err','Roster: no members found.');return}
+  const o=opts();const res=assign(roster,plan,o);
+  if(!res.slots.length){showMsg('#runMsg','err','No operations are chosen. Pick some under “Operations to fill”.');return}
+  RESULT=res;Object.assign(RESULT,{roster,plan,o,all:null,off:[...OFF],deploy:Object.fromEntries(DEPLOY),seed:SEED,settings:curSettings()});
+  DIRTY=true;showResult();
+}
+function showResult(){
+  const roster=RESULT.roster;
+  const known=new Set();roster.players.forEach(m=>m.forEach((_,k)=>known.add(k)));
+  const miss=new Map();RESULT.slots.forEach(s=>{if(!known.has(s.key)&&!known.has(s.nameKey))miss.set(s.key,s.unit)});
+  RESULT.missing=[...miss.values()];
+  if(PHASE==null||!RESULT.phases.includes(PHASE))PHASE=RESULT.phases[0];
+  showMsg('#runMsg');$('#reshuffle').disabled=false;OK=true;$('#mainbar').hidden=false;$('#empty').hidden=true;setMode(MODE,false);
+  if(!RESULT.players.includes(WHO))WHO='';
+  $('#who').innerHTML='<option value="">Everyone</option>'+[...RESULT.players].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).map(p=>`<option${p===WHO?' selected':''}>${esc(p)}</option>`).join('');
+  render();renderSaved();renderTierInfo();
+}
+function renderTierInfo(){
+  const el=$('#tierInfo');if(!RESULT){el.textContent='';return}
+  const t=tiersOf(RESULT.roster);
+  if(!t){el.textContent='No GP available yet, so tiers can’t be worked out. Load the roster sheet again (it needs a Power or GP column), then assign.';return}
+  const gp=RESULT.roster.gp;
+  el.textContent='Current tiers: '+[1,2,3,4].map(n=>{const m=[...t].filter(([,v])=>v===n).map(([p])=>gp.get(p)||0);return m.length?`tier ${n} ${m.length} members (${fmtGP(Math.min(...m))} and up)`:''}).filter(Boolean).join(', ')+'.';
+}
+
+/* ---------- Results ---------- */
+function phaseSlots(ph){return RESULT.slots.filter(s=>s.phase===ph)}
+function renderTrack(){
+  const t=$('#track');t.innerHTML='';
+  for(let i=1;i<=6;i++){
+    const ss=RESULT?phaseSlots(i):[];const f=ss.filter(s=>s.player).length;
+    const pct=ss.length?Math.floor(f/ss.length*100):0;
+    t.insertAdjacentHTML('beforeend',`<button class="ph${ss.length&&f<ss.length?' part':''}" data-ph="${i}" ${ss.length?'':'disabled'} aria-pressed="${PHASE===i}">
+      <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="lab"><span><span class="lw">Phase </span><span class="ls">P</span>${i}</span><span>${ss.length?pct+'%':''}</span></div></button>`);
+  }
+  t.querySelectorAll('.ph').forEach(b=>b.addEventListener('click',()=>{PHASE=+b.dataset.ph;render()}));
+}
+const slotSort=(a,b)=>a.planet.localeCompare(b.planet)||cmpOp(a.op,b.op)||(a.row??0)-(b.row??0)||(a.slot??0)-(b.slot??0);
+const tierBadge=p=>RESULT&&RESULT.tiers&&RESULT.tiers.get(p)?`<span class="tier">T${RESULT.tiers.get(p)}</span>`:'';
+const tags=s=>(s.overCap?'<span class="tag">over limit</span>':'')+(s.extraGL?'<span class="tag">2nd GL</span>':'');
+const carry=s=>s.zone&&s.zone!==s.phase?`<span class="carry">phase ${s.zone} planet</span>`:'';
+const where=s=>`${s.planet}, op ${s.op}${s.row!=null?`, row ${s.row}`:''}`;
+function capFor(p){const c=+$('#cap').value||Infinity;const t=RESULT&&RESULT.tiers&&RESULT.tiers.get(p);return t?Math.max(1,Math.round(c*TIER_W[t])):c}
+function renderMember(){
+  const p=WHO,cap=capFor(WHO);
+  const mine=RESULT.slots.filter(s=>s.player===p);
+  const ss=mine.filter(s=>s.phase===PHASE).sort(slotSort);
+  $('#resTitle').innerHTML=`Phase ${PHASE}: ${esc(p)}${tierBadge(p)}`;
+  $('#tabs').hidden=true;
+  $('#copyDiscord').textContent='Copy '+p+'’s list';
+  $('#stats').innerHTML=`<div class="stat"><b${ss.length>cap?' style="color:var(--bad)"':''}>${ss.length}</b><span>units to place</span></div>
+    <div class="stat"><b>${new Set(ss.map(opId)).size}</b><span>operations</span></div>
+    <div class="stat"><b>${ss.filter(s=>s.gl).length}</b><span>GLs</span></div>
+    <div class="stat"><b>${mine.length}</b><span>across all phases</span></div>`;
+  let html=`<div class="phrow">${RESULT.phases.map(ph=>`<button class="phchip" data-ph="${ph}" aria-pressed="${ph===PHASE}">Phase ${ph}<b>${mine.filter(s=>s.phase===ph).length}</b></button>`).join('')}</div>`;
+  const g=new Map();ss.forEach(s=>{const k=s.planet+'\u0000'+s.op;if(!g.has(k))g.set(k,[]);g.get(k).push(s)});
+  if(!ss.length)html+=`<p>Nothing for ${esc(p)} to place in phase ${PHASE}.</p>`;
+  for(const[k,a]of g){const[pl,op]=k.split('\u0000');
+    html+=`<div class="task"><h3>${esc(pl)}, operation ${esc(op)}${carry(a[0])}</h3><ul>${a.map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${tags(s)}${s.row!=null?` <small>row ${s.row}</small>`:''}</li>`).join('')}</ul></div>`}
+  $('#view').innerHTML=html;
+  $('#view').querySelectorAll('.phchip').forEach(b=>b.addEventListener('click',()=>{PHASE=+b.dataset.ph;render()}));
+}
+function render(){
+  renderTrack();
+  if(WHO){renderMember();return}
+  $('#tabs').hidden=false;
+  $('#copyDiscord').textContent='Copy phase for Discord';
+  const ss=phaseSlots(PHASE).sort(slotSort),filled=ss.filter(s=>s.player);
+  const loads=new Map(RESULT.players.map(p=>[p,0]));filled.forEach(s=>loads.set(s.player,loads.get(s.player)+1));
+  const active=[...loads.values()].filter(v=>v>0);
+  const fullOps=new Map();ss.forEach(s=>{const k=opId(s);fullOps.set(k,(fullOps.get(k)??true)&&!!s.player)});
+  $('#resTitle').textContent=`Phase ${PHASE} assignments`;
+  $('#stats').innerHTML=`<div class="stat"><b>${filled.length}/${ss.length}</b><span>slots filled</span></div>
+    <div class="stat"><b>${[...fullOps.values()].filter(Boolean).length}/${fullOps.size}</b><span>operations complete</span></div>
+    <div class="stat"><b>${ss.filter(s=>s.overCap||s.extraGL).length}</b><span>refilled past a limit</span></div>
+    <div class="stat"><b>${active.length}</b><span>members placing</span></div>
+    <div class="stat"><b>${active.length?Math.min(...loads.values()):0}–${active.length?Math.max(...active):0}</b><span>units per member</span></div>`;
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===VIEW));
+  let html='';
+  if(RESULT.missing.length&&VIEW!=='totals')html+=`<div class="warn"><b>Nobody in the roster has:</b> ${RESULT.missing.map(esc).join(', ')}.</div>`;
+  if(VIEW==='players'){
+    const by=new Map();filled.forEach(s=>{if(!by.has(s.player))by.set(s.player,[]);by.get(s.player).push(s)});
+    const list=[...by].sort((a,b)=>a[0].localeCompare(b[0],undefined,{sensitivity:'base'}));
+    const idle=RESULT.players.filter(p=>!by.has(p));
+    html+=`<div class="plist">${list.map(([p,a])=>`<div class="pc"><h3><span>${esc(p)}${tierBadge(p)}</span><span class="n${a.length>capFor(p)?' over':''}">${a.length}</span></h3><ul>${a.map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${tags(s)}<br><small>${esc(where(s))}</small>${carry(s)}</li>`).join('')}</ul></div>`).join('')}</div>`;
+    if(idle.length)html+=`<p class="note" style="margin-top:12px">Nothing to place this phase: ${idle.map(esc).join(', ')}</p>`;
+  }else if(VIEW==='ops'){
+    const g=new Map();ss.forEach(s=>{const k=s.planet+'\u0000'+s.op;if(!g.has(k))g.set(k,[]);g.get(k).push(s)});
+    for(const[k,a]of g){const[pl,op]=k.split('\u0000');const f=a.filter(s=>s.player).length;
+      html+=`<div class="opblock"><h3>${esc(pl)}, operation ${esc(op)}${carry(a[0])} <span class="note">${f}/${a.length}</span></h3><div class="scroll"><table><thead><tr>${a[0].row!=null?'<th>Row</th>':''}<th>Unit</th><th>Member</th></tr></thead><tbody>${a.map(s=>`<tr>${s.row!=null?`<td>${s.row}</td>`:''}<td>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}</td>${s.player?`<td>${esc(s.player)}${tags(s)}</td>`:'<td class="empty">Unfilled</td>'}</tr>`).join('')}</tbody></table></div></div>`}
+  }else if(VIEW==='unfilled'){
+    const u=ss.filter(s=>!s.player);
+    html+=u.length?`<div class="scroll"><table><thead><tr><th>Planet</th><th>Op</th><th>Unit</th><th>Why</th></tr></thead><tbody>${u.map(s=>`<tr><td>${esc(s.planet)}</td><td>${esc(s.op)}</td><td>${esc(s.unit)}</td><td>${esc(s.reason)}</td></tr>`).join('')}</tbody></table></div>`:'<p>Every slot in this phase is filled.</p>';
+    if(u.length)html=`<p class="note">These are left after the refill pass, so nobody else in the guild can take them. Gearing one more copy of each unit is the fix.</p>`+html;
+  }else{
+    const rows=RESULT.players.map(p=>({p,c:RESULT.phases.map(ph=>RESULT.slots.filter(s=>s.phase===ph&&s.player===p).length)})).map(r=>({...r,t:r.c.reduce((a,b)=>a+b,0)})).sort((a,b)=>b.t-a.t||a.p.localeCompare(b.p));
+    const T=RESULT.tiers,gp=RESULT.roster.gp;
+    if(T)rows.sort((a,b)=>T.get(a.p)-T.get(b.p)||b.t-a.t||a.p.localeCompare(b.p));
+    if(T)html+=`<p class="note">Player tier balancing is on. Average units per member, all phases: ${[1,2,3,4].map(t=>{const m=rows.filter(r=>T.get(r.p)===t);return m.length?`tier ${t} ${(m.reduce((a,r)=>a+r.t,0)/m.length).toFixed(1)}`:''}).filter(Boolean).join(', ')}.</p>`;
+    html+=`<div class="scroll"><table><thead><tr><th>Member</th>${T?'<th>Tier</th>':''}${gp&&gp.size?'<th>GP</th>':''}${RESULT.phases.map(ph=>`<th>P${ph}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.p)}</td>${T?`<td>T${T.get(r.p)}</td>`:''}${gp&&gp.size?`<td>${fmtGP(gp.get(r.p))}</td>`:''}${r.c.map(c=>`<td>${c||''}</td>`).join('')}<td><b>${r.t}</b></td></tr>`).join('')}</tbody></table></div>`;
+  }
+  $('#view').innerHTML=html;
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{VIEW=b.dataset.view;render()}));
+
+/* ---------- Missing platoons ---------- */
+const lvlText=u=>u.ship?`${u.stars??'?'}★`:u.gear!=null&&u.gear<13?`G${u.gear}`:u.relic!=null?`R${u.relic}`:u.stars!=null?`${u.stars}★`:'owned';
+let MODE='assign';
+function setMode(m,scroll=true){
+  MODE=m;MISSING=m==='missing';
+  $('#assignBtn').setAttribute('aria-pressed',m==='assign');$('#missingBtn').setAttribute('aria-pressed',m==='missing');$('#summaryBtn').setAttribute('aria-pressed',m==='summary');$('#reqBtn').setAttribute('aria-pressed',m==='req');
+  $('#missing').hidden=m!=='missing';$('#summary').hidden=m!=='summary';$('#req').hidden=m!=='req';$('#results').hidden=m!=='assign';
+  if(m==='missing')renderMissing();if(m==='summary')renderSummary();if(m==='req')renderReq();
+  if(scroll)$('#'+(m==='assign'?'results':m)).scrollIntoView({behavior:'smooth'});
+}
+function showMissing(on){setMode(on?'missing':'assign')}
+
+/* ---------- Summary ---------- */
+let SUMSORT={k:'total',d:-1};
+function summaryData(){
+  const R=RESULT,T=R.tiers,gp=R.roster.gp,hasGP=!!(gp&&[...gp.values()].some(v=>v>0));
+  const idx=new Map(R.phases.map((ph,i)=>[ph,i]));
+  const rows=new Map(R.players.map(p=>[p,{p,tier:T?T.get(p):null,gp:gp?.get(p)||0,total:0,gl:0,u:R.phases.map(()=>0),g:R.phases.map(()=>0)}]));
+  R.slots.forEach(s=>{if(!s.player)return;const r=rows.get(s.player);if(!r)return;const i=idx.get(s.phase);r.total++;r.u[i]++;if(s.gl){r.gl++;r.g[i]++}});
+  return{rows:[...rows.values()],T,hasGP};
+}
+function renderSummary(){
+  if(!RESULT)return;
+  const{rows,T,hasGP}=summaryData(),P=RESULT.phases,R=RESULT;
+  const val=(r,k)=>k==='p'?r.p.toLowerCase():k==='tier'?r.tier:k==='gp'?r.gp:k==='total'?r.total:k==='gl'?r.gl:k[0]==='u'?r.u[+k.slice(1)]:r.g[+k.slice(1)];
+  rows.sort((a,b)=>{const x=val(a,SUMSORT.k),y=val(b,SUMSORT.k);return(x<y?-1:x>y?1:0)*SUMSORT.d||a.p.localeCompare(b.p)});
+  const filled=R.slots.filter(s=>s.player),gls=filled.filter(s=>s.gl).length;
+  $('#sumStats').innerHTML=`<div class="stat"><b>${rows.length}</b><span>members</span></div>
+    <div class="stat"><b>${filled.length}</b><span>platoons deployed</span></div>
+    <div class="stat"><b>${gls}</b><span>GLs deployed</span></div>
+    <div class="stat"><b>${R.slots.length-filled.length}</b><span>slots empty</span></div>`;
+  const th=(k,label,cls='')=>`<th class="sort ${cls}" data-k="${k}" aria-sort="${SUMSORT.k===k?(SUMSORT.d>0?'ascending':'descending'):'none'}"><button type="button">${label}${SUMSORT.k===k?(SUMSORT.d>0?' ▲':' ▼'):''}</button></th>`;
+  const tot=k=>rows.reduce((a,r)=>a+val(r,k),0);
+  const zero=v=>v?v:'<span class="z">0</span>';
+  let t=`<table class="sumtable"><thead><tr><th class="stick"></th>${T?'<th></th>':''}${hasGP?'<th></th>':''}<th colspan="2" class="grp">All phases</th>${P.map(ph=>`<th colspan="2" class="grp">Phase ${ph}</th>`).join('')}</tr>
+    <tr>${th('p','Member','stick')}${T?th('tier','Tier'):''}${hasGP?th('gp','GP'):''}${th('total','Platoons','gs')}${th('gl','GLs')}${P.map((ph,i)=>th('u'+i,'Platoons','gs')+th('g'+i,'GLs')).join('')}</tr></thead><tbody>`;
+  t+=rows.map(r=>`<tr><td class="stick">${esc(r.p)}</td>${T?`<td>T${r.tier}</td>`:''}${hasGP?`<td>${fmtGP(r.gp)}</td>`:''}<td class="gs"><b>${r.total}</b></td><td>${zero(r.gl)}</td>${P.map((ph,i)=>`<td class="gs">${zero(r.u[i])}</td><td>${zero(r.g[i])}</td>`).join('')}</tr>`).join('');
+  t+=`</tbody><tfoot><tr><td class="stick">Guild total</td>${T?'<td></td>':''}${hasGP?`<td>${fmtGP(tot('gp'))}</td>`:''}<td class="gs">${tot('total')}</td><td>${tot('gl')}</td>${P.map((ph,i)=>`<td class="gs">${tot('u'+i)}</td><td>${tot('g'+i)}</td>`).join('')}</tr></tfoot></table>`;
+  $('#sumView').innerHTML=t;
+}
+$('#sumView').addEventListener('click',e=>{const c=e.target.closest('th[data-k]');if(!c)return;const k=c.dataset.k;SUMSORT=SUMSORT.k===k?{k,d:-SUMSORT.d}:{k,d:k==='p'||k==='tier'?1:-1};renderSummary()});
+$('#assignBtn').addEventListener('click',()=>setMode('assign'));
+$('#summaryBtn').addEventListener('click',()=>setMode('summary'));
+$('#reqBtn').addEventListener('click',()=>setMode('req'));
+
+/* ---------- Requirements ---------- */
+let REQPH=0,REQF='all';
+function reqData(){
+  const R=RESULT,out=[];
+  const isShip=s=>s.ship||R.players.some(p=>unitOf(R.roster,p,s)?.ship);
+  for(const ph of R.phases){
+    const ss=R.slots.filter(s=>s.phase===ph);
+    const phaseNeed=new Map();ss.forEach(s=>phaseNeed.set(s.key,(phaseNeed.get(s.key)||0)+1));
+    const byPlanet=new Map();
+    ss.forEach(s=>{const k=(s.zone??s.phase)+'|'+s.planet;if(!byPlanet.has(k))byPlanet.set(k,{planet:s.planet,zone:s.zone??s.phase,ops:new Set(),slots:0,units:new Map()});
+      const P=byPlanet.get(k);P.ops.add(s.op);P.slots++;
+      if(!P.units.has(s.key))P.units.set(s.key,{s,need:0});P.units.get(s.key).need++});
+    const planets=[...byPlanet.values()].sort((a,b)=>a.zone-b.zone||a.planet.localeCompare(b.planet)).map(P=>{
+      const rows=[...P.units.values()].map(({s,need})=>{
+        let have=0,below=0;R.players.forEach(p=>{const u=unitOf(R.roster,p,s);if(!u||u.stars===0)return;if(qualifies(u,s,R.o))have++;else below++});
+        const pn=phaseNeed.get(s.key);
+        const lvl=isShip(s)?`${s.minStars??R.o.minStars}★`:`R${s.minRelic??R.o.relic[s.zone??s.phase]??0}`;
+        return{unit:s.unit,gl:!!s.gl||glKeys(R.o.gl).has(s.key)||glKeys(R.o.gl).has(s.nameKey),need,phaseNeed:pn,have,diff:have-pn,below,lvl};
+      }).sort((a,b)=>a.diff-b.diff||a.unit.localeCompare(b.unit));
+      return{...P,ops:[...P.ops].sort(cmpOp),rows};
+    });
+    out.push({phase:ph,planets});
+  }
+  return out;
+}
+function renderReq(){
+  if(!RESULT)return;
+  const data=reqData();
+  if(REQPH&&!data.some(d=>d.phase===REQPH))REQPH=0;
+  const shortIn=d=>{const s=new Set();d.planets.forEach(P=>P.rows.forEach(r=>{if(r.diff<0)s.add(r.unit)}));return s.size};
+  $('#reqPhase').innerHTML=[`<button class="phchip" data-ph="0" aria-pressed="${REQPH===0}">All phases</button>`,...data.map(d=>`<button class="phchip" data-ph="${d.phase}" aria-pressed="${d.phase===REQPH}">Phase ${d.phase}<b>${shortIn(d)}</b></button>`)].join('');
+  document.querySelectorAll('#reqFilter .phchip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===REQF));
+  const shown=data.filter(d=>!REQPH||d.phase===REQPH);
+  let slots=0,chars=new Set(),short=new Map();
+  shown.forEach(d=>d.planets.forEach(P=>{slots+=P.slots;P.rows.forEach(r=>{chars.add(d.phase+'|'+r.unit);if(r.diff<0)short.set(d.phase+'|'+r.unit,-r.diff)})}));
+  $('#reqStats').innerHTML=`<div class="stat"><b>${slots}</b><span>slots needed</span></div>
+    <div class="stat"><b>${chars.size}</b><span>characters needed</span></div>
+    <div class="stat"><b>${short.size}</b><span>characters short</span></div>
+    <div class="stat"><b>${[...short.values()].reduce((a,b)=>a+b,0)}</b><span>upgrades needed</span></div>`;
+  const sign=v=>v>0?`+${v}`:v<0?`−${-v}`:'0';
+  let html='';
+  for(const d of shown){
+    html+=`<div class="reqphase"><h3 class="reqph">Phase ${d.phase}</h3>`;
+    for(const P of d.planets){
+      const rows=REQF==='short'?P.rows.filter(r=>r.diff<0):P.rows;
+      const nShort=P.rows.filter(r=>r.diff<0).length;
+      html+=`<div class="reqplanet"><h3>${esc(P.planet)}${P.zone!==d.phase?`<span class="carry">phase ${P.zone} planet</span>`:''}</h3>
+        <p class="note">Operations ${P.ops.map(esc).join(', ')}. ${P.slots} slots, ${P.rows.length} different characters, ${P.rows.reduce((a,r)=>a+r.need,0)} needed in total${nShort?`, <b class="neg">${nShort} short</b>`:', none short'}.</p>`;
+      if(!rows.length){html+='<p class="note">Nothing short on this planet.</p></div>';continue}
+      html+=`<div class="scroll"><table class="reqtable"><thead><tr><th>Character</th><th>Need</th><th>Have</th><th>Diff</th><th>Can upgrade</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.diff<0?'isneg':''}"><td class="nm">${esc(r.unit)}${r.gl?'<span class="gl">GL</span>':''}<br><small>${r.lvl}${r.phaseNeed!==r.need?`, ${r.phaseNeed} needed across phase ${d.phase}`:''}</small></td><td>${r.need}</td><td>${r.have}</td><td class="${r.diff<0?'neg':r.diff>0?'pos':''}"><b>${sign(r.diff)}</b></td><td>${r.below||'<span class="z">0</span>'}</td></tr>`).join('')}</tbody></table></div></div>`;
+    }
+    html+='</div>';
+  }
+  $('#reqView').innerHTML=html||'<p>No operations are chosen.</p>';
+}
+$('#reqPhase').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){REQPH=+b.dataset.ph;renderReq()}});
+$('#reqFilter').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(b){REQF=b.dataset.f;renderReq()}});
+$('#reqCopy').addEventListener('click',async()=>{
+  const lines=[['Phase','Planet','Planet phase','Character','Level','Needed on planet','Needed in phase','Have','Difference','Could upgrade']];
+  reqData().filter(d=>!REQPH||d.phase===REQPH).forEach(d=>d.planets.forEach(P=>P.rows.forEach(r=>{if(REQF==='short'&&r.diff>=0)return;lines.push([d.phase,P.planet,P.zone,r.unit,r.lvl,r.need,r.phaseNeed,r.have,r.diff,r.below])})));
+  const t=lines.map(a=>a.map(v=>String(v).replace(/\t/g,' ')).join('\t')).join('\n');
+  try{await navigator.clipboard.writeText(t);showMsg('#reqMsg','ok','Copied. Paste into cell A1 of a new tab.')}
+  catch(e){showMsg('#reqMsg','err','Copy was blocked here. Select the text below and copy it.<textarea readonly style="margin-top:6px">'+esc(t)+'</textarea>')}
+});
+$('#sumCopy').addEventListener('click',async()=>{
+  const{rows,T,hasGP}=summaryData(),P=RESULT.phases;
+  rows.sort((a,b)=>b.total-a.total||a.p.localeCompare(b.p));
+  const head=['Member',...(T?['Tier']:[]),...(hasGP?['GP']:[]),'Platoons','GLs',...P.flatMap(ph=>[`P${ph} platoons`,`P${ph} GLs`])];
+  const lines=[head,...rows.map(r=>[r.p,...(T?['T'+r.tier]:[]),...(hasGP?[Math.round(r.gp)]:[]),r.total,r.gl,...P.flatMap((ph,i)=>[r.u[i],r.g[i]])])].map(a=>a.map(v=>String(v).replace(/\t/g,' ')).join('\t')).join('\n');
+  try{await navigator.clipboard.writeText(lines);showMsg('#sumMsg','ok','Copied. Paste into cell A1 of a new tab.')}
+  catch(e){showMsg('#sumMsg','err','Copy was blocked here. Select the text below and copy it.<textarea readonly style="margin-top:6px">'+esc(lines)+'</textarea>')}
+});
+function renderMissing(){
+  if(!RESULT)return;
+  let res=RESULT;
+  if(MSCOPE==='all'){if(!RESULT.all)RESULT.all=assign(RESULT.roster,RESULT.plan,RESULT.o,true);res=RESULT.all}
+  document.querySelectorAll('#mScope .phchip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scope===MSCOPE));
+  const all=res.slots.filter(s=>!s.player);
+  const phases=res.phases;
+  if(MPHASE&&!phases.includes(MPHASE))MPHASE=0;
+  $('#mPhase').innerHTML=[0,...phases].map(ph=>`<button class="phchip" data-ph="${ph}" aria-pressed="${ph===MPHASE}">${ph?'Phase '+ph:'All phases'}<b>${all.filter(s=>!ph||s.phase===ph).length}</b></button>`).join('');
+  const miss=all.filter(s=>!MPHASE||s.phase===MPHASE);
+  const inScope=res.slots.filter(s=>!MPHASE||s.phase===MPHASE);
+  const ops=new Map();inScope.forEach(s=>{const k=opId(s);if(!ops.has(k))ops.set(k,{phase:s.phase,planet:s.planet,op:s.op,total:0,missing:[]});const o=ops.get(k);o.total++;if(!s.player)o.missing.push(s)});
+  const broken=[...ops.values()].filter(o=>o.missing.length).sort((a,b)=>a.phase-b.phase||a.planet.localeCompare(b.planet)||cmpOp(a.op,b.op));
+  // characters short, per phase (relic needs differ by phase)
+  const short=new Map();
+  miss.forEach(s=>{const k=s.phase+'|'+(s.zone??s.phase)+'|'+s.key;if(!short.has(k))short.set(k,{s,count:0,ops:new Set()});const x=short.get(k);x.count++;x.ops.add(`${s.planet} op ${s.op}`)});
+  const rows=[...short.values()].sort((a,b)=>a.s.phase-b.s.phase||b.count-a.count||a.s.unit.localeCompare(b.s.unit));
+  $('#mStats').innerHTML=`<div class="stat"><b>${miss.length}</b><span>empty slots</span></div>
+    <div class="stat"><b>${broken.length}/${ops.size}</b><span>operations incomplete</span></div>
+    <div class="stat"><b>${rows.length}</b><span>characters short</span></div>`;
+  if(!miss.length){$('#mView').innerHTML=`<p>Nothing is missing${MPHASE?' in phase '+MPHASE:''}. Every slot can be filled.</p>`;return}
+  const R=res===RESULT?RESULT:RESULT;
+  const need=s=>{const ship=s.ship||RESULT.players.some(p=>unitOf(RESULT.roster,p,s)?.ship);return ship?`${s.minStars??RESULT.o.minStars}★`:`R${s.minRelic??RESULT.o.relic[s.zone??s.phase]??0}`};
+  const close=s=>{const list=RESULT.players.map(p=>({p,u:unitOf(RESULT.roster,p,s)})).filter(x=>x.u&&!qualifies(x.u,s,RESULT.o))
+      .sort((a,b)=>(b.u.relic??-1)-(a.u.relic??-1)||(b.u.gear??0)-(a.u.gear??0)||(b.u.stars??0)-(a.u.stars??0));
+    if(!list.length)return'<span class="note">Nobody owns it below the requirement</span>';
+    return list.slice(0,6).map(x=>`${esc(x.p)} <small>${lvlText(x.u)}</small>`).join(', ')+(list.length>6?` <span class="note">and ${list.length-6} more</span>`:'')};
+  let html=`<h3 style="margin-bottom:8px">Characters the guild is short on</h3>
+    <p class="note">Short by is how many more members need the unit at the required level. Closest lists members who own it but haven’t reached that level yet.</p>
+    <div class="scroll"><table><thead><tr>${MPHASE?'':'<th>Phase</th>'}<th>Unit and closest members</th><th>Short by</th><th>Needs</th></tr></thead><tbody>${rows.map(x=>`<tr style="vertical-align:top">${MPHASE?'':`<td>P${x.s.phase}</td>`}<td style="white-space:normal;min-width:180px">${esc(x.s.unit)}${x.s.gl?'<span class="gl">GL</span>':''}<br><small style="color:var(--muted)">Closest: ${close(x.s)}</small></td><td><b>${x.count}</b></td><td>${need(x.s)}</td></tr>`).join('')}</tbody></table></div>
+    <h3 style="margin:20px 0 8px">Incomplete operations</h3>`;
+  html+=broken.map(o=>`<div class="task"><h3>${MPHASE?'':`Phase ${o.phase}, `}${esc(o.planet)}, operation ${esc(o.op)} <span class="note">${o.total-o.missing.length}/${o.total} filled</span></h3><ul>${o.missing.sort(slotSort).map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${s.row!=null?` <small>row ${s.row}</small>`:''}<br><small>${esc(s.reason||'')}</small></li>`).join('')}</ul></div>`).join('');
+  $('#mView').innerHTML=html;
+}
+$('#missingBtn').addEventListener('click',()=>setMode('missing'));
+$('#mScope').addEventListener('click',e=>{const b=e.target.closest('[data-scope]');if(b){MSCOPE=b.dataset.scope;renderMissing()}});
+$('#mPhase').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){MPHASE=+b.dataset.ph;renderMissing()}});
+
+/* ---------- Export ---------- */
+function table(sep){
+  const q=v=>{v=String(v??'');return sep===','&&/[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v.replace(/\t/g,' ')};
+  const rows=[['Phase','Planet','Operation','Row','Slot','Unit','Member','Status'],...[...RESULT.slots].sort((a,b)=>a.phase-b.phase||slotSort(a,b)).map(s=>[s.phase,s.planet,s.op,s.row??'',s.slot??'',s.unit,s.player||'',s.player?(s.overCap||s.extraGL?'Assigned (refill'+(s.overCap?', over limit':'')+(s.extraGL?', 2nd GL':'')+')':'Assigned'):'Unfilled: '+(s.reason||'')])];
+  return rows.map(r=>r.map(q).join(sep)).join('\n');
+}
+async function copy(text,label){
+  try{await navigator.clipboard.writeText(text);showMsg('#toolMsg','ok',label)}
+  catch(e){showMsg('#toolMsg','err','Copy was blocked here. Select the text below and copy it.<textarea readonly style="margin-top:6px">'+esc(text)+'</textarea>')}
+}
+$('#who').addEventListener('change',e=>{WHO=e.target.value;render()});
+$('#copyDiscord').addEventListener('click',()=>{
+  if(WHO){const a=phaseSlots(PHASE).filter(s=>s.player===WHO).sort(slotSort);
+    copy(`**RotE Phase ${PHASE}: ${WHO}** (${a.length})\n`+a.map(s=>`• ${s.planet} op ${s.op}${s.row!=null?` row ${s.row}`:''}: ${s.unit}`).join('\n'),'Copied '+WHO+'’s Phase '+PHASE+' list.');return}
+  const by=new Map();phaseSlots(PHASE).filter(s=>s.player).sort(slotSort).forEach(s=>{if(!by.has(s.player))by.set(s.player,[]);by.get(s.player).push(s)});
+  let t=`**RotE Phase ${PHASE} platoons**\n`;
+  for(const[p,a]of [...by].sort((x,y)=>x[0].localeCompare(y[0]))){t+=`\n**${p}** (${a.length})\n`+a.map(s=>`• ${s.planet} op ${s.op}: ${s.unit}`).join('\n')+'\n'}
+  copy(t,'Copied Phase '+PHASE+' for Discord.');
+});
+$('#copyTsv').addEventListener('click',()=>copy(table('\t'),'Copied. Paste into cell A1 of a new tab.'));
+let downloads=null;
+(async()=>{try{if(window.claude&&claude.use)downloads=await claude.use('downloads')}catch(e){}})();
+$('#dlCsv').addEventListener('click',async()=>{
+  const data=table(','),filename='rote-platoons.csv';
+  try{
+    if(downloads){await downloads.save({filename,data});showMsg('#toolMsg','ok','Saved '+filename+'.');return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/csv'}));a.download=filename;a.click();
+  }catch(e){if(e&&e.code==='declined')showMsg('#toolMsg');else showMsg('#toolMsg','err','Download isn’t available here. Use “Copy all for Sheets” instead.')}
+});
+
+renderTrack();
+['r','p'].forEach(w=>{if($('#'+w+'Text').value.trim())showMsg('#'+w+'Msg','ok',describe(w))});
+renderOps();
+
+/* ---------- Menu ---------- */
+const menu=$('#menu');let pane='sheets';
+function showPane(n){pane=n;document.querySelectorAll('.dtabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.pane===n));document.querySelectorAll('.pane').forEach(s=>s.hidden=s.dataset.pane!==n);$('.dbody').scrollTop=0}
+function openMenu(n){if(!unlocked){askPassword(n);return}showPane(n||pane);if(!menu.open){if(menu.showModal)menu.showModal();else menu.setAttribute('open','')}}
+function closeMenu(){if(!menu.open)return;if(menu.close)menu.close();else menu.removeAttribute('open');$('#menuBtn').focus()}
+$('#menuBtn').addEventListener('click',()=>openMenu());
+$('#menuClose').addEventListener('click',closeMenu);
+menu.addEventListener('click',e=>{if(e.target===menu)closeMenu()});
+document.querySelectorAll('.dtabs button').forEach(b=>b.addEventListener('click',()=>showPane(b.dataset.pane)));
+document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openMenu(b.dataset.open)));
+$('#run').addEventListener('click',()=>{run();if(OK)closeMenu()});
+$('#reshuffle').addEventListener('click',()=>{SEED++;run();if(OK)closeMenu()});
+
+
+
+/* ---------- Officer access: the site's officer password (or a GitHub token) ---------- */
+let unlocked=false,TOKEN=null;
+const gate=$('#gate');let gatePane=null;
+const enc=new TextEncoder(),dec=new TextDecoder();
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function unlockBlob(blob,pw){
+  try{const base=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:unb64(blob.salt),iterations:blob.iterations,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+    return dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(blob.iv)},key,unb64(blob.data)))}catch(e){return null}}
+async function loginWith(secret){
+  if(SITE.keyBlob){const tok=await unlockBlob(SITE.keyBlob,secret);if(tok)return{tok,kind:'pw'};if(/^(github_pat_|ghp_)/.test(secret))return{tok:secret,kind:'tok'};return null}
+  return /^(github_pat_|ghp_)/.test(secret)?{tok:secret,kind:'tok'}:null}
+async function tryRemembered(){
+  let pw=null,tk=null;try{pw=localStorage.getItem('raidTrackerPassword');tk=localStorage.getItem('raidTrackerToken')}catch(e){}
+  if(pw&&SITE.keyBlob){const tok=await unlockBlob(SITE.keyBlob,pw);if(tok){TOKEN=tok;return true}}
+  if(tk){TOKEN=tk;return true}
+  return false}
+async function askPassword(n){
+  gatePane=n;
+  if(await tryRemembered()){unlocked=true;openMenu(n);renderSaved();return}
+  const pw=!!SITE.keyBlob;
+  $('#pwLabel').textContent=pw?'Officer password':'GitHub access token';
+  $('#gateNote').textContent=pw?'The menu is for officers. Enter the officer password (the same one as the upload page).':'No officer password has been set up yet. Enter a GitHub access token, or set up the officer password on the upload page.';
+  $('#pw').value='';showMsg('#gateMsg');if(gate.showModal)gate.showModal();else gate.setAttribute('open','');$('#pw').focus()}
+function closeGate(){if(gate.close)gate.close();else gate.removeAttribute('open')}
+$('#gateForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const secret=$('#pw').value.trim();if(!secret)return;
+  $('#gateGo').disabled=true;showMsg('#gateMsg','ok','Checking…');
+  const r=await loginWith(secret);$('#gateGo').disabled=false;
+  if(!r){showMsg('#gateMsg','err',SITE.keyBlob?'That password isn’t right.':'That doesn’t look like a GitHub token (they start github_pat_).');$('#pw').select();return}
+  TOKEN=r.tok;unlocked=true;
+  try{if($('#pwRemember').checked){if(r.kind==='pw')localStorage.setItem('raidTrackerPassword',secret);else localStorage.setItem('raidTrackerToken',secret)}}catch(err){}
+  closeGate();openMenu(gatePane);renderSaved();
+});
+$('#gateCancel').addEventListener('click',closeGate);
+$('#lock').addEventListener('click',()=>{unlocked=false;TOKEN=null;try{localStorage.removeItem('raidTrackerPassword');localStorage.removeItem('raidTrackerToken')}catch(e){}closeMenu()});
+$('#lock').textContent='Lock and forget login';
+
+/* ---------- GitHub ---------- */
+const gh=(path,opts={})=>fetch('https://api.github.com'+path,{...opts,headers:{Authorization:`Bearer ${TOKEN}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(opts.body?{'Content-Type':'application/json'}:{})}});
+const b64utf8=s=>{const bytes=enc.encode(s);let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(bin)};
+async function ghExplain(res){let m='';try{m=(await res.json()).message||''}catch(e){}
+  if(res.status===401)return'GitHub didn’t accept the login (the token behind the officer password may have expired). Ask the repository owner to set the officer password up again.';
+  if(res.status===403||res.status===404)return'The GitHub token isn’t allowed to save to this repository. It needs Contents: Read and write on it.';
+  return`GitHub said: ${res.status} ${esc(m)}`}
+async function putFile(path,text,message){
+  const repo=SITE.cfg.repository,branch=SITE.cfg.branch||'main';
+  if(!repo)throw new Error('The site settings haven’t loaded, so it doesn’t know which repository to save to.');
+  const url=`/repos/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const cur=await gh(url+'?ref='+encodeURIComponent(branch));
+  const sha=cur.ok?(await cur.json()).sha:undefined;
+  const res=await gh(url,{method:'PUT',body:JSON.stringify({message,content:b64utf8(text),branch,...(sha?{sha}:{})})});
+  if(!res.ok)throw new Error(await ghExplain(res));
+}
+
+/* ---------- Shared, saved state ---------- */
+const SETTINGS_SHARED=['gls','stars','plain','scale','oneGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
+function curSettings(){const s={};SETTINGS_SHARED.forEach(f=>{const el=$('#'+f);s[f]=el.type==='checkbox'?el.checked:el.value});return s}
+function packState(){
+  const R=RESULT,keys=new Set(R.plan.slots.map(s=>s.key)),names=new Set(R.plan.slots.map(s=>s.nameKey));
+  const players=[...R.roster.players.keys()];
+  const roster=players.map(p=>{const m={};R.roster.players.get(p).forEach((l,k)=>{if(keys.has(k)||names.has(k))m[k]=l});return m});
+  const plan=R.plan.slots.map(s=>[s.phase,s.planet,s.op,s.row,s.slot,s.unit,s.key,s.nameKey,s.minRelic,s.minStars,s.ship?1:0]);
+  const pIdx=new Map(players.map((p,i)=>[p,i]));
+  const res=R.slots.map(s=>[s.pi,s.player!=null?pIdx.get(s.player):-1,(s.overCap?1:0)|(s.extraGL?2:0)|(s.gl?4:0),s.player?0:(s.reason||''),s.phase]);
+  const gp=players.map(p=>Math.round(R.roster.gp?.get(p)||0));
+  return{v:1,savedAt:new Date().toISOString(),settings:R.settings,off:R.off,deploy:R.deploy||{},seed:R.seed,raw:!!R.roster.raw,players,roster,plan,res,gp};
+}
+function unpackState(st){
+  const roster={players:new Map(st.players.map((p,i)=>[p,new Map(Object.entries(st.roster[i]||{}))])),names:new Map(),raw:st.raw,gp:new Map(st.players.map((p,i)=>[p,(st.gp||[])[i]||0]))};
+  const plan={slots:st.plan.map(a=>({phase:a[0],planet:a[1],op:a[2],row:a[3],slot:a[4],unit:a[5],key:a[6],nameKey:a[7],minRelic:a[8],minStars:a[9],ship:!!a[10]})),names:new Map()};
+  const slots=st.res.map(([i,pi,f,r,d])=>({...plan.slots[i],pi:i,zone:plan.slots[i].phase,phase:d||plan.slots[i].phase,player:pi>=0?st.players[pi]:null,overCap:!!(f&1),extraGL:!!(f&2),gl:!!(f&4),reason:r||undefined}));
+  return{roster,plan,slots};
+}
+function applySharedSettings(st){
+  for(const f of SETTINGS_SHARED){const v=st.settings[f];if(v==null)continue;const el=$('#'+f);if(el.type==='checkbox')el.checked=v;else el.value=v}
+  OFF=new Set(st.off||[]);DEPLOY=new Map(Object.entries(st.deploy||{}).map(([k,v])=>[k,+v]));SEED=st.seed||1;
+}
+function renderSaved(){
+  const el=$('#savedInfo');
+  if(!SHARED&&!DIRTY){el.hidden=true;return}
+  const when=SHARED?new Date(SHARED.savedAt).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):'';
+  if(DIRTY&&unlocked){el.className='savebar dirty';el.innerHTML=`<span>These assignments aren’t saved. Members ${SHARED?'still see the version saved '+esc(when):'see nothing yet'}.</span><button class="btn primary" data-save>Save and share</button>`}
+  else if(DIRTY){el.className='savebar dirty';el.innerHTML=`<span>These assignments are only in this browser. Members ${SHARED?'still see the version saved '+esc(when):'see nothing yet'}.</span>`}
+  else if(SHARED){el.className='savebar';el.innerHTML=`<span>Assignments saved ${esc(when)}.</span>`}
+  else{el.hidden=true;return}
+  el.hidden=false;
+  $('#saveShare').disabled=!RESULT;
+}
+
+async function saveShare(){
+  if(!RESULT)return;
+  if(!unlocked||!TOKEN){openMenu();return}
+  const btns=document.querySelectorAll('#saveShare,[data-save]');btns.forEach(b=>{b.disabled=true;b.textContent='Saving…'});
+  try{
+    const st=packState();
+    await putFile(`guilds/${GUILD}/platoons.json`,JSON.stringify(st),`Save ${guildName()} platoon assignments from the planner`);
+    SHARED={...(SHARED||{}),savedAt:st.savedAt,v:1};DIRTY=false;
+    showMsg('#runMsg','ok','Saved. Members see these assignments in about two minutes.');
+    renderSaved();
+  }catch(e){showMsg('#runMsg','err',esc(e.message||'Saving didn’t work. Try again in a moment.'));if(!menu.open)openMenu()}
+  finally{btns.forEach(b=>{b.disabled=false;b.textContent='Save and share'})}
+}
+$('#saveShare').addEventListener('click',()=>saveShare());
+$('#savedInfo').addEventListener('click',e=>{if(e.target.closest('[data-save]'))saveShare()});
+$('#gateForm').addEventListener('submit',()=>setTimeout(renderSaved,50));
+$('#lock').addEventListener('click',()=>setTimeout(renderSaved,0));
+
+/* ---------- Start-up ---------- */
+const guildName=()=>(SITE.guilds.find(g=>g.slug===GUILD)||{}).name||GUILD;
+const getJSON=u=>fetch(u,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+function rosterFromJSON(d){return{players:new Map(d.players.map((p,i)=>[p,new Map(Object.entries(d.roster[i]||{}))])),names:new Map(),raw:!!d.raw,gp:new Map(d.players.map((p,i)=>[p,(d.gp||[])[i]||0]))}}
+// theme toggle shared with the rest of the site
+(function(){const M=[['system','System','<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.8a6.2 6.2 0 0 1 0 12.4z" fill="currentColor"/></svg>'],['light','Light','<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.2" fill="currentColor"/><path d="M8 .8v2.2M8 13v2.2M.8 8H3M13 8h2.2M2.9 2.9l1.6 1.6M11.5 11.5l1.6 1.6M2.9 13.1l1.6-1.6M11.5 4.5l1.6-1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'],['dark','Dark','<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.6 10.4A6.2 6.2 0 0 1 5.6 2.4a6.2 6.2 0 1 0 8 8z" fill="currentColor"/></svg>']];
+  const cur=()=>{try{return localStorage.getItem('raidTheme')||'system'}catch(e){return'system'}};
+  const paint=()=>{const m=M.find(x=>x[0]===cur())||M[0];$('#themeBtn').innerHTML=m[2]+'<span>'+m[1]+'</span>';$('#themeBtn').setAttribute('aria-label','Theme: '+m[1]+'. Click to change.')};
+  $('#themeBtn').addEventListener('click',()=>{const i=M.findIndex(x=>x[0]===cur());const n=M[(i+1)%M.length][0];
+    try{n==='system'?localStorage.removeItem('raidTheme'):localStorage.setItem('raidTheme',n)}catch(e){}
+    if(n==='system')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=n;paint()});
+  paint()})();
+$('#clearPaste').addEventListener('click',()=>{$('#rText').value='';$('#pText').value='';showMsg('#rMsg');showMsg('#pMsg');renderOps()});
+$('#planFile').addEventListener('change',()=>{
+  const f=$('#planFile').files[0];if(!f)return;const fr=new FileReader();
+  fr.onload=async()=>{
+    let plan;try{plan=parsePlan(fr.result)}catch(e){showMsg('#planUpMsg','err',esc(e.message));return}
+    const ph=new Set(plan.slots.map(s=>s.phase)),ops=new Set(plan.slots.map(opId));
+    showMsg('#planUpMsg','ok',`Saving ${ph.size} phases, ${ops.size} operations, ${plan.slots.length} slots…`);
+    try{await putFile('guilds/_platoons/rote-plan.csv',fr.result,'Replace the RotE operations plan from the planner');
+      LIVE.plan=plan;renderOps();describePlan();
+      showMsg('#planUpMsg','ok',`Saved: ${ph.size} phases, ${ops.size} operations, ${plan.slots.length} slots. Both guilds use it from now on (the site updates in about two minutes).`)}
+    catch(e){showMsg('#planUpMsg','err',esc(e.message))}
+    $('#planFile').value='';
+  };fr.readAsText(f)});
+function describePlan(){
+  if(!LIVE.plan){$('#planInfo').textContent='No plan file found. Upload one below.';return}
+  const p=LIVE.plan,ph=new Set(p.slots.map(s=>s.phase)),ops=new Set(p.slots.map(opId)),pl=new Set(p.slots.map(s=>s.phase+'|'+s.planet));
+  $('#planInfo').textContent=`${ph.size} phases, ${pl.size} planets, ${ops.size} operations, ${p.slots.length} slots. Shared by every guild.`}
+(async function boot(){
+  const [guilds,cfg,key,planText]=await Promise.all([getJSON('guilds.json'),getJSON('upload-config.json'),getJSON('upload-key.json'),
+    fetch('data/platoons/rote-plan.csv',{cache:'no-store'}).then(r=>r.ok?r.text():null).catch(()=>null)]);
+  SITE.guilds=(guilds||[]).filter(g=>g.platoons&&(g.platoons.roster||g.platoons.saved));SITE.cfg=cfg||{};SITE.keyBlob=key&&key.data?key:null;
+  if(!SITE.guilds.some(g=>g.slug===GUILD))GUILD=(SITE.guilds[0]||{}).slug||'';
+  // per-guild settings, now that the guild is known
+  OFF=new Set(JSON.parse(store.get(K('rote-off'))||'[]'));
+  DEPLOY=new Map(Object.entries(JSON.parse(store.get(K('rote-deploy'))||'{}')).map(([k,v])=>[k,+v]));
+  restore();
+  $('#guildSel').innerHTML=SITE.guilds.map(g=>`<option value="${esc(g.slug)}"${g.slug===GUILD?' selected':''}>${esc(g.name)}</option>`).join('');
+  $('#guildSel').hidden=SITE.guilds.length<2;
+  $('#guildSel').addEventListener('change',e=>{location.search='?guild='+encodeURIComponent(e.target.value)});
+  $('#raidLink').href='./?guild='+encodeURIComponent(GUILD);
+  $('#rosterUpLink').href='upload.html?guild='+encodeURIComponent(GUILD)+'&type=roster';
+  document.title=(guildName()||'RotE')+' · Platoon Planner';
+  if(!GUILD){$('#guildLine').textContent='No guild has a roster yet. Upload a WookieeBot roster export first.';$('#rosterInfo').textContent='No roster uploaded yet.';return}
+  if(planText){try{LIVE.plan=parsePlan(planText)}catch(e){$('#planInfo').textContent='The plan file couldn’t be read: '+e.message}}
+  describePlan();
+  const [rj,saved]=await Promise.all([getJSON(`data/${encodeURIComponent(GUILD)}/platoon-roster.json`),getJSON(`data/${encodeURIComponent(GUILD)}/platoons.json`)]);
+  if(rj){LIVE.roster=rosterFromJSON(rj);LIVE.rosterInfo=rj;
+    const when=new Date(rj.updated+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    $('#rosterInfo').textContent=`${rj.players.length} members, roster from ${when}.`;
+    $('#guildLine').textContent=`${guildName()} · roster from ${when}`;}
+  else{$('#rosterInfo').textContent='No roster uploaded for this guild yet.';$('#guildLine').textContent=guildName()}
+  SHARED=saved;
+  if(SHARED&&SHARED.v===1){
+    applySharedSettings(SHARED);
+    const u=unpackState(SHARED);SHARED.roster=u.roster;SHARED.plan=u.plan;
+    const phases=[...new Set(u.slots.map(s=>s.phase))].sort((a,b)=>a-b);
+    RESULT={slots:u.slots,phases,players:SHARED.players,roster:u.roster,plan:u.plan,o:opts(),all:null,tiers:SHARED.settings.tierMode?tiersOf(u.roster):null,off:[...OFF],deploy:Object.fromEntries(DEPLOY),seed:SEED,settings:SHARED.settings};
+    renderOps();showResult();$('#reshuffle').disabled=false;
+  }else{
+    SHARED=null;renderOps();renderTrack();
+  }
+})();
+</script>
+</body>
+</html>

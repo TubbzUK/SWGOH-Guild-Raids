@@ -127,6 +127,21 @@ name, `file_names`, target and characters). Then upload results into the guild f
 name matches `file_names` are moved into `guilds/<guild>/<short-name>/` automatically. (To make the
 folder by hand: in the guild folder **Add file → Create new file**, name it `<short-name>/README.md`.)
 
+## Platoon planner (Rise of the Empire)
+
+The **⚑ Platoons** page (`…/platoons.html?guild=oanr`) assigns every territory battle platoon slot
+across the guild. Everyone can see the saved assignments; officers open **Menu** with the officer
+password to choose operations, change the rules, run **Assign platoons** and **Save and share**.
+
+- **Roster:** each guild's latest WookieeBot roster upload, the same one used for raid readiness.
+  Upload a fresh roster before planning so relic levels are current.
+- **Operations plan:** `guilds/_platoons/rote-plan.csv`, shared by every guild. Replace it from the
+  planner's Menu → Data, or upload a new file over it on GitHub.
+- **Saved assignments:** `guilds/<guild>/platoons.json`, written by **Save and share**. Members see
+  the new assignments about two minutes after saving.
+- Settings (relic minimums, per-member limit, GL rules, tier balancing, operations chosen) are
+  saved with the assignments, separately for each guild.
+
 ## Look and feel
 
 The site has a dark space theme and a light theme. Everyone can switch with the **System / Light /
