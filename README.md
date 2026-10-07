@@ -139,8 +139,12 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   planner's Menu → Data, or upload a new file over it on GitHub.
 - **Saved assignments:** `guilds/<guild>/platoons.json`, written by **Save and share**. Members see
   the new assignments about two minutes after saving.
-- Settings (relic minimums, per-member limit, GL rules, tier balancing, operations chosen) are
-  saved with the assignments, separately for each guild.
+- **Each guild has its own planet and operation choices.** Officers pick them in Menu → Operations
+  to fill and press **Save selections** (saved to `guilds/<guild>/platoon-settings.json`). The rules
+  (relic minimums, per-member limit, GL rules, tier balancing) are saved there too, per guild.
+  **Save and share** also saves the choices the assignments were made with.
+- The page shows which planets each guild is filling in each phase, and flags it when the choices
+  have changed since the assignments were last made.
 
 ## Look and feel
 

@@ -784,6 +784,8 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
             (out_dir / "platoon-roster.json").write_text(json.dumps(pr, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
             has_platoon_roster = True
             print(f"Platoon roster: {len(pr['players'])} players")
+    if (gdir / "platoon-settings.json").exists():
+        shutil.copy2(gdir / "platoon-settings.json", out_dir / "platoon-settings.json")
     saved = gdir / "platoons.json"
     platoons_saved = None
     if saved.exists():

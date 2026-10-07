@@ -263,6 +263,17 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .datacard{border:1px solid var(--line);border-left:2px solid var(--saber);padding:10px 12px;margin-bottom:12px}
 .datacard h3{margin-bottom:4px}
 .datacard a{color:var(--holo)}
+.selbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:8px 10px;margin:4px 0 12px;border-left:3px solid var(--saber);background:var(--holo-bg);font-size:14px}
+.selbar.dirty{border-left-color:var(--gold);background:var(--amber-bg)}
+.gname{color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
+.planets{margin:0 0 14px;border:1px solid var(--line);border-left:2px solid var(--saber);padding:8px 12px;background:var(--panel-bg)}
+.planets summary{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--ink)}
+.planets .prow{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-top:1px dashed var(--line);font-size:14px}
+.planets .prow:first-of-type{border-top:0}
+.planets .prow b{font-family:var(--f-head);min-width:62px;color:var(--amber)}
+.planets .pp{display:inline-block;margin-right:12px}
+.planets .pp small{color:var(--muted)}
+.planets .stale{font-size:13px;color:var(--muted);margin-top:6px}
 @media (max-width:560px){.navlink .lw{display:none}}
 </style>
 </head>
@@ -289,6 +300,7 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
     <button class="btn" data-open="ops">Open the menu</button>
   </section>
 
+  <details class="planets" id="planetSum" hidden open><summary id="planetSumTitle">Planets this guild is filling</summary><div id="planetSumBody"></div></details>
   <div class="savebar" id="savedInfo" hidden=""></div>
   <div class="row" id="mainbar" hidden="" style="margin-bottom:12px"><button class="btn" id="assignBtn" aria-pressed="true">Assignments</button><button class="btn" id="summaryBtn" aria-pressed="false">Summary</button><button class="btn" id="reqBtn" aria-pressed="false">Requirements</button><button class="btn" id="missingBtn" aria-pressed="false">Missing platoons</button></div>
 
@@ -386,10 +398,11 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
       </details>
     </section>
     <section class="pane" data-pane="ops" hidden="">
-      <h2>Operations to fill</h2>
+      <h2>Operations to fill<span class="gname"></span></h2>
       <p class="note" id="opsEmpty">The operations plan hasn't loaded. Check the Data tab.</p>
       <div id="opsPanel" hidden="">
-    <p class="note">Pick a phase, then choose the planets and operations your guild fills in that phase. A planet stays available in later phases, so you can carry it over or split its operations across two phases to preload it.</p>
+    <p class="note">Pick a phase, then choose the planets and operations <b class="gname2">this guild</b> fills in that phase. Each guild has its own choices. A planet stays available in later phases, so you can carry it over or split its operations across two phases to preload it.</p>
+    <div class="selbar" id="selBar"><span id="selStatus"></span><button class="btn primary" id="selSave" type="button">Save selections</button></div>
     <div class="phrow" id="opsPh" role="group" aria-label="Phase being planned"></div>
     <div class="opsbar"><button class="btn" id="opsAll">Reset to each planet’s own phase</button><button class="btn" id="opsNone">Clear this phase</button></div>
     <p class="note" id="opsHint"></p>
@@ -690,10 +703,10 @@ function restore(){
   $('#gls').value=DEFAULT_GL.join('\n');
   for(const f of settings){if(saved[f]==null)continue;const el=$('#'+f);if(el.type==='checkbox')el.checked=saved[f];else el.value=saved[f]}
 }
-function saveSettings(){const o={};for(const f of settings){const el=$('#'+f);o[f]=el.type==='checkbox'?el.checked:el.value}store.set(K('rote-settings'),JSON.stringify(o))}
+function saveSettings(){const o={};for(const f of settings){const el=$('#'+f);o[f]=el.type==='checkbox'?el.checked:el.value}store.set(K('rote-settings'),JSON.stringify(o));if(typeof renderSel==='function'){SELDIRTY=true;renderSel()}}
 function saveText(w){}
 restore();
-document.addEventListener('change',e=>{if(['rText','pText','planFile','pw','pwRemember','guildSel'].includes(e.target.id)||e.target.dataset.file)return;saveSettings()});
+document.addEventListener('change',e=>{if(['rText','pText','planFile','pw','pwRemember','guildSel','who'].includes(e.target.id)||e.target.dataset.file)return;saveSettings()});
 
 function showMsg(id,kind,html){$(id).innerHTML=html?`<div class="msg ${kind}">${html}</div>`:''}
 function describe(w){
@@ -749,7 +762,8 @@ function renderOps(){
   $('#opsHint').textContent='Gold operations are filled in this phase. Ones marked P1 to P6 are filled in that other phase; tap one to move it here. Tap a planet name to add or remove all of its operations.';
   $('#opsPanel').hidden=false;$('#opsEmpty').hidden=true;
 }
-function saveDeploy(){store.set(K('rote-deploy'),JSON.stringify(Object.fromEntries(DEPLOY)));renderOps()}
+let SELDIRTY=false,SELSAVED=null;   // SELSAVED: when this guild's selections were last saved to the site
+function saveDeploy(){store.set(K('rote-deploy'),JSON.stringify(Object.fromEntries(DEPLOY)));SELDIRTY=true;renderOps();renderSel();renderPlanets()}
 function setD(id,ph){DEPLOY.set(id,ph);OFF.delete(id)}
 $('#opsPh').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){OPSPH=+b.dataset.ph;renderOps()}});
 $('#ops').addEventListener('click',e=>{
@@ -1245,7 +1259,10 @@ function describePlan(){
   if(!GUILD){$('#guildLine').textContent='No guild has a roster yet. Upload a WookieeBot roster export first.';$('#rosterInfo').textContent='No roster uploaded yet.';return}
   if(planText){try{LIVE.plan=parsePlan(planText)}catch(e){$('#planInfo').textContent='The plan file couldn’t be read: '+e.message}}
   describePlan();
-  const [rj,saved]=await Promise.all([getJSON(`data/${encodeURIComponent(GUILD)}/platoon-roster.json`),getJSON(`data/${encodeURIComponent(GUILD)}/platoons.json`)]);
+  const [rj,saved,sel]=await Promise.all([getJSON(`data/${encodeURIComponent(GUILD)}/platoon-roster.json`),getJSON(`data/${encodeURIComponent(GUILD)}/platoons.json`),getJSON(`data/${encodeURIComponent(GUILD)}/platoon-settings.json`)]);
+  document.querySelectorAll('.gname').forEach(e=>e.textContent=' · '+guildName());
+  document.querySelectorAll('.gname2').forEach(e=>e.textContent=guildName());
+  $('#planetSumTitle').textContent=`Planets ${guildName()} is filling`;
   if(rj){LIVE.roster=rosterFromJSON(rj);LIVE.rosterInfo=rj;
     const when=new Date(rj.updated+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     $('#rosterInfo').textContent=`${rj.players.length} members, roster from ${when}.`;
@@ -1257,11 +1274,49 @@ function describePlan(){
     const u=unpackState(SHARED);SHARED.roster=u.roster;SHARED.plan=u.plan;
     const phases=[...new Set(u.slots.map(s=>s.phase))].sort((a,b)=>a-b);
     RESULT={slots:u.slots,phases,players:SHARED.players,roster:u.roster,plan:u.plan,o:opts(),all:null,tiers:SHARED.settings.tierMode?tiersOf(u.roster):null,off:[...OFF],deploy:Object.fromEntries(DEPLOY),seed:SEED,settings:SHARED.settings};
-    renderOps();showResult();$('#reshuffle').disabled=false;
-  }else{
-    SHARED=null;renderOps();renderTrack();
-  }
+    SELSAVED=SHARED.savedAt;
+  }else SHARED=null;
+  // Selections saved on their own (without new assignments) win when they are newer
+  if(sel&&sel.v===1&&(!SHARED||new Date(sel.savedAt)>new Date(SHARED.savedAt))){applySharedSettings(sel);SELSAVED=sel.savedAt;SELNEWER=!!SHARED}
+  SELDIRTY=false;
+  renderOps();renderSel();renderPlanets();
+  if(SHARED){showResult();$('#reshuffle').disabled=false}else renderTrack();
 })();
+
+/* ---------- This guild's operation selections ---------- */
+let SELNEWER=false;   // selections were changed after the saved assignments were made
+function renderSel(){
+  const bar=$('#selBar');if(!bar)return;
+  const when=SELSAVED?new Date(SELSAVED).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):null;
+  bar.classList.toggle('dirty',SELDIRTY);
+  $('#selStatus').textContent=SELDIRTY?`Changes for ${guildName()} aren’t saved yet.`:when?`${guildName()}’s selections saved ${when}.`:`${guildName()} has no saved selections yet; every planet is in its own phase.`;
+  $('#selSave').disabled=!SELDIRTY;
+}
+function renderPlanets(){
+  const box=$('#planetSum');let plan;try{plan=opsPlan()}catch(e){box.hidden=true;return}
+  const byPh=new Map();
+  planets(plan).forEach(p=>p.ops.forEach(op=>{const d=dOf(p.zone,p.planet,op);if(!d)return;
+    if(!byPh.has(d))byPh.set(d,new Map());const m=byPh.get(d),k=p.planet+'\u0000'+p.zone;if(!m.has(k))m.set(k,{planet:p.planet,zone:p.zone,n:0,of:p.ops.length});m.get(k).n++}));
+  const phases=[...byPh.keys()].sort((a,b)=>a-b);
+  let html=phases.map(ph=>`<div class="prow"><b>Phase ${ph}</b><span>${[...byPh.get(ph).values()].sort((a,b)=>a.planet.localeCompare(b.planet)).map(x=>`<span class="pp">${esc(x.planet)} <small>${x.n===x.of?'all '+x.of+' ops':x.n+' of '+x.of+' ops'}${x.zone!==ph?`, phase ${x.zone} planet`:''}</small></span>`).join('')}</span></div>`).join('')||'<p class="note">No operations chosen yet.</p>';
+  if((SELNEWER||SELDIRTY)&&SHARED)html+=`<p class="stale">These selections were changed after the assignments below were made. Officers: run Assign platoons, then Save and share, to update them.</p>`;
+  $('#planetSumBody').innerHTML=html;box.hidden=false;
+}
+$('#selSave').addEventListener('click',async()=>{
+  if(!unlocked||!TOKEN){openMenu('ops');return}
+  const b=$('#selSave');b.disabled=true;b.textContent='Saving…';
+  try{
+    const st={v:1,savedAt:new Date().toISOString(),settings:curSettings(),off:[...OFF],deploy:Object.fromEntries(DEPLOY),seed:SEED};
+    await putFile(`guilds/${GUILD}/platoon-settings.json`,JSON.stringify(st,null,1),`Save ${guildName()} platoon selections from the planner`);
+    SELSAVED=st.savedAt;SELDIRTY=false;SELNEWER=!!SHARED;renderSel();renderPlanets();
+    $('#selStatus').textContent=`Saved for ${guildName()}. The site updates in about two minutes.`;
+  }catch(e){$('#selStatus').textContent=e.message||'Saving didn’t work. Try again in a moment.'}
+  finally{b.textContent='Save selections';b.disabled=!SELDIRTY}
+});
+// saving assignments also saves the selections they were made with
+const _saveShare=saveShare;
+saveShare=async function(){await _saveShare();if(!DIRTY&&SHARED){SELSAVED=SHARED.savedAt;SELDIRTY=false;SELNEWER=false;renderSel();renderPlanets()}};
+window.addEventListener('beforeunload',e=>{if(unlocked&&(SELDIRTY||DIRTY)){e.preventDefault();e.returnValue=''}});
 </script>
 </body>
 </html>
