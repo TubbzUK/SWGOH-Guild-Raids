@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TB Contribution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: banner with guild and TB pickers, then tabs - summary tiles and charts, the member table with a
+   per-member detail panel, and a per-phase view. Colours and fonts come from theme.css. */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
+nav.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); padding: 4px; border-radius: 12px; margin: 0 0 18px; width: fit-content; max-width: 100%; overflow-x: auto; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+nav.tabs button { border: 0; background: transparent; color: var(--text-2); font: 700 11.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.card { padding: 16px 18px; min-width: 0; }
+.kpi .label { color: var(--text-2); font: 700 10.5px var(--font-display); text-transform: uppercase; letter-spacing: .16em; }
+.kpi .value { font: 700 26px var(--font-display); margin-top: 6px; letter-spacing: .02em; }
+.kpi .value .sub { font: 500 13px var(--font-num); color: var(--text-2); }
+.kpi .note { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+.up { color: var(--good-ink); } .down { color: var(--bad-ink); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid2 > * { min-width: 0; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+h2 { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 4px; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.chart { position: relative; height: 240px; }
+ol.list { margin: 0; padding: 0; list-style: none; }
+ol.list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+ol.list li:last-child { border-bottom: 0; }
+ol.list .who { min-width: 0; }
+ol.list .who small { display: block; color: var(--text-2); font-size: 12px; }
+ol.list .rk { color: var(--muted); width: 22px; display: inline-block; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); min-width: 0; }
+input[type=search] { flex: 1 1 220px; max-width: 320px; }
+label.check { display: flex; gap: 6px; align-items: center; color: var(--text-2); font-size: 13px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--glow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 9px; text-align: left; white-space: nowrap; }
+th { font: 700 10.5px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); background: var(--surface-2); user-select: none; }
+th[data-sort] { cursor: pointer; }
+th[data-sort]::after { content: " \2195"; color: var(--muted); }
+th.asc::after { content: " \2191"; color: var(--text); } th.desc::after { content: " \2193"; color: var(--text); }
+th.r, td.r { text-align: right; }
+tbody tr { border-top: 1px solid var(--border); }
+tbody tr.click { cursor: pointer; } tbody tr.click:hover { background: var(--surface-2); }
+tbody tr.sel { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+td.name { font-weight: 600; }
+td.focus { white-space: normal; min-width: 140px; max-width: 210px; }
+.tag { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border-radius: 999px; font-size: 11.5px; white-space: nowrap; color: var(--text-2); border: 1px solid var(--border); background: var(--surface-2, transparent); }
+.former { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font: 600 12px var(--font-ui); }
+.b-good { background: var(--good-bg); color: var(--good-ink); }
+.b-warn { background: var(--warn-bg); color: var(--warn-ink); }
+.b-bad { background: var(--bad-bg); color: var(--bad-ink); }
+.b-none { background: var(--none-bg); color: var(--text-2); }
+.spark { vertical-align: middle; margin-left: 8px; }
+.bar { display: inline-block; width: 56px; height: 6px; background: var(--surface-2); border-radius: 3px; vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 3px; background: var(--series-1); }
+.dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+.dots i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.d-gap { background: transparent; box-shadow: inset 0 0 0 1px var(--border); }
+.d-full { background: var(--good); } .d-part { background: var(--warn); } .d-none { background: var(--bad); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.phrow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.phrow button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font: 600 13px var(--font-ui); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.phrow button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.detail { margin-top: 12px; }
+.detail .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stats div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+.stats b { display: block; font-size: 17px; }
+.stats span { font-size: 12px; color: var(--text-2); }
+.todo { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); }
+.todo.ok { background: var(--good-bg); color: var(--good-ink); }
+.todo ul { margin: 6px 0 0; padding-left: 18px; }
+.warnings { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+.warnings summary { cursor: pointer; font-weight: 600; }
+.empty { color: var(--text-2); padding: 24px; text-align: center; }
+.picker { display: flex; gap: 6px; align-items: center; flex: 1 1 260px; max-width: 420px; }
+.picker select { flex: 1; min-width: 0; font-weight: 600; }
+.stepbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; width: 36px; height: 36px; font-size: 18px; cursor: pointer; flex: none; }
+.stepbtn:hover { border-color: var(--accent); }
+.phead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.phead h2 { font-size: 22px; margin: 0 0 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.verdict { font-size: 14px; color: var(--text); margin: 6px 0 0; max-width: 70ch; }
+.mkpi .value { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mkpi .note { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.mkpi .badge { font-size: 11px; padding: 1px 7px; }
+.chart.tall { height: 280px; }
+td.sub2 { color: var(--text-2); font-size: 12.5px; }
+.list li.click { cursor: pointer; } .list li.click:hover .who { color: var(--accent); }
+.linkbtn { background: none; border: 1px solid var(--border); color: var(--accent); border-radius: 8px; padding: 6px 12px; font: 600 13px var(--font-ui); cursor: pointer; }
+.linkbtn:hover { border-color: var(--accent); }
+tr.cur-tb td { background: var(--surface-2); }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+@media (max-width: 600px) { nav.tabs { max-width: 100%; overflow-x: auto; } nav.tabs button { padding: 9px 8px; letter-spacing: .04em; font-size: 11px; } .kpi .value { font-size: 20px; } }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Ranking page extras */
+:root { --c-dep: #1f9d55; --c-cm: #1d5fd1; --c-spec: #c2410c; --c-plat: #8b5cf6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c-dep: #4ade80; --c-cm: #4cc9f0; --c-spec: #ff9f43; --c-plat: #c4a1ff; } }
+:root[data-theme="dark"] { --c-dep: #4ade80; --c-cm: #4cc9f0; --c-spec: #ff9f43; --c-plat: #c4a1ff; }
+.settings-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; margin-bottom: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; color: var(--text-2); }
+.settings-line b { color: var(--text); }
+.settings-line .grow { flex: 1 1 auto; }
+.chip { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font: 600 12px var(--font-ui); border: 1px solid var(--border); }
+.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip.off { color: var(--muted); text-decoration: line-through; }
+.preview { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; }
+.preview b { color: inherit; }
+.btn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 7px 14px; font: 600 13px var(--font-ui); cursor: pointer; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { color: var(--accent-ink); filter: brightness(1.08); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.pct { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.pbar { width: 64px; height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; display: inline-flex; }
+.pbar i { display: block; height: 100%; }
+td.heat { text-align: center; font: 600 12.5px var(--font-num); border-left: 1px solid var(--border); min-width: 48px; }
+td.dim, th.dim { color: var(--muted); }
+th.grp { text-align: center; border-left: 1px solid var(--border); }
+.chart.rank { height: auto; }
+.legend .sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface-solid); color: var(--text); padding: 0; width: min(520px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+dialog::backdrop { background: rgba(3, 5, 11, .6); }
+dialog form, dialog .inner { padding: 18px 20px; }
+dialog h2 { margin-bottom: 6px; }
+dialog p { font-size: 13.5px; color: var(--text-2); margin: 0 0 12px; }
+dialog input[type=password], dialog input[type=number] { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: 14px var(--font-ui); width: 100%; }
+dialog .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 14px; }
+dialog .row .grow { flex: 1; }
+.phase-toggles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.phase-toggles label, .weights label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 14px; }
+.phase-toggles label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.weights { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+.weights label { cursor: default; justify-content: space-between; }
+.weights input { width: 72px !important; text-align: right; }
+.msg { border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
+.msg.err { background: var(--bad-bg); color: var(--bad-ink); } .msg.ok { background: var(--good-bg); color: var(--good-ink); } .msg.info { background: var(--surface-2); color: var(--text-2); }
+.mhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.mhead h2 { font-size: 18px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.picker { display: flex; gap: 6px; align-items: center; flex: 0 1 340px; min-width: 0; }
+.picker select { flex: 1; min-width: 0; font-weight: 600; }
+.stepbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; width: 34px; height: 34px; font-size: 18px; cursor: pointer; flex: none; }
+.stepbtn:hover { border-color: var(--accent); }
+tr.click { cursor: pointer; } tr.click:hover { background: var(--surface-2); }
+tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.how { font-size: 13px; color: var(--text-2); }
+.how summary { cursor: pointer; font-weight: 600; color: var(--text); }
+.how ul { margin: 8px 0 0; padding-left: 18px; }
+.how li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="wordmark" href="./"><span data-emblem></span>Raid Tracker</a>
+    <div class="top-actions">
+      <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
+      <a class="top-link" id="tbLink" href="tb.html">◈ Territory battles</a>
+      <span data-theme-toggle></span>
+    </div>
+  </div>
+  <header class="banner">
+    <div class="art" id="bannerArt"></div>
+    <div>
+      <div class="eyebrow">TB contribution ranking</div>
+      <h1 id="guild">Contribution</h1>
+      <div class="sub" id="updated"></div>
+    </div>
+    <div class="banner-switch">
+      <div class="pills" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+      <div class="pills raids" id="tbSwitch" role="group" aria-label="Territory battle"></div>
+    </div>
+  </header>
+
+  <div class="settings-line" id="settingsLine"></div>
+  <div id="warnings"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h2>Contribution ranking</h2>
+    <p class="hint" id="rankHint"></p>
+    <div class="legend" id="rankLegend"></div>
+    <div class="chart rank" id="rankBox"><canvas id="rankChart" aria-label="Contribution ranking chart"></canvas></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><h2>Guild average by phase</h2><p class="hint">Average score of members in each phase that's counted</p><div class="legend" id="phLegend"></div><div class="chart"><canvas id="phChart" aria-label="Guild average by phase"></canvas></div></div>
+    <div class="card"><h2>Guild contribution by TB</h2><p class="hint">Median member's overall score in each TB, with the same settings</p><div class="chart"><canvas id="tbChart" aria-label="Guild contribution by TB"></canvas></div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h2>Score trend by member</h2>
+    <p class="hint" id="trendHint"></p>
+    <div class="legend" id="trendLegend"></div>
+    <div class="chart rank" id="trendBox"><canvas id="trendChart" aria-label="Score trend by member"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px" id="memberCard">
+    <div class="mhead">
+      <div><h2 id="mName">Member</h2><div class="hint" id="mInfo" style="margin:0"></div></div>
+      <div class="picker"><button type="button" class="stepbtn" id="mPrev" aria-label="Previous member">‹</button><select id="mSel" aria-label="Member"></select><button type="button" class="stepbtn" id="mNext" aria-label="Next member">›</button></div>
+    </div>
+    <div class="grid2" style="margin:12px 0 0">
+      <div><h2>Overall score by TB</h2><div class="legend" id="mLegend1"></div><div class="chart"><canvas id="mChart1" aria-label="Member's overall score by TB"></canvas></div></div>
+      <div><h2>Score by part</h2><div class="legend" id="mLegend2"></div><div class="chart"><canvas id="mChart2" aria-label="Member's score by part, by TB"></canvas></div></div>
+    </div>
+    <div style="margin-top:12px"><h2>Counted phases by TB</h2><p class="hint" style="margin:0 0 6px">Each bar is one TB, oldest to newest (last 5), so you can see which phases are rising or falling</p><div class="legend" id="mLegend3"></div><div class="chart"><canvas id="mChart3" aria-label="Member's phase scores by TB"></canvas></div></div>
+  </div>
+
+  <div class="toolbar" style="margin-top:4px">
+    <input type="search" id="search" placeholder="Search members&hellip;" aria-label="Search members">
+    <label class="check"><input type="checkbox" id="curOnly" checked> Current members only</label>
+  </div>
+  <div class="tablewrap"><table id="table"></table></div>
+
+  <details class="card how" style="margin-top:12px" id="how">
+    <summary>How the contribution score works</summary>
+    <ul id="howList"></ul>
+  </details>
+
+  <footer id="footer"></footer>
+</div>
+
+<dialog id="gate">
+  <form id="gateForm" method="dialog">
+    <h2>Officer settings</h2>
+    <p id="gateNote">Only officers can change which phases count. Enter the officer password (the same one as the upload page).</p>
+    <label class="vh" for="pw" id="pwLabel">Officer password</label>
+    <input type="password" id="pw" autocomplete="current-password" spellcheck="false">
+    <label class="check" style="margin-top:10px"><input type="checkbox" id="pwRemember" checked> Remember on this device</label>
+    <div id="gateMsg"></div>
+    <div class="row"><button type="button" class="btn" id="gateCancel">Cancel</button><button type="submit" class="btn primary" id="gateGo">Unlock</button></div>
+  </form>
+</dialog>
+
+<dialog id="menu">
+  <div class="inner">
+    <h2>Officer settings</h2>
+    <p>Choose which phases count towards the ranking and how much each part is worth. <b>Preview</b> changes the page for you only; <b>Save for everyone</b> makes it the setting all members see (about two minutes later).</p>
+    <div class="label" style="font: 700 10.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); margin-bottom: 6px">Phases to include</div>
+    <div class="phase-toggles" id="phaseToggles"></div>
+    <div class="label" style="font: 700 10.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); margin-bottom: 6px">Weighting (%)</div>
+    <div class="weights">
+      <label>Deployment <input type="number" id="wDep" min="0" max="100" step="5"></label>
+      <label>Combat missions <input type="number" id="wCm" min="0" max="100" step="5"></label>
+      <label>Special missions <input type="number" id="wSpec" min="0" max="100" step="5"></label>
+      <label>Platoons <input type="number" id="wPlat" min="0" max="100" step="5"></label>
+    </div>
+    <div class="hint" id="wSum" style="margin:4px 0 0"></div>
+    <div id="menuMsg"></div>
+    <div class="row">
+      <button type="button" class="btn" id="lock">Lock</button>
+      <span class="grow"></span>
+      <button type="button" class="btn" id="resetBtn">Use saved</button>
+      <button type="button" class="btn" id="previewBtn">Preview</button>
+      <button type="button" class="btn primary" id="saveBtn">Save for everyone</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const dfmt = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const dshort = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" });
+  const getJSON = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+  const median = a => { const v = a.filter(x => x != null).sort((x, y) => x - y), n = v.length; return n ? (n % 2 ? v[(n - 1) / 2] : (v[n / 2 - 1] + v[n / 2]) / 2) : null; };
+  const quant = (a, q) => { const v = a.filter(x => x != null).sort((x, y) => x - y); if (!v.length) return null; const i = (v.length - 1) * q, lo = Math.floor(i); return v[lo] + (v[Math.min(lo + 1, v.length - 1)] - v[lo]) * (i - lo); };
+  const P = v => v == null ? "–" : Math.round(v) + "%";
+  const COMP = [["dep", "Deployment", "--c-dep"], ["cm", "Combat missions", "--c-cm"], ["spec", "Special missions", "--c-spec"], ["plat", "Platoons", "--c-plat"]];
+
+  // ---------- data ----------
+  const [index, cfg, keyBlob] = await Promise.all([getJSON("guilds.json"), getJSON("upload-config.json"), getJSON("upload-key.json")]);
+  const guilds = (index || []).filter(g => g.tb && g.tb.count);
+  let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  const ready = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tb" }) : setTimeout(ready, 30);
+  ready();
+  if (!guilds.length) { $("#updated").textContent = "No territory battle results uploaded yet."; return; }
+  const guild = guilds.find(g => g.slug === params.guild) || guilds[0];
+  const [data, savedSettings] = await Promise.all([getJSON(`data/${encodeURIComponent(guild.slug)}/tb.json`), getJSON(`data/${encodeURIComponent(guild.slug)}/tb-settings.json`)]);
+  if (!data) { $("#updated").textContent = "Couldn't load this guild's TB data."; return; }
+  const tbs = data.tbs, players = data.players, nPh = Math.max(...tbs.map(t => t.phases));
+  document.title = guild.name + " · TB contribution";
+  $("#guild").textContent = guild.name;
+  $("#raidLink").href = "./?guild=" + encodeURIComponent(guild.slug);
+  $("#tbLink").href = "tb.html?guild=" + encodeURIComponent(guild.slug);
+  const gp = $("#guildSwitch"); gp.hidden = guilds.length < 2;
+  gp.innerHTML = guilds.map(g => `<button type="button" aria-pressed="${g.slug === guild.slug}" data-id="${esc(g.slug)}">${esc(g.name)}</button>`).join("");
+  gp.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.id !== guild.slug) location.search = "?guild=" + encodeURIComponent(b.dataset.id); });
+  if (data.warnings?.length) $("#warnings").innerHTML = `<details class="warnings"><summary>Data notes (${data.warnings.length})</summary><ul>${data.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul></details>`;
+  $("#footer").textContent = `TB data updated ${new Date(data.generated_at).toLocaleString("en-GB")}`;
+
+  const DEFAULTS = { phases: Array.from({ length: nPh }, (_, i) => i + 1), weights: { dep: 25, cm: 25, spec: 25, plat: 25 } };
+  const clean = s => ({
+    phases: (Array.isArray(s?.phases) && s.phases.length ? s.phases : DEFAULTS.phases).map(Number).filter(p => p >= 1 && p <= nPh).sort((a, b) => a - b),
+    weights: Object.fromEntries(COMP.map(([k]) => [k, Math.max(0, +(s?.weights?.[k] ?? DEFAULTS.weights[k]) || 0)])),
+  });
+  const SAVED = clean(savedSettings);
+  let S = clean(SAVED), previewing = false;
+  const sameSettings = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+  // "all" = average over every TB; otherwise one TB by index
+  let view = params.tb === "all" ? "all" : Math.max(0, tbs.findIndex(t => t.id === params.tb)); if (!params.tb) view = tbs.length - 1;
+  let sortK = { k: "overall", d: -1 };
+
+  // ---------- scoring ----------
+  // One TB at a time: per-phase deployment, combat and special-mission scores, then the overall score.
+  function scoreTB(i) {
+    const t = tbs[i], inc = S.phases.filter(p => p <= t.phases), w = S.weights;
+    const rows = players.map(p => ({ p, r: p.detail[String(i)] })).filter(x => x.r);
+    // references from the whole guild in this TB
+    const fullGP = {}, specRef = {};
+    for (let ph = 1; ph <= t.phases; ph++) {
+      const xs = rows.map(x => x.r.phases.find(y => y.p === ph)).filter(Boolean);
+      fullGP[ph] = median(xs.filter(x => x.dep && x.gp > 0).map(x => x.gp)) || null;
+      const anySpec = xs.some(x => x.spec > 0);
+      specRef[ph] = anySpec ? Math.max(1, Math.round(quant(xs.filter(x => x.spec > 0).map(x => x.spec), 0.5))) : null;
+    }
+    const platRef = Math.max(1, quant(rows.map(x => x.r.platoons), 0.75) || 1);
+    const out = new Map();
+    rows.forEach(({ p, r }) => {
+      const ownFull = Math.max(0, ...r.phases.filter(x => x.dep).map(x => x.gp));
+      const ph = {};
+      r.phases.forEach(x => {
+        const ref = ownFull || fullGP[x.p];
+        const dep = x.dep ? 100 : x.gp > 0 && ref ? Math.min(100, x.gp / ref * 100) : 0;
+        const cm = Math.min(100, x.waves / (t.max_waves[x.p - 1] || 1) * 100);
+        const spec = specRef[x.p] ? Math.min(100, x.spec / specRef[x.p] * 100) : null;
+        const parts = [["dep", dep], ["cm", cm], ["spec", spec]].filter(([, v]) => v != null);
+        const wsum = parts.reduce((a, [k]) => a + w[k], 0);
+        ph[x.p] = { dep, cm, spec, waves: x.waves, score: wsum ? parts.reduce((a, [k, v]) => a + w[k] * v, 0) / wsum : null };
+      });
+      const incPh = inc.map(n => ph[n]).filter(Boolean);
+      const maxW = inc.reduce((a, n) => a + (t.max_waves[n - 1] || 0), 0);
+      const avg = k => { const v = incPh.map(x => x[k]).filter(v => v != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+      const comp = {
+        dep: incPh.length ? avg("dep") : null,
+        cm: maxW ? Math.min(100, incPh.reduce((a, x) => a + x.waves, 0) / maxW * 100) : null,
+        spec: avg("spec"),
+        plat: Math.min(100, r.platoons / platRef * 100),
+      };
+      const parts = COMP.map(([k]) => [k, comp[k]]).filter(([, v]) => v != null);
+      const wsum = parts.reduce((a, [k]) => a + w[k], 0);
+      const overall = wsum ? parts.reduce((a, [k, v]) => a + w[k] * v, 0) / wsum : 0;
+      // each part's share of the overall score, for the stacked bars
+      const share = Object.fromEntries(parts.map(([k, v]) => [k, wsum ? w[k] * v / wsum : 0]));
+      out.set(p.id, { overall, comp, share, ph, platoons: r.platoons });
+    });
+    return { out, inc, platRef, specRef, fullGP };
+  }
+  let cache = null;
+  function compute() {
+    cache = tbs.map((_, i) => scoreTB(i));
+  }
+  function rowsFor(v) {
+    if (v !== "all") {
+      const sc = cache[v], prevI = v - 1;
+      return players.filter(p => sc.out.has(p.id)).map(p => {
+        const s = sc.out.get(p.id), prev = prevI >= 0 ? cache[prevI].out.get(p.id) : null;
+        return { p, ...s, delta: prev ? s.overall - prev.overall : null, hist: cache.map(c => c.out.get(p.id)?.overall ?? null), n: 1 };
+      });
+    }
+    // average over every TB the member took part in
+    return players.map(p => {
+      const got = cache.map(c => c.out.get(p.id)).filter(Boolean);
+      if (!got.length) return null;
+      const mean = f => { const v = got.map(f).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+      const comp = Object.fromEntries(COMP.map(([k]) => [k, mean(s => s.comp[k])]));
+      const share = Object.fromEntries(COMP.map(([k]) => [k, mean(s => s.share[k]) || 0]));
+      const ph = {}; for (let n = 1; n <= nPh; n++) ph[n] = { score: mean(s => s.ph[n]?.score) };
+      const hist = cache.map(c => c.out.get(p.id)?.overall ?? null);
+      return { p, overall: mean(s => s.overall), comp, share, ph, delta: null, hist, n: got.length, platoons: mean(s => s.platoons) };
+    }).filter(Boolean);
+  }
+
+
+  // ---------- one member's scores by TB ----------
+  let selId = params.player || null, memberCharts = [];
+  function selectMember(id, scroll) {
+    selId = id; render();
+    if (scroll) $("#memberCard").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
+  function renderMember(list) {
+    memberCharts.forEach(c => c.destroy()); memberCharts = [];
+    const sorted = list.slice().sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+    const p = sorted.find(x => x.id === selId);
+    if (!p) { $("#memberCard").hidden = true; return; }
+    $("#memberCard").hidden = false;
+    $("#mSel").innerHTML = sorted.map(x => `<option value="${esc(x.id)}" ${x.id === selId ? "selected" : ""}>${esc(x.name)}${x.current ? "" : " (left)"}</option>`).join("");
+    const k = sorted.indexOf(p);
+    $("#mSel").onchange = e => selectMember(e.target.value);
+    $("#mPrev").onclick = () => selectMember(sorted[(k - 1 + sorted.length) % sorted.length].id);
+    $("#mNext").onclick = () => selectMember(sorted[(k + 1) % sorted.length].id);
+    try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&tb=${view === "all" ? "all" : tbs[view].id}&player=${encodeURIComponent(selId)}`); } catch (e) {}
+
+    const S1 = cache.map(c => c.out.get(p.id) || null), hist = S1.map(s => s ? s.overall : null);
+    const N = data.trend_over_last || 5, played = hist.filter(v => v != null);
+    const pts = hist.map((y, i) => [i, y]).filter(([, y]) => y != null).slice(-N);
+    let fit = hist.map(() => null), slope = null;
+    if (pts.length >= 2) {
+      const n = pts.length, xm = pts.reduce((a, q) => a + q[0], 0) / n, ym = pts.reduce((a, q) => a + q[1], 0) / n;
+      const den = pts.reduce((a, q) => a + (q[0] - xm) ** 2, 0) || 1;
+      slope = pts.reduce((a, q) => a + (q[0] - xm) * (q[1] - ym), 0) / den;
+      fit = hist.map((_, i) => i >= pts[0][0] ? ym + slope * (i - xm) : null);
+    }
+    const lab = slope == null ? ["b-none", "● Not enough TBs"] : slope >= 2 ? ["b-good", `▲ Getting better +${slope.toFixed(1)}/TB`] : slope <= -2 ? ["b-bad", `▼ Declining ${slope.toFixed(1)}/TB`] : ["b-none", `■ Steady ${slope >= 0 ? "+" : ""}${slope.toFixed(1)}/TB`];
+    const best = played.length ? Math.max(...played) : null, last = played[played.length - 1], prev = played[played.length - 2];
+    $("#mName").innerHTML = `${esc(p.name)} ${p.current ? "" : '<span class="former">left</span>'} <span class="badge ${lab[0]}">${lab[1]}</span>`;
+    $("#mInfo").textContent = `${played.length} of ${tbs.length} TBs · latest ${P(last)}${prev != null ? ` (${last - prev >= 0 ? "+" : "−"}${Math.abs(last - prev).toFixed(0)} on the TB before)` : ""} · best ${P(best)} · average ${P(played.reduce((a, b) => a + b, 0) / (played.length || 1))}`;
+
+    const labels = tbs.map(x => dshort(x.date)), MU = css("--muted"), S1c = css("--accent"), S2c = css("--series-2");
+    const medTb = cache.map(c => median([...c.out.entries()].filter(([id]) => !$("#curOnly").checked || players.find(q => q.id === id)?.current).map(([, s]) => s.overall)));
+    const ln = (label, d, color, extra = {}) => ({ label, data: d, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 3, spanGaps: true, tension: .2, ...extra });
+    const yPct = { beginAtZero: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } };
+    const opts = { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { filter: i => i.raw != null && i.dataset.label !== "Trend", callbacks: { label: c => ` ${c.dataset.label}: ${P(c.raw)}` } } }, scales: { y: yPct, x: { grid: { display: false } } } };
+    const swatch = (c, l, dash) => `<span><i class="swatch" style="background:${dash ? `repeating-linear-gradient(90deg,${c} 0 4px,transparent 4px 7px)` : c}"></i>${esc(l)}</span>`;
+    $("#mLegend1").innerHTML = swatch(S1c, p.name) + swatch(S2c, "Guild median", 1) + swatch(MU, "Trend", 1);
+    memberCharts.push(new Chart($("#mChart1"), { type: "line", data: { labels, datasets: [ln(p.name, hist, S1c, { pointRadius: 4 }), ln("Guild median", medTb, S2c, { borderDash: [5, 4], pointRadius: 0 }), ln("Trend", fit, MU, { borderDash: [2, 4], pointRadius: 0, borderWidth: 1.5, tension: 0 })] }, options: opts }));
+    $("#mLegend2").innerHTML = COMP.map(([, l, c]) => swatch(css(c), l)).join("");
+    memberCharts.push(new Chart($("#mChart2"), { type: "line", data: { labels, datasets: COMP.map(([k, l, c]) => ln(l, S1.map(s => s ? s.comp[k] : null), css(c))) }, options: opts }));
+    const inc = S.phases, idx = S1.map((x, i) => x ? i : -1).filter(i => i >= 0).slice(-5);
+    const ramp = ["--r2", "--r3", "--r4", "--r5", "--r6"].slice(-idx.length).map(css);
+    $("#mLegend3").innerHTML = idx.map((i, j) => `<span><i class="sq" style="background:${ramp[j]}"></i>${dshort(tbs[i].date)}</span>`).join("");
+    memberCharts.push(new Chart($("#mChart3"), { type: "bar", data: { labels: inc.map(n => "P" + n), datasets: idx.map((i, j) => ({ label: dshort(tbs[i].date), data: inc.map(n => S1[i].ph[n]?.score ?? null), backgroundColor: ramp[j], borderRadius: 3, maxBarThickness: 22 })) },
+      options: { ...opts, plugins: { ...opts.plugins, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${P(c.raw)}` } } }, scales: { y: yPct, x: { offset: true, grid: { display: false } } } } }));
+  }
+
+  // ---------- render ----------
+  const heat = v => {
+    if (v == null) return "";
+    const c = v >= 75 ? css("--good") : v >= 50 ? css("--warn") : css("--bad");
+    return `background: color-mix(in srgb, ${c} ${Math.round(14 + Math.min(1, Math.abs(v - 50) / 50) * 18)}%, transparent)`;
+  };
+  const pbar = (v, color) => `<span class="pct"><span class="pbar"><i style="width:${Math.max(0, Math.min(100, v || 0))}%;background:${color}"></i></span><span class="num">${P(v)}</span></span>`;
+  const spark = vals => {
+    const v = vals.filter(x => x != null); if (v.length < 2) return "";
+    const w = 60, h = 18, mn = Math.min(...v), mx = Math.max(...v), sx = (w - 4) / (v.length - 1), sy = mx > mn ? (h - 4) / (mx - mn) : 0;
+    const pts = v.map((y, i) => [2 + i * sx, h - 2 - (y - mn) * sy]);
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true" style="vertical-align:middle"><polyline fill="none" stroke="${css("--series-1")}" stroke-width="1.5" points="${pts.map(p => p.join(",")).join(" ")}"/><circle cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="2.3" fill="${css("--series-1")}"/></svg>`;
+  };
+  let charts = [];
+
+  function render() {
+    charts.forEach(c => c.destroy()); charts = [];
+    Chart.defaults.font.family = '"Exo 2", system-ui, sans-serif'; Chart.defaults.color = css("--text-2"); Chart.defaults.borderColor = css("--grid"); Chart.defaults.maintainAspectRatio = false;
+    Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--surface-solid"), titleColor: css("--text"), bodyColor: css("--text-2"), borderColor: css("--accent"), borderWidth: 1, padding: 10 });
+    compute();
+    const isAll = view === "all", t = isAll ? tbs[tbs.length - 1] : tbs[view];
+
+    // TB picker
+    const tp = $("#tbSwitch");
+    tp.innerHTML = tbs.map((x, i) => `<button type="button" aria-pressed="${view === i}" data-v="${i}">${dshort(x.date)}</button>`).join("") + (tbs.length > 1 ? `<button type="button" aria-pressed="${isAll}" data-v="all">All TBs</button>` : "");
+    tp.querySelectorAll("button").forEach(b => b.onclick = () => { view = b.dataset.v === "all" ? "all" : +b.dataset.v; try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&tb=${view === "all" ? "all" : tbs[view].id}`); } catch (e) {} render(); });
+    $("#updated").textContent = isAll ? `Average over ${tbs.length} territory battles (${dfmt(tbs[0].date)} to ${dfmt(t.date)})` : `${t.label} · ${dfmt(t.date)} · ${t.members} members took part`;
+
+    // settings line
+    const chips = Array.from({ length: nPh }, (_, i) => `<span class="chip ${S.phases.includes(i + 1) ? "on" : "off"}">P${i + 1}</span>`).join(" ");
+    const wsum = COMP.reduce((a, [k]) => a + S.weights[k], 0) || 1;
+    const wtxt = COMP.map(([k, l]) => `${l} ${Math.round(S.weights[k] / wsum * 100)}%`).join(" · ");
+    const line = $("#settingsLine");
+    line.className = "settings-line" + (previewing ? " preview" : "");
+    line.innerHTML = `<span>${previewing ? "<b>Preview (not saved):</b>" : "<b>Phases counted:</b>"}</span> ${chips} <span class="grow">${esc(wtxt)}</span>
+      ${previewing ? `<button type="button" class="btn" id="cancelPrev">Back to saved</button>` : ""}<button type="button" class="btn" id="openMenu">⚙ Officer settings</button>`;
+    $("#openMenu").onclick = openMenu;
+    if (previewing) $("#cancelPrev").onclick = () => { S = clean(SAVED); previewing = false; render(); };
+
+    const curOnly = $("#curOnly").checked, q = $("#search").value.trim().toLowerCase();
+    let rows = rowsFor(view).filter(x => !curOnly || x.p.current);
+    const rankOrder = rows.slice().sort((a, b) => b.overall - a.overall);
+    const rank = new Map(rankOrder.map((x, i) => [x.p.id, i + 1]));
+    const inc = S.phases;
+
+    // KPIs
+    const ov = rows.map(x => x.overall), med = median(ov);
+    const band = (lo, hi) => rows.filter(x => x.overall >= lo && x.overall < hi).length;
+    const prevMed = !isAll && view > 0 ? median(rowsFor(view - 1).filter(x => !curOnly || x.p.current).map(x => x.overall)) : null;
+    $("#kpis").innerHTML = [
+      ["Median contribution", P(med), prevMed != null ? `<span class="${med >= prevMed ? "up" : "down"}">${med >= prevMed ? "+" : "−"}${Math.abs(med - prevMed).toFixed(0)} pts</span> vs previous TB` : `${rows.length} members`],
+      ["75% or more", `${band(75, 101)}<span class="sub"> / ${rows.length}</span>`, "Strong contributors"],
+      ["50 – 74%", `${band(50, 75)}<span class="sub"> / ${rows.length}</span>`, "Room to improve"],
+      ["Under 50%", `${band(0, 50)}<span class="sub"> / ${rows.length}</span>`, "Need a nudge"],
+      ["Top contributor", rankOrder[0] ? P(rankOrder[0].overall) : "–", rankOrder[0] ? esc(rankOrder[0].p.name) : ""],
+    ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+
+    // ranking chart: one stacked bar per member
+    const lg = COMP.map(([k, l, c]) => `<span><i class="sq" style="background:${css(c)}"></i>${l}</span>`).join("");
+    $("#rankLegend").innerHTML = lg;
+    $("#rankHint").textContent = `Each bar is a member's overall score; the colours show how much each part added. ${isAll ? "Averaged over every TB they took part in." : ""}`;
+    $("#rankBox").style.height = Math.max(160, rankOrder.length * 20 + 40) + "px";
+    charts.push(new Chart($("#rankChart"), {
+      type: "bar",
+      data: { labels: rankOrder.map((x, i) => `${i + 1}. ${x.p.name}`), datasets: COMP.map(([k, l, c]) => ({ label: l, data: rankOrder.map(x => x.share[k] || 0), backgroundColor: css(c), borderWidth: 0, barThickness: 13 })) },
+      options: { indexAxis: "y", interaction: { mode: "index", intersect: false },
+        onClick: (e, els) => { if (els.length) { const id = rankOrder[els[0].index].p.id; setTimeout(() => selectMember(id, true)); } },
+        onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => rankOrder[i[0].dataIndex].p.name + " · " + P(rankOrder[i[0].dataIndex].overall), label: c => ` ${c.dataset.label}: ${P(rankOrder[c.dataIndex].comp[COMP[c.datasetIndex][0]])} (adds ${c.raw.toFixed(1)})` } } },
+        scales: { x: { stacked: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, font: { size: 11.5 } } } } },
+    }));
+
+    // guild average by phase (one TB, or every TB averaged)
+    const phs = inc.filter(n => n <= (isAll ? nPh : t.phases));
+    const phAvg = (n, k) => {
+      const src = isAll ? cache : [cache[view]];
+      const v = src.flatMap(c => [...c.out.entries()].filter(([id]) => !curOnly || players.find(p => p.id === id)?.current).map(([, s]) => s.ph[n]?.[k])).filter(x => x != null);
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    };
+    $("#phLegend").innerHTML = COMP.slice(0, 3).map(([k, l, c]) => `<span><i class="sq" style="background:${css(c)}"></i>${l}</span>`).join("") + `<span><i class="swatch" style="background:${css("--text")}"></i>Phase score</span>`;
+    charts.push(new Chart($("#phChart"), {
+      type: "bar",
+      data: { labels: phs.map(n => "P" + n), datasets: [
+        ...COMP.slice(0, 3).map(([k, l, c]) => ({ type: "bar", label: l, data: phs.map(n => phAvg(n, k)), backgroundColor: css(c), borderRadius: 3, maxBarThickness: 22 })),
+        { type: "line", label: "Phase score", data: phs.map(n => phAvg(n, "score")), borderColor: css("--text"), backgroundColor: css("--text"), pointRadius: 4, showLine: false, pointStyle: "line", pointBorderWidth: 3, order: -1 }] },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${P(c.raw)}` } } }, scales: { y: { beginAtZero: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } } },
+    }));
+    // guild median by TB
+    const medByTb = cache.map(c => median([...c.out.entries()].filter(([id]) => !curOnly || players.find(p => p.id === id)?.current).map(([, s]) => s.overall)));
+    charts.push(new Chart($("#tbChart"), {
+      type: "line",
+      data: { labels: tbs.map(x => dshort(x.date)), datasets: [{ label: "Median contribution", data: medByTb, borderColor: css("--series-1"), backgroundColor: css("--series-1"), pointRadius: 4, borderWidth: 2, tension: .2 }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` Median: ${P(c.raw)}` } } }, scales: { y: { beginAtZero: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, x: { grid: { display: false } } } },
+    }));
+
+
+    // ---- score trend by member (line of best fit through their overall score, last N TBs)
+    const N = data.trend_over_last || 5, TH = 2;
+    const slopeOf = hist => {
+      const pts = hist.map((y, i) => [i, y]).filter(([, y]) => y != null).slice(-N);
+      if (pts.length < 2) return null;
+      const n = pts.length, xm = pts.reduce((a, p) => a + p[0], 0) / n, ym = pts.reduce((a, p) => a + p[1], 0) / n;
+      const den = pts.reduce((a, p) => a + (p[0] - xm) ** 2, 0) || 1;
+      return { slope: pts.reduce((a, p) => a + (p[0] - xm) * (p[1] - ym), 0) / den, xm, ym, from: pts[0][0], n };
+    };
+    const histOf = p => cache.map(c => c.out.get(p.id)?.overall ?? null);
+    const members = players.filter(p => (!curOnly || p.current) && cache.some(c => c.out.has(p.id)));
+    const trends = members.map(p => ({ p, h: histOf(p), f: slopeOf(histOf(p)) })).filter(x => x.f).sort((a, b) => b.f.slope - a.f.slope);
+    const up = trends.filter(x => x.f.slope >= TH).length, down = trends.filter(x => x.f.slope <= -TH).length;
+    $("#trendHint").textContent = trends.length
+      ? `Points gained or lost per TB (line of best fit through each member's overall score, last ${N} TBs). ${up} getting better, ${down} declining, ${trends.length - up - down} steady. Click a member to see their TBs below.`
+      : "Needs at least two TBs for a member before a trend can be shown.";
+    $("#trendLegend").innerHTML = `<span><i class="sq" style="background:${css("--good")}"></i>Getting better (+${TH} or more per TB)</span><span><i class="sq" style="background:${css("--muted")}"></i>Steady</span><span><i class="sq" style="background:${css("--bad")}"></i>Declining (−${TH} or more per TB)</span>`;
+    $("#trendBox").style.height = trends.length ? Math.max(160, trends.length * 20 + 40) + "px" : "60px";
+    if (!members.some(p => p.id === selId)) selId = (rankOrder[0] || {}).p?.id || members[0]?.id;
+    if (trends.length) {
+      const tc = trends.map(x => x.f.slope >= TH ? css("--good") : x.f.slope <= -TH ? css("--bad") : css("--muted"));
+      const tchart = new Chart($("#trendChart"), {
+        type: "bar",
+        data: { labels: trends.map(x => x.p.name), datasets: [{ label: "Points per TB", data: trends.map(x => +x.f.slope.toFixed(1)), backgroundColor: tc, borderColor: trends.map(x => x.p.id === selId ? css("--text") : "transparent"), borderWidth: trends.map(x => x.p.id === selId ? 2 : 0), barThickness: 13 }] },
+        options: { indexAxis: "y",
+          onClick: (e, els) => { if (els.length) { const id = trends[els[0].index].p.id; setTimeout(() => selectMember(id, true)); } },
+          onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => trends[i[0].dataIndex].p.name, label: c => { const x = trends[c.dataIndex]; return [` ${c.raw > 0 ? "+" : ""}${c.raw} points per TB over ${x.f.n} TBs`, ` Latest ${P(x.h.filter(v => v != null).slice(-1)[0])}`, " Click for their TBs"]; } } } },
+          scales: { x: { grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => (v > 0 ? "+" : "") + v } }, y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 11.5 } } } } },
+      });
+      charts.push(tchart);
+    }
+    renderMember(members);
+
+    // table
+    const shown = rows.filter(x => !q || x.p.name.toLowerCase().includes(q));
+    const val = (x, k) => k === "name" ? x.p.name.toLowerCase() : k === "rank" ? -rank.get(x.p.id) : k === "overall" ? x.overall : k === "delta" ? (x.delta ?? -999) : k.startsWith("p") ? (x.ph[+k.slice(1)]?.score ?? -1) : (x.comp[k] ?? -1);
+    shown.sort((a, b) => { const A = val(a, sortK.k), B = val(b, sortK.k); return (A > B ? 1 : A < B ? -1 : 0) * sortK.d || a.p.name.localeCompare(b.p.name); });
+    const th = (k, l, c = "") => `<th data-sort="${k}" class="${c} ${sortK.k === k ? (sortK.d > 0 ? "asc" : "desc") : ""}">${l}</th>`;
+    const allPh = Array.from({ length: isAll ? nPh : t.phases }, (_, i) => i + 1);
+    $("#table").innerHTML = `<thead><tr>${th("rank", "#", "r")}${th("name", "Member")}${th("overall", "Overall", "r")}${isAll ? `<th class="r">TBs</th>` : th("delta", "vs prev", "r")}<th>By TB</th>
+      ${COMP.map(([k, l]) => th(k, l === "Combat missions" ? "CMs" : l === "Special missions" ? "Specials" : l, "r")).join("")}
+      ${allPh.map(n => th("p" + n, "P" + n, "grp" + (inc.includes(n) ? "" : " dim"))).join("")}</tr></thead>
+      <tbody>${shown.map(x => `<tr class="click ${x.p.id === selId ? "sel" : ""}" data-id="${esc(x.p.id)}" tabindex="0"><td class="r num">${rank.get(x.p.id)}</td><td class="name">${esc(x.p.name)}${x.p.current ? "" : '<span class="former">left</span>'}</td>
+        <td class="r">${pbar(x.overall, css("--accent"))}</td>
+        ${isAll ? `<td class="r num">${x.n}</td>` : `<td class="r num"><span class="${x.delta > 0 ? "up" : x.delta < 0 ? "down" : ""}">${x.delta == null ? "–" : (x.delta > 0 ? "+" : x.delta < 0 ? "−" : "±") + Math.abs(x.delta).toFixed(0)}</span></td>`}
+        <td>${spark(x.hist)}</td>
+        ${COMP.map(([k, , c]) => `<td class="r num" title="${k === "plat" ? `${Math.round(x.platoons)} platoon units` : ""}">${P(x.comp[k])}</td>`).join("")}
+        ${allPh.map(n => { const v = x.ph[n]?.score; return inc.includes(n) ? `<td class="heat num" style="${heat(v)}">${P(v)}</td>` : `<td class="heat dim num" title="Not counted">${P(v)}</td>`; }).join("")}
+      </tr>`).join("") || `<tr><td colspan="20" class="empty">No members match</td></tr>`}</tbody>`;
+    $("#table").querySelectorAll("tr[data-id]").forEach(tr => { tr.onclick = () => selectMember(tr.dataset.id, true); tr.onkeydown = e => { if (e.key === "Enter") selectMember(tr.dataset.id, true); }; });
+    $("#table").querySelectorAll("th[data-sort]").forEach(h => h.onclick = () => { const k = h.dataset.sort; sortK = { k, d: sortK.k === k ? -sortK.d : (k === "name" ? 1 : -1) }; render(); });
+
+    // how it works
+    const sc = isAll ? null : cache[view];
+    $("#howList").innerHTML = [
+      `<b>Deployment</b>: 100% for a phase they fully deployed. Partly deployed counts the share of their GP placed (compared with what they deployed in phases they filled).`,
+      `<b>Combat missions</b>: waves completed ÷ the most waves possible in the counted phases (${esc(t.max_waves.map(v => Math.round(v)).join(" / "))} per phase, from the guild's settings).`,
+      `<b>Special missions</b>: special mission attempts in each phase, where reaching the typical number for members who did them (usually 1) counts as 100%. Phases where nobody attempted one are left out.`,
+      `<b>Platoons</b>: platoon units ÷ the top quarter of the guild${sc ? ` (${Math.round(sc.platRef)} units in this TB)` : ""}, capped at 100%. The export gives one platoon total per TB, so platoons count in the overall score only, not per phase.`,
+      `<b>Overall</b> combines the four with the weighting shown at the top. <b>Phase columns</b> combine deployment, combat and specials for that phase. Greyed phases aren't counted.`,
+      `Officers choose the phases and weighting under ⚙ Officer settings. "All TBs" averages each member over the TBs they took part in.`,
+    ].map(x => `<li>${x}</li>`).join("");
+  }
+  $("#search").oninput = render; $("#curOnly").onchange = render;
+  window.addEventListener("themechange", render);
+
+  // ---------- officer settings ----------
+  let TOKEN = null;
+  const enc = new TextEncoder(), dec = new TextDecoder(), unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  async function unlockBlob(blob, pw) {
+    try {
+      const base = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]);
+      const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: unb64(blob.salt), iterations: blob.iterations, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      return dec.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(blob.iv) }, key, unb64(blob.data)));
+    } catch (e) { return null; }
+  }
+  const KB = keyBlob && keyBlob.data ? keyBlob : null;
+  async function login(secret) {
+    if (KB) { const t = await unlockBlob(KB, secret); if (t) return { t, kind: "pw" }; }
+    return /^(github_pat_|ghp_)/.test(secret) ? { t: secret, kind: "tok" } : null;
+  }
+  async function remembered() {
+    const pw = store.get("raidTrackerPassword"), tk = store.get("raidTrackerToken");
+    if (pw && KB) { const t = await unlockBlob(KB, pw); if (t) return t; }
+    return tk || null;
+  }
+  const showMsg = (sel, cls, text) => { $(sel).innerHTML = cls ? `<div class="msg ${cls}">${text}</div>` : ""; };
+  const dlg = el => el.showModal ? el.showModal() : el.setAttribute("open", "");
+  const close = el => el.close ? el.close() : el.removeAttribute("open");
+  async function openMenu() {
+    if (!TOKEN) TOKEN = await remembered();
+    if (!TOKEN) {
+      $("#pwLabel").textContent = KB ? "Officer password" : "GitHub access token";
+      $("#gateNote").textContent = KB ? "Only officers can change which phases count. Enter the officer password (the same one as the upload page)." : "No officer password has been set up yet. Enter a GitHub access token, or set up the officer password on the upload page.";
+      $("#pw").value = ""; showMsg("#gateMsg"); dlg($("#gate")); $("#pw").focus(); return;
+    }
+    fillMenu(); showMsg("#menuMsg"); dlg($("#menu"));
+  }
+  $("#gateForm").onsubmit = async e => {
+    e.preventDefault();
+    const secret = $("#pw").value.trim(); if (!secret) return;
+    $("#gateGo").disabled = true; showMsg("#gateMsg", "info", "Checking…");
+    const r = await login(secret); $("#gateGo").disabled = false;
+    if (!r) { showMsg("#gateMsg", "err", KB ? "That password isn't right." : "That doesn't look like a GitHub token (they start github_pat_)."); return; }
+    TOKEN = r.t;
+    if ($("#pwRemember").checked) store.set(r.kind === "pw" ? "raidTrackerPassword" : "raidTrackerToken", secret);
+    close($("#gate")); openMenu();
+  };
+  $("#gateCancel").onclick = () => close($("#gate"));
+  $("#lock").onclick = () => { TOKEN = null; store.del("raidTrackerPassword"); store.del("raidTrackerToken"); close($("#menu")); };
+
+  function fillMenu(src = S) {
+    $("#phaseToggles").innerHTML = Array.from({ length: nPh }, (_, i) => `<label><input type="checkbox" value="${i + 1}" ${src.phases.includes(i + 1) ? "checked" : ""}> Phase ${i + 1}</label>`).join("");
+    $("#wDep").value = src.weights.dep; $("#wCm").value = src.weights.cm; $("#wSpec").value = src.weights.spec; $("#wPlat").value = src.weights.plat;
+    menuCheck();
+  }
+  const menuValues = () => clean({
+    phases: [...$("#phaseToggles").querySelectorAll("input:checked")].map(i => +i.value),
+    weights: { dep: +$("#wDep").value, cm: +$("#wCm").value, spec: +$("#wSpec").value, plat: +$("#wPlat").value },
+  });
+  function menuCheck() {
+    const n = $("#phaseToggles").querySelectorAll("input:checked").length;
+    const w = [$("#wDep"), $("#wCm"), $("#wSpec"), $("#wPlat")].map(i => Math.max(0, +i.value || 0)), sum = w.reduce((a, b) => a + b, 0);
+    $("#wSum").textContent = sum ? `Shares: ${COMP.map(([, l], i) => `${l} ${Math.round(w[i] / sum * 100)}%`).join(" · ")}` : "";
+    const bad = !n ? "Pick at least one phase." : !sum ? "At least one weighting must be above 0." : "";
+    $("#previewBtn").disabled = $("#saveBtn").disabled = !!bad;
+    showMsg("#menuMsg", bad ? "err" : null, bad);
+  }
+  $("#menu").addEventListener("input", menuCheck);
+  $("#resetBtn").onclick = () => { fillMenu(SAVED); };
+  $("#previewBtn").onclick = () => { S = menuValues(); previewing = !sameSettings(S, SAVED); close($("#menu")); render(); };
+  $("#saveBtn").onclick = async () => {
+    const v = menuValues(), repo = cfg?.repository, branch = cfg?.branch || "main";
+    if (!repo) { showMsg("#menuMsg", "err", "The site settings haven't loaded, so it doesn't know which repository to save to."); return; }
+    $("#saveBtn").disabled = true; showMsg("#menuMsg", "info", "Saving…");
+    const gh = (path, opts = {}) => fetch("https://api.github.com" + path, { ...opts, headers: { Authorization: `Bearer ${TOKEN}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.body ? { "Content-Type": "application/json" } : {}) } });
+    try {
+      const path = `guilds/${guild.slug}/tb-settings.json`, url = `/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+      const cur = await gh(url + "?ref=" + encodeURIComponent(branch)); const sha = cur.ok ? (await cur.json()).sha : undefined;
+      const text = JSON.stringify({ ...v, saved_at: new Date().toISOString() }, null, 1);
+      const bytes = enc.encode(text); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+      const res = await gh(url, { method: "PUT", body: JSON.stringify({ message: `Save ${guild.name} TB ranking settings`, content: btoa(bin), branch, ...(sha ? { sha } : {}) }) });
+      if (!res.ok) {
+        const m = res.status === 401 ? "GitHub didn't accept the login (the token behind the officer password may have expired)." : res.status === 403 || res.status === 404 ? "The GitHub token isn't allowed to save to this repository." : `GitHub said ${res.status}.`;
+        showMsg("#menuMsg", "err", m); $("#saveBtn").disabled = false; return;
+      }
+      Object.assign(SAVED, v); S = clean(v); previewing = false;
+      showMsg("#menuMsg", "ok", "Saved. Everyone sees these settings once the site updates (about two minutes).");
+      $("#saveBtn").disabled = false; render();
+    } catch (e) { showMsg("#menuMsg", "err", `Couldn't reach GitHub (${esc(e.message)}).`); $("#saveBtn").disabled = false; }
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

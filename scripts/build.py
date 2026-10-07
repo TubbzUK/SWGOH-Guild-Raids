@@ -778,6 +778,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Territory Battles
+    sys.modules.setdefault("build", sys.modules[__name__])   # so tb.py shares this module (and its warnings list)
     import tb as TB
     WARNINGS.clear()
     tb_data = TB.build_tb(gdir, cfg, {norm(players.info[k]["name"]) for k in current} | {norm(n) for n in (roster_names_of(roster, players))})
@@ -800,6 +801,8 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
             (out_dir / "platoon-roster.json").write_text(json.dumps(pr, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
             has_platoon_roster = True
             print(f"Platoon roster: {len(pr['players'])} players")
+    if (gdir / "tb-settings.json").exists():
+        shutil.copy2(gdir / "tb-settings.json", out_dir / "tb-settings.json")
     if (gdir / "platoon-settings.json").exists():
         shutil.copy2(gdir / "platoon-settings.json", out_dir / "platoon-settings.json")
     saved = gdir / "platoons.json"
@@ -826,7 +829,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         (raids_index[0]["slug"] if raids_index else None)
     return {"slug": gdir.name, "name": cfg.get("guild_name", gdir.name), "members": len(current),
             "raids": raids_index, "default_raid": default,
-            "has_data": bool(with_scores or roster), "order": cfg.get("site_order", 99),
+            "has_data": bool(with_scores or roster or tb_data), "order": cfg.get("site_order", 99),
             "platoons": {"roster": has_platoon_roster, "saved": platoons_saved},
             "tb": tb_index}
 

@@ -112,6 +112,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <a class="wordmark" href="./"><span data-emblem></span>Raid Tracker</a>
     <div class="top-actions">
       <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
+      <a class="top-link" id="rankLink" href="ranking.html">★ Contribution</a>
       <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
       <a class="top-link" id="uploadLink" href="upload.html?type=tb">⬆ Upload results</a>
       <span data-theme-toggle></span>
@@ -267,6 +268,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   pills($("#guildSwitch"), index.map(g => ({ id: g.slug, name: g.name })), guild.slug, g => esc(g.name), id => { location.search = "?guild=" + encodeURIComponent(id); });
   $("#raidLink").href = "./?guild=" + encodeURIComponent(guild.slug);
   $("#platoonLink").href = "platoons.html?guild=" + encodeURIComponent(guild.slug);
+  $("#rankLink").href = "ranking.html?guild=" + encodeURIComponent(guild.slug);
   $("#uploadLink").href = "upload.html?guild=" + encodeURIComponent(guild.slug) + "&type=tb";
   document.title = guild.name + " · Territory Battles";
   $("#guild").textContent = guild.name;

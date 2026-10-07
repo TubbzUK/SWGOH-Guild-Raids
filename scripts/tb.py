@@ -96,6 +96,14 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
     if not tbs:
         return None
     tbs.sort(key=lambda t: t["date"])
+    seen = {}
+    for t in tbs:   # the same export uploaded twice under different dates
+        sig = tuple((r["name"], r["tp"], r["waves"], r["platoons"]) for r in t["rows"])
+        if sig in seen:
+            B.warn(f"tb/{t['file']} has exactly the same results as tb/{seen[sig]} - was the same file uploaded twice? "
+                   f"Upload the right export for {t['date'].isoformat()} (same date replaces it) or delete one on GitHub.")
+        else:
+            seen[sig] = t["file"]
 
     trend_n = int(cfg.get("trend_over_last", 5))
     trend_thr = float(cfg.get("trend_threshold_pct", 3))

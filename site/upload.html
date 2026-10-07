@@ -49,6 +49,8 @@ details li { margin-bottom: 4px; }
 button { font: 600 14px var(--font-ui); border-radius: 8px; padding: 10px 18px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); width: 100%; padding: 13px; font: 700 13px var(--font-display); letter-spacing: .16em; text-transform: uppercase; box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent); }
 button.primary:disabled { opacity: .45; cursor: not-allowed; }
+.newguild { margin-top: 10px; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 10px; }
+button.primary.small { padding: 8px 16px; font-size: 13px; width: auto; }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 500; font-size: 13px; }
 button:focus-visible, select:focus-visible, input:focus-visible, .drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .progress { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -81,6 +83,18 @@ a { color: var(--accent); }
       <div>
         <label class="title" for="guild">Guild</label>
         <select id="guild"></select>
+        <div class="row" style="margin-top:6px"><button type="button" class="link" id="newGuildLink">+ Add a new guild</button></div>
+        <div class="newguild" id="newGuild" hidden>
+          <label class="title" for="ngName" style="margin-top:4px">New guild's name</label>
+          <input type="text" id="ngName" maxlength="40" placeholder="e.g. Rebel Scum" autocomplete="off">
+          <div class="sub" id="ngInfo" style="margin-top:6px"></div>
+          <div class="choices" style="margin-top:8px">
+            <label><input type="radio" name="ngDate" value="dmy" checked> <span>UK dates<small>06/10/2026 = 6 October</small></span></label>
+            <label><input type="radio" name="ngDate" value="mdy"> <span>US dates<small>10/06/2026 = 6 October</small></span></label>
+          </div>
+          <div class="row"><button type="button" class="primary small" id="ngGo" disabled>Create guild</button><button type="button" class="link" id="ngCancel">Cancel</button></div>
+          <ul class="progress" id="ngProgress"></ul>
+        </div>
       </div>
     </div>
 
@@ -449,16 +463,9 @@ a { color: var(--accent); }
   $("#form").onsubmit = async e => {
     e.preventDefault();
     $("#go").disabled = true;
-    let token;
-    if (mode === "password") {
-      progress([["run", "Checking the password…"]]);
-      token = await unlock(keyBlob, $("#password").value);
-      if (!token) { progress([["fail", "That password isn't right. Check with whoever gave it to you."]]); store.del(PW_KEY); update(); return; }
-      if ($("#remember").checked) { store.set(PW_KEY, $("#password").value); store.del(TOKEN_KEY); $("#forget").hidden = false; } else store.del(PW_KEY);
-    } else {
-      token = $("#token").value.trim();
-      if ($("#remember").checked) { store.set(TOKEN_KEY, token); store.del(PW_KEY); $("#forget").hidden = false; } else store.del(TOKEN_KEY);
-    }
+    if (mode === "password") progress([["run", "Checking the password…"]]);
+    const token = await getToken(m => progress([["fail", m]]));
+    if (!token) { update(); return; }
     const g = $("#guild").value, gName = $("#guild").selectedOptions[0].text;
     const isRaid = kind() === "raid", rName = $("#raid").selectedOptions[0]?.text;
     const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
@@ -501,6 +508,9 @@ a { color: var(--accent); }
           if (run.conclusion === "success") {
             list[1] = ["done", "Site updated"];
             list[2] = ["done", `Done. <a href="${viewUrl}">View the results</a>${isRaid ? " · a summary has been posted to Discord if a webhook is set up" : ""}.`];
+          } else if (run.conclusion === "cancelled") {
+            list[1] = ["done", `Upload saved. GitHub replaced this update with a newer one that includes this file, so the site will update when that one finishes. <a href="${runsUrl}" target="_blank" rel="noopener">Check on GitHub</a>.`];
+            list[2] = ["todo", "Refresh the results in a few minutes"];
           } else {
             list[1] = ["fail", `The site update failed. <a href="${esc(run.html_url)}" target="_blank" rel="noopener">See what went wrong on GitHub</a>.`];
           }
@@ -512,13 +522,105 @@ a { color: var(--accent); }
         list[1] = ["done", `Upload finished, but GitHub hasn't started the update yet. <a href="${runsUrl}" target="_blank" rel="noopener">Check on GitHub</a>.`]; progress(list);
       }
       if (run && run.status !== "completed") {
-        list[1] = ["done", `Still running on GitHub; <a href="${esc(run.html_url)}" target="_blank" rel="noopener">follow it here</a>.`]; progress(list);
+        list[1] = ["done", `Upload saved, but the site update is still ${run.status === "in_progress" ? "running" : "waiting its turn"} on GitHub. If it's still waiting after 15 minutes, an earlier update may be stuck: open <a href="${runsUrl}" target="_blank" rel="noopener">Actions on GitHub</a>, open the run marked Waiting and press <b>Cancel workflow</b>.`]; progress(list);
       }
     } catch (err) {
       list[0] = ["fail", `Couldn't reach GitHub (${esc(err.message)}). Check your connection and try again.`]; progress(list);
     }
     file = null; $("#file").value = ""; pick(null);
   };
+
+  // ---------- add a new guild (writes guilds/<folder>/config.yml) ----------
+  const slugify = s => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+  const secretOf = slug => "DISCORD_WEBHOOK_" + slug.toUpperCase().replace(/-/g, "_");
+  $("#newGuildLink").onclick = () => { $("#newGuild").hidden = false; $("#newGuildLink").hidden = true; $("#ngName").focus(); ngCheck(); };
+  $("#ngCancel").onclick = () => { $("#newGuild").hidden = true; $("#newGuildLink").hidden = false; $("#ngProgress").innerHTML = ""; };
+  function ngCheck() {
+    const name = $("#ngName").value.trim(), slug = slugify(name);
+    const login = mode === "password" ? $("#password").value : $("#token").value.trim();
+    const taken = guilds.find(g => g.slug === slug || g.name.toLowerCase() === name.toLowerCase());
+    $("#ngInfo").innerHTML = !name ? "The folder name and Discord secret are made from the name."
+      : !slug ? `<span class="down">Use at least one letter or number.</span>`
+      : taken ? `<span class="down">${esc(taken.name)} already exists.</span>`
+      : `Folder <span class="num">guilds/${esc(slug)}/</span> · Discord secret <span class="num">${esc(secretOf(slug))}</span>`;
+    $("#ngGo").disabled = !(name && slug && !taken && login && repo);
+    $("#ngGo").title = login ? "" : "Enter the officer password (step 5) first";
+    if (name && slug && !taken && !login) $("#ngInfo").innerHTML += `<br>Enter the ${mode === "password" ? "officer password" : "GitHub token"} at step 5 below, then press Create guild.`;
+  }
+  $("#ngName").oninput = ngCheck;
+  ["#password", "#token"].forEach(id => $(id).addEventListener("input", ngCheck));
+  async function getToken(showFail) {
+    if (mode === "password") {
+      const t = await unlock(keyBlob, $("#password").value);
+      if (!t) { showFail("That password isn't right. Check with whoever gave it to you."); store.del(PW_KEY); return null; }
+      if ($("#remember").checked) { store.set(PW_KEY, $("#password").value); store.del(TOKEN_KEY); $("#forget").hidden = false; } else store.del(PW_KEY);
+      return t;
+    }
+    const t = $("#token").value.trim();
+    if ($("#remember").checked) { store.set(TOKEN_KEY, t); store.del(PW_KEY); $("#forget").hidden = false; } else store.del(TOKEN_KEY);
+    return t;
+  }
+  $("#ngGo").onclick = async () => {
+    const name = $("#ngName").value.trim(), slug = slugify(name), secret = secretOf(slug);
+    const df = document.querySelector("input[name=ngDate]:checked").value;
+    const show = list => { $("#ngProgress").innerHTML = list.map(([st, t]) => `<li class="${st}"><span class="ic">${st === "done" ? "✓" : st === "fail" ? "✗" : '<span class="spin" aria-hidden="true"></span>'}</span><span>${t}</span></li>`).join(""); };
+    $("#ngGo").disabled = true;
+    show([["run", mode === "password" ? "Checking the password…" : "Checking the token…"]]);
+    const token = await getToken(m => show([["fail", m]]));
+    if (!token) { ngCheck(); return; }
+    try {
+      const path = `guilds/${slug}/config.yml`, api = `/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+      const ex = await gh(`${api}?ref=${encodeURIComponent(branch)}`, token);
+      if (ex.ok) { show([["fail", `A folder called guilds/${esc(slug)} already exists on GitHub. Pick a different name.`]]); ngCheck(); return; }
+      if (ex.status === 401 || ex.status === 403) { show([["fail", await explain(ex)]]); ngCheck(); return; }
+      show([["run", `Creating ${esc(name)}…`]]);
+      const order = guilds.length + 1;
+      const yml = `# ------------------------------------------------------------------
+#  Guild settings - edit this file on GitHub (pencil icon) and commit.
+#  Raid names, targets and readiness characters live in raids/*.yml
+#  The site rebuilds automatically a minute or two later.
+# ------------------------------------------------------------------
+
+guild_name: ${JSON.stringify(name)}
+
+# Position in the site's guild switcher (lowest first)
+site_order: ${order}
+
+# Name of the GitHub secret holding this guild's Discord webhook URL
+discord_secret: ${secret}
+
+# Dates inside WookieeBot files: "dmy" = UK style (06/10/2026 = 6 October), "mdy" = US style
+date_format: "${df}"
+
+# Optional: this guild's own target scores, overriding the ones in raids/*.yml
+# target_scores:
+#   order-66: 3000000
+
+# "Avg (last N)" averages each player's last N raids they actually scored in
+average_over_last: 5
+
+# Trend: compares each player's last N scores. If they rise by at least
+# trend_threshold_pct % per raid on average they're "Improving", if they fall by
+# that much "Declining", otherwise "Level". Players with fewer than 3 scores are "New".
+trend_over_last: 5
+trend_threshold_pct: 3
+
+# Territory Battles: the most combat waves one member can complete in each phase
+# (P1..P6), from the planets your guild opens. Leave it out to use the best member's total.
+tb_max_waves: [27, 27, 36, 35, 33, 35]
+`;
+      const content = btoa(String.fromCharCode(...new TextEncoder().encode(yml)));
+      const res = await gh(api, token, { method: "PUT", body: JSON.stringify({ message: `Add guild ${name} from the website`, content, branch }) });
+      if (!res.ok) { show([["fail", await explain(res)]]); ngCheck(); return; }
+      guilds.push({ slug, name, order });
+      $("#guild").insertAdjacentHTML("beforeend", `<option value="${esc(slug)}">${esc(name)}</option>`);
+      $("#guild").value = slug; backLink(); runChecks();
+      show([["done", `<b>${esc(name)}</b> created and selected above. Now upload its roster (and any raid or TB results) below; it appears on the site with its first file.`],
+            ["done", `For Discord posts: in GitHub <b>Settings → Secrets and variables → Actions</b>, add a secret named <span class="num">${esc(secret)}</span> with the channel's webhook URL.`]]);
+      $("#ngName").value = ""; ngCheck();
+    } catch (err) { show([["fail", `Couldn't reach GitHub (${esc(err.message)}).`]]); ngCheck(); }
+  };
+
   // ---------- owner setup: lock a token with the officer password ----------
   function setupCheck() {
     const t = $("#setupToken").value.trim(), a = $("#setupPw").value, b = $("#setupPw2").value;

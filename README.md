@@ -180,6 +180,27 @@ in 2+ phases, or wave % under half the guild median. *To work on* flags phases n
 partly deployed, combat waves under ¾ of the guild median, few or no platoon units, no special
 missions, and falling points.
 
+## TB contribution ranking (for officers)
+
+**★ Contribution** on the Territory Battles page (`…/ranking.html?guild=oanr`) ranks members by a
+contribution score from 0 to 100%, overall and for each phase, for one TB or averaged over all TBs.
+
+- **Deployment** – 100% for each phase fully deployed; partly deployed counts the share of GP placed.
+- **Combat missions** – waves completed ÷ the most possible in the counted phases (`tb_max_waves`).
+- **Special missions** – attempts per phase, where the typical number for those who did them = 100%.
+- **Platoons** – platoon units ÷ the guild's top quarter, capped at 100%. The export only has one
+  platoon total per TB, so platoons count in the overall score, not the phase columns.
+
+**Score trend by member** shows how many points each member gains or loses per TB (line of best fit
+through their overall score, last 5 TBs; ±2 or more counts as getting better or declining). Click a
+bar, a ranking bar or a table row to see that member's overall score by TB against the guild median,
+each part (deployment, combat, specials, platoons) by TB, and each counted phase by TB.
+
+Officers press **⚙ Officer settings** (officer password) to choose which phases count (e.g. untick
+Phase 1) and how much each part is worth. **Preview** changes only their own view; **Save for
+everyone** saves to `guilds/<guild>/tb-settings.json` and every member sees it about two minutes
+later. Anyone with the link can view the ranking; only officers can change the settings.
+
 ## Look and feel
 
 The site has a dark space theme and a light theme. Everyone can switch with the **System / Light /
@@ -204,7 +225,15 @@ A guild can have its own target score for a raid in its `config.yml` under `targ
 
 ## Adding another guild
 
-See `guilds/_template/README.md`.
+**From the website (easiest):** on the upload page, under *Guild*, click **+ Add a new guild**, type
+the guild's name, pick UK or US dates, enter the officer password at step 5 and press
+**Create guild**. It creates `guilds/<name>/config.yml` and selects the new guild, so you can upload
+its roster (and any raid or TB results) straight away. The guild appears on the site with its first
+file. For Discord posts, add the secret it shows (e.g. `DISCORD_WEBHOOK_REBEL_SCUM`) under
+**Settings → Secrets and variables → Actions** with the channel's webhook URL.
+
+To rename a guild or change its settings later, edit its `config.yml` on GitHub (pencil icon).
+To add one by hand on GitHub instead, see `guilds/_template/README.md`.
 
 ## If something looks wrong
 
