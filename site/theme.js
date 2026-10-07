@@ -171,6 +171,25 @@
         <path d="${stacks} L1200 230 L1200 300 Z" fill="#090402"/>
         <rect x="0" y="236" width="1200" height="3" fill="#ff8a2b" opacity=".35"/>`;
     },
+    tb(rnd) {
+      // six planets along an arc - one per phase - joined by a hyperspace route
+      const pts = [[640, 210, 14], [730, 168, 18], [830, 132, 22], [940, 104, 27], [1055, 86, 32], [1160, 78, 38]];
+      const cols = [["#7ad1ff", "#1b4f8a"], ["#ffd27a", "#8a4b12"], ["#b9f27a", "#2e6a1c"], ["#ff9ab0", "#7a1e3a"], ["#c9b6ff", "#3b2a7a"], ["#9ff0ff", "#145a66"]];
+      let defs = "", planets = "", route = "M" + pts.map(p => p[0] + " " + p[1]).join(" L");
+      pts.forEach(([x, y, r], i) => {
+        defs += `<radialGradient id="pl${i}" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="${cols[i][0]}"/><stop offset=".65" stop-color="${cols[i][1]}"/><stop offset="1" stop-color="#05070f"/></radialGradient>`;
+        planets += `<circle cx="${x}" cy="${y}" r="${r * 1.9}" fill="${cols[i][0]}" opacity=".10"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#pl${i})"/>`;
+      });
+      return `<defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03060f"/><stop offset=".6" stop-color="#0d1430"/><stop offset="1" stop-color="#05070f"/></linearGradient>
+        <filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>${defs}</defs>
+        <rect width="1200" height="260" fill="url(#bg)"/>
+        <ellipse cx="900" cy="120" rx="380" ry="120" fill="#3a5cff" opacity=".28" filter="url(#b)"/>
+        <ellipse cx="620" cy="230" rx="240" ry="80" fill="#ffb347" opacity=".14" filter="url(#b)"/>
+        ${starsSVG(rnd, 170, 260)}
+        <path d="${route}" fill="none" stroke="#9fd4ff" stroke-width="1.6" stroke-dasharray="2 7" stroke-linecap="round" opacity=".7"/>
+        ${planets}`;
+    },
     default(rnd) {
       return `<defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03060f"/><stop offset=".6" stop-color="#0b1a3a"/><stop offset="1" stop-color="#04070f"/></linearGradient>

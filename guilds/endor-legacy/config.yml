@@ -27,3 +27,7 @@ average_over_last: 5
 # that much "Declining", otherwise "Level". Players with fewer than 3 scores are "New".
 trend_over_last: 5
 trend_threshold_pct: 3
+
+# Territory Battles: the most combat waves one member can complete in each phase
+# (P1..P6), from the planets your guild opens. Leave it out to use the best member's total.
+tb_max_waves: [27, 27, 36, 35, 33, 35]

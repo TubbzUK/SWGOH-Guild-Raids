@@ -25,7 +25,7 @@ h1 { font: 800 clamp(22px, 4vw, 30px)/1.15 var(--font-display); letter-spacing: 
 .step[hidden] { display: none; }
 .n { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--accent); color: var(--accent); font: 700 11px var(--font-display); display: grid; place-items: center; }
 .step label.title, .step .title { display: block; font: 700 12px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
-select, input[type=password], input[type=text] { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font: 14px var(--font-ui); }
+select, input[type=password], input[type=text], input[type=date] { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font: 14px var(--font-ui); }
 .choices { display: flex; flex-wrap: wrap; gap: 8px; }
 .choices label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; cursor: pointer; flex: 1 1 180px; }
 .choices label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
@@ -72,7 +72,7 @@ a { color: var(--accent); }
   <header>
     <a id="back" href="./">← Back to raid results</a>
     <h1>Upload a WookieeBot file</h1>
-    <div class="sub">For officers. Adds a raid result or roster export to the site; it updates about two minutes later.</div>
+    <div class="sub">For officers. Adds a raid result, territory battle or roster export to the site; it updates about two minutes later.</div>
   </header>
 
   <form class="card" id="form" novalidate>
@@ -91,6 +91,7 @@ a { color: var(--accent); }
         <div class="choices">
           <label><input type="radio" name="kind" value="raid" id="kindRaid" checked> <span>Raid results<small>WookieeBot raid export, e.g. Order66_Raid_1.csv</small></span></label>
           <label><input type="radio" name="kind" value="roster" id="kindRoster"> <span>Guild roster<small>Relic levels for the readiness pages</small></span></label>
+          <label><input type="radio" name="kind" value="tb" id="kindTb"> <span>Territory battle<small>TB results, one row per member</small></span></label>
         </div>
       </div>
     </div>
@@ -100,6 +101,15 @@ a { color: var(--accent); }
       <div>
         <label class="title" for="raid">Which raid?</label>
         <select id="raid"></select>
+      </div>
+    </div>
+
+    <div class="step" id="tbStep" hidden>
+      <span class="n">3</span>
+      <div>
+        <label class="title" for="tbDate">When did the territory battle end?</label>
+        <input type="date" id="tbDate">
+        <div class="sub" style="margin-top:6px">Uploading another file with the same date replaces it (handy for corrections).</div>
       </div>
     </div>
 
@@ -238,6 +248,8 @@ a { color: var(--accent); }
   if (guilds.some(g => g.slug === params.guild)) $("#guild").value = params.guild;
   if (raids.some(r => r.slug === params.raid)) $("#raid").value = params.raid;
   if (params.type === "roster") $("#kindRoster").checked = true;
+  if (params.type === "tb") $("#kindTb").checked = true;
+  { const d = new Date(); $("#tbDate").value = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
   const backLink = () => { $("#back").href = `./?guild=${encodeURIComponent($("#guild").value)}&raid=${encodeURIComponent($("#raid").value)}`; };
   backLink();
 
@@ -302,6 +314,8 @@ a { color: var(--accent); }
     const dateI = findCol(hdr, ["date", "raiddate", "raidend", "enddate"], 4);
     const allies = new Set(allyI >= 0 ? body.map(r => (r[allyI] || "").replace(/\D/g, "")).filter(a => a.length === 9) : []);
     const names = new Set(nameI >= 0 ? body.map(r => (r[nameI] || "").trim()).filter(Boolean) : []);
+    const tbPhases = new Set(hdr.map(h => (/^p(\d+)(territorypoints|waves|deployed)$/.exec(h) || [])[1]).filter(Boolean));
+    if (hdr.includes("totalterritorypoints") || tbPhases.size) return { type: "tb", players: names.size, allies, names, phases: tbPhases.size };
     if (unitI >= 0 && relicI >= 0) return { type: "roster", players: names.size || allies.size, allies, units: body.length };
     if (scoreI >= 0) {
       const counts = {};
@@ -330,6 +344,18 @@ a { color: var(--accent); }
     } catch (e) { return (memberCache[slug] = null); }
   }
 
+  const nameCache = {};
+  async function guildNames(slug) {
+    if (slug in nameCache) return nameCache[slug];
+    try {
+      const idx = await fetch("guilds.json", { cache: "no-store" }).then(r => r.json());
+      const g = idx.find(x => x.slug === slug);
+      if (!g) return (nameCache[slug] = null);
+      const d = await fetch(`data/${slug}/${g.default_raid}.json`, { cache: "no-store" }).then(r => r.json());
+      return (nameCache[slug] = new Set(d.players.map(p => norm(p.name))));
+    } catch (e) { return (nameCache[slug] = null); }
+  }
+
   async function runChecks() {
     const out = [];
     if (!file) { $("#check").innerHTML = ""; return; }
@@ -340,14 +366,23 @@ a { color: var(--accent); }
     } else {
       info = inspect(await file.text());
       const gName = $("#guild").selectedOptions[0]?.text || "this guild";
-      if (info.type === "unknown") out.push(["bad", "This doesn't look like a WookieeBot raid or roster export (no player name and score/relic columns found)."]);
-      else if (info.type !== kind()) out.push(["bad", `This looks like a ${info.type === "raid" ? "raid results" : "roster"} file, but you chose ${kind() === "raid" ? "Raid results" : "Guild roster"}. Change step 2 to match.`]);
+      const KIND = { raid: ["raid results", "Raid results"], roster: ["roster", "Guild roster"], tb: ["territory battle", "Territory battle"] };
+      if (info.type === "unknown") out.push(["bad", "This doesn't look like a raid, roster or territory battle export (no player name and score, relic or territory point columns found)."]);
+      else if (info.type !== kind()) out.push(["bad", `This looks like a ${KIND[info.type][0]} file, but you chose ${KIND[kind()][1]}. Change step 2 to match.`]);
+      else if (info.type === "tb") out.push(["ok", `Territory battle · ${info.players} members${info.phases ? ` · ${info.phases} phases` : ""}`]);
       else if (info.type === "raid") out.push(["ok", `Raid results · ${info.players} players, ${info.scored} with a score${info.date ? ` · raid date ${esc(fmtDate(info.date))}` : ""}`]);
       else out.push(["ok", `Guild roster · ${info.players} players · ${info.units.toLocaleString("en-GB")} units`]);
       if (info.type === "raid" && kind() === "raid") {
         const fn = norm(file.name), picked = $("#raid").value;
         const named = raids.find(r => (r.match || []).some(m => m && fn.includes(m)));
         if (named && named.slug !== picked) out.push(["warn", `The file name looks like ${esc(named.name)}, but you picked ${esc($("#raid").selectedOptions[0].text)} in step 3. Is that right?`]);
+      }
+      if (info.type === "tb" && info.names.size) {
+        const known = await guildNames($("#guild").value);
+        if (known && known.size) {
+          const hits = [...info.names].filter(n => known.has(norm(n))).length;
+          if (hits / info.names.size < 0.5) out.push(["warn", `Only ${hits} of ${info.names.size} names in this file match ${esc(gName)} members. Is this the right guild?`]);
+        }
       }
       if (info.type !== "unknown" && info.allies.size) {
         const members = await guildAllies($("#guild").value);
@@ -364,13 +399,14 @@ a { color: var(--accent); }
 
   // ---------- form behaviour ----------
   function update() {
-    const raidKind = kind() === "raid";
+    const raidKind = kind() === "raid", tbKind = kind() === "tb";
     $("#raidStep").hidden = !raidKind;
-    $("#fileN").textContent = raidKind ? "4" : "3";
-    $("#tokenN").textContent = raidKind ? "5" : "4";
+    $("#tbStep").hidden = !tbKind;
+    $("#fileN").textContent = raidKind || tbKind ? "4" : "3";
+    $("#tokenN").textContent = raidKind || tbKind ? "5" : "4";
     const blocked = !!$("#check .bad");
     const login = mode === "password" ? $("#password").value : $("#token").value.trim();
-    $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && !blocked && repo);
+    $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && (!tbKind || /^\d{4}-\d{2}-\d{2}$/.test($("#tbDate").value)) && !blocked && repo);
   }
   const pick = f => { file = f || null; $("#dropText").innerHTML = file ? `<b>${esc(file.name)}</b> · ${(file.size / 1024).toFixed(0)} KB · <u>change</u>` : `<b>Choose a file</b> or drag it here`; runChecks(); };
   $("#file").onchange = e => pick(e.target.files[0]);
@@ -382,7 +418,7 @@ a { color: var(--accent); }
   document.querySelectorAll("input[name=kind]").forEach(r => r.onchange = () => { update(); runChecks(); });
   $("#guild").onchange = () => { backLink(); runChecks(); };
   $("#raid").onchange = () => { backLink(); runChecks(); };
-  $("#token").oninput = update; $("#password").oninput = update;
+  $("#token").oninput = update; $("#password").oninput = update; $("#tbDate").oninput = update;
   update();
 
   // ---------- upload ----------
@@ -427,14 +463,21 @@ a { color: var(--accent); }
     const isRaid = kind() === "raid", rName = $("#raid").selectedOptions[0]?.text;
     const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
     const safeName = file.name.replace(/[\\/:*?"<>|#%]+/g, "_");
-    const path = isRaid ? `guilds/${g}/${$("#raid").value}/upload-${stamp} ${safeName}` : `guilds/${g}/roster/upload-${stamp} ${safeName}`;
-    const what = isRaid ? `${gName} ${rName} results` : `${gName} roster`;
+    const isTb = kind() === "tb", tbDate = $("#tbDate").value;
+    const ext = (/\.(csv|tsv|txt|xlsx|xls)$/i.exec(file.name) || [".csv"])[0].toLowerCase();
+    const path = isRaid ? `guilds/${g}/${$("#raid").value}/upload-${stamp} ${safeName}`
+      : isTb ? `guilds/${g}/tb/${tbDate} RotE${ext}` : `guilds/${g}/roster/upload-${stamp} ${safeName}`;
+    const what = isRaid ? `${gName} ${rName} results` : isTb ? `${gName} territory battle (${fmtDate(tbDate)})` : `${gName} roster`;
+    const viewUrl = isTb ? `tb.html?guild=${encodeURIComponent(g)}&tb=${tbDate}` : `./?guild=${encodeURIComponent(g)}${isRaid ? "&raid=" + encodeURIComponent($("#raid").value) : ""}`;
     const list = [["run", `Uploading ${esc(what)}…`], ["todo", "Updating the site"], ["todo", "Done"]];
     progress(list);
     try {
       const content = await toBase64(file);
-      const res = await gh(`/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`, token, {
-        method: "PUT", body: JSON.stringify({ message: `Upload ${what} from the website`, content, branch }),
+      const api = `/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+      let sha0;   // replacing a file with the same name (a TB re-uploaded for the same date)
+      if (isTb) { const ex = await gh(`${api}?ref=${encodeURIComponent(branch)}`, token); if (ex.ok) sha0 = (await ex.json()).sha; }
+      const res = await gh(api, token, {
+        method: "PUT", body: JSON.stringify({ message: `Upload ${what} from the website`, content, branch, ...(sha0 ? { sha: sha0 } : {}) }),
       });
       if (!res.ok) { list[0] = ["fail", await explain(res)]; progress(list); $("#go").disabled = false; return; }
       const sha = (await res.json()).commit.sha;
@@ -457,7 +500,7 @@ a { color: var(--accent); }
         if (run.status === "completed") {
           if (run.conclusion === "success") {
             list[1] = ["done", "Site updated"];
-            list[2] = ["done", `Done. <a href="./?guild=${encodeURIComponent(g)}${isRaid ? "&raid=" + encodeURIComponent($("#raid").value) : ""}">View the results</a>${isRaid ? " · a summary has been posted to Discord if a webhook is set up" : ""}.`];
+            list[2] = ["done", `Done. <a href="${viewUrl}">View the results</a>${isRaid ? " · a summary has been posted to Discord if a webhook is set up" : ""}.`];
           } else {
             list[1] = ["fail", `The site update failed. <a href="${esc(run.html_url)}" target="_blank" rel="noopener">See what went wrong on GitHub</a>.`];
           }

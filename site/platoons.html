@@ -282,6 +282,7 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
   <span class="brand">RotE platoons</span>
   <div class="navr">
   <a class="navlink" id="raidLink" href="./">⟵ <span class="lw">Raid </span>results</a>
+  <a class="navlink" id="tbLink" href="tb.html"><span class="lw">Territory </span>battles</a>
   <label class="vh" for="guildSel">Guild</label><select id="guildSel" class="gsel" hidden></select>
   <button class="btn themebtn" id="themeBtn" type="button"></button>
   <button class="btn menubtn" id="menuBtn" aria-haspopup="dialog" aria-controls="menu"><svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"></path></svg>Menu</button>
@@ -1253,7 +1254,7 @@ function describePlan(){
   $('#guildSel').innerHTML=SITE.guilds.map(g=>`<option value="${esc(g.slug)}"${g.slug===GUILD?' selected':''}>${esc(g.name)}</option>`).join('');
   $('#guildSel').hidden=SITE.guilds.length<2;
   $('#guildSel').addEventListener('change',e=>{location.search='?guild='+encodeURIComponent(e.target.value)});
-  $('#raidLink').href='./?guild='+encodeURIComponent(GUILD);
+  $('#raidLink').href='./?guild='+encodeURIComponent(GUILD);$('#tbLink').href='tb.html?guild='+encodeURIComponent(GUILD);
   $('#rosterUpLink').href='upload.html?guild='+encodeURIComponent(GUILD)+'&type=roster';
   document.title=(guildName()||'RotE')+' · Platoon Planner';
   if(!GUILD){$('#guildLine').textContent='No guild has a roster yet. Upload a WookieeBot roster export first.';$('#rosterInfo').textContent='No roster uploaded yet.';return}

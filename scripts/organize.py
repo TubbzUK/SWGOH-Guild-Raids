@@ -56,9 +56,13 @@ def organize_guild(gdir: Path, defs: list[dict], log: list[str]) -> dict[str, st
     rel = lambda p: p.relative_to(build.ROOT).as_posix()  # noqa: E731
     moves: dict[str, str] = {}
 
-    # 1) loose files in the guild folder -> roster/ or a raid folder
+    # 1) loose files in the guild folder -> roster/, tb/ or a raid folder
+    import tb as TB
     for path in build.data_files(gdir):
-        if is_roster(path):
+        if TB.is_tb_file(path):
+            (gdir / "tb").mkdir(exist_ok=True)
+            dest = gdir / "tb" / path.name
+        elif is_roster(path):
             build.ROSTER_DIR.mkdir(exist_ok=True)
             dest = build.ROSTER_DIR / path.name
         else:
@@ -97,7 +101,18 @@ def organize_guild(gdir: Path, defs: list[dict], log: list[str]) -> dict[str, st
             moves.setdefault(rel(path), rel(target))
             log.append(f"{gdir.name}/{d['slug']}: {path.name} -> {target.name}")
 
-    # 3) newest roster only, dated today
+    # 3) TB exports without a date in the name -> '<today> RotE.ext'
+    tb_dir = gdir / "tb"
+    for path in build.data_files(tb_dir) if tb_dir.exists() else []:
+        if DATED.match(path.stem):
+            continue
+        target = path.with_name(f"{dt.date.today().isoformat()} RotE{path.suffix.lower()}")
+        if target.exists():
+            target.unlink()
+        path.replace(target)
+        log.append(f"{gdir.name}/tb: {path.name} -> {target.name}")
+
+    # 4) newest roster only, dated today
     today = dt.date.today().isoformat()
     new_rosters = [p for p in build.data_files(build.ROSTER_DIR) if not DATED.match(p.stem)]
     if new_rosters:

@@ -15,6 +15,7 @@ guilds/
     order-66/                ← OANR's Order 66 results (24 raids from 30 Jun 2025 already in)
     droid-destruction/       ← OANR's Droid Destruction results, when it starts
     roster/                  ← newest WookieeBot roster export (for readiness)
+    tb/                      ← territory battle results, one file per TB
   endor-legacy/              ← same layout, waiting for its first files
   _template/                 ← starter config for adding more guilds (ignored by the site)
 ```
@@ -145,6 +146,33 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   **Save and share** also saves the choices the assignments were made with.
 - The page shows which planets each guild is filling in each phase, and flags it when the choices
   have changed since the assignments were last made.
+
+## Territory battles
+
+The **◈ Territory battles** page (`…/tb.html?guild=oanr`) tracks how each member does in every
+Rise of the Empire TB and how that changes over time.
+
+**After each TB:** on the upload page choose **Territory battle**, set the date the TB ended and drop
+in the export (one row per member with `Name`, `Total Territory Points`, `Platoon Units`,
+`Combat Waves`, and per phase `P1 Deployed`, `P1 Territory Points`, `P1 Deployed GP`,
+`P1 Combat Attempts`, `P1 Special Attempts`, `P1 Waves` …). It's saved as
+`guilds/<guild>/tb/<date> RotE.csv`; uploading again with the same date replaces it. You can also
+upload into `guilds/<guild>/tb/` on GitHub: name it `2026-10-05 RotE.csv`, or it gets today's date.
+
+- **Overview** – guild territory points per TB, wave completion by phase, platoon units, who fully
+  deployed, how many members were active / partial / inactive, a *needs attention* list and the top 10.
+- **Members** – everyone's points, change vs their last TB, trend (line of best fit over the last
+  5 TBs, same rule as raids), waves completed %, combat mission attempts, platoon units, a square
+  per phase for deployment (green full, amber partly, red none) and short *to work on* tags. Click a
+  member for their per-phase breakdown and their points and wave % by TB against the guild median.
+- **Phases** – one phase at a time: points, GP deployed, waves and CM attempts for every member.
+
+**How it's judged.** *Waves %* = waves completed ÷ the most a member could complete
+(`tb_max_waves` in the guild's `config.yml`; change it if your guild opens different planets).
+**Inactive** = no points, or no deployment and no combat at all. **Partial** = missed full deployment
+in 2+ phases, or wave % under half the guild median. *To work on* flags phases not deployed or only
+partly deployed, combat waves under ¾ of the guild median, few or no platoon units, no special
+missions, and falling points.
 
 ## Look and feel
 

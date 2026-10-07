@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Territory Battles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: banner with guild and TB pickers, then tabs - summary tiles and charts, the member table with a
+   per-member detail panel, and a per-phase view. Colours and fonts come from theme.css. */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
+nav.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); padding: 4px; border-radius: 12px; margin: 0 0 18px; width: fit-content; max-width: 100%; overflow-x: auto; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+nav.tabs button { border: 0; background: transparent; color: var(--text-2); font: 700 11.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.card { padding: 16px 18px; min-width: 0; }
+.kpi .label { color: var(--text-2); font: 700 10.5px var(--font-display); text-transform: uppercase; letter-spacing: .16em; }
+.kpi .value { font: 700 26px var(--font-display); margin-top: 6px; letter-spacing: .02em; }
+.kpi .value .sub { font: 500 13px var(--font-num); color: var(--text-2); }
+.kpi .note { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+.up { color: var(--good-ink); } .down { color: var(--bad-ink); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid2 > * { min-width: 0; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+h2 { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 4px; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.chart { position: relative; height: 240px; }
+ol.list { margin: 0; padding: 0; list-style: none; }
+ol.list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+ol.list li:last-child { border-bottom: 0; }
+ol.list .who { min-width: 0; }
+ol.list .who small { display: block; color: var(--text-2); font-size: 12px; }
+ol.list .rk { color: var(--muted); width: 22px; display: inline-block; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); min-width: 0; }
+input[type=search] { flex: 1 1 220px; max-width: 320px; }
+label.check { display: flex; gap: 6px; align-items: center; color: var(--text-2); font-size: 13px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--glow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 9px; text-align: left; white-space: nowrap; }
+th { font: 700 10.5px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); background: var(--surface-2); user-select: none; }
+th[data-sort] { cursor: pointer; }
+th[data-sort]::after { content: " \2195"; color: var(--muted); }
+th.asc::after { content: " \2191"; color: var(--text); } th.desc::after { content: " \2193"; color: var(--text); }
+th.r, td.r { text-align: right; }
+tbody tr { border-top: 1px solid var(--border); }
+tbody tr.click { cursor: pointer; } tbody tr.click:hover { background: var(--surface-2); }
+tbody tr.sel { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+td.name { font-weight: 600; }
+td.focus { white-space: normal; min-width: 140px; max-width: 210px; }
+.tag { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border-radius: 999px; font-size: 11.5px; white-space: nowrap; color: var(--text-2); border: 1px solid var(--border); background: var(--surface-2, transparent); }
+.former { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font: 600 12px var(--font-ui); }
+.b-good { background: var(--good-bg); color: var(--good-ink); }
+.b-warn { background: var(--warn-bg); color: var(--warn-ink); }
+.b-bad { background: var(--bad-bg); color: var(--bad-ink); }
+.b-none { background: var(--none-bg); color: var(--text-2); }
+.spark { vertical-align: middle; margin-left: 8px; }
+.bar { display: inline-block; width: 56px; height: 6px; background: var(--surface-2); border-radius: 3px; vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 3px; background: var(--series-1); }
+.dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+.dots i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.d-full { background: var(--good); } .d-part { background: var(--warn); } .d-none { background: var(--bad); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.phrow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.phrow button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font: 600 13px var(--font-ui); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.phrow button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.detail { margin-top: 12px; }
+.detail .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stats div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
+.stats b { display: block; font-size: 17px; }
+.stats span { font-size: 12px; color: var(--text-2); }
+.todo { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); }
+.todo.ok { background: var(--good-bg); color: var(--good-ink); }
+.todo ul { margin: 6px 0 0; padding-left: 18px; }
+.warnings { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+.warnings summary { cursor: pointer; font-weight: 600; }
+.empty { color: var(--text-2); padding: 24px; text-align: center; }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+@media (max-width: 600px) { nav.tabs button { padding: 9px 11px; letter-spacing: .08em; } .kpi .value { font-size: 20px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="wordmark" href="./"><span data-emblem></span>Raid Tracker</a>
+    <div class="top-actions">
+      <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
+      <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
+      <a class="top-link" id="uploadLink" href="upload.html?type=tb">⬆ Upload results</a>
+      <span data-theme-toggle></span>
+    </div>
+  </div>
+  <header class="banner">
+    <div class="art" id="bannerArt"></div>
+    <div>
+      <div class="eyebrow">Territory Battles</div>
+      <h1 id="guild">Territory Battles</h1>
+      <div class="sub" id="updated"></div>
+    </div>
+    <div class="banner-switch">
+      <div class="pills" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+      <div class="pills raids" id="tbSwitch" role="group" aria-label="Territory battle" hidden></div>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
+    <button role="tab" aria-selected="false" data-tab="members">Members</button>
+    <button role="tab" aria-selected="false" data-tab="phases">Phases</button>
+  </nav>
+  <div id="warnings"></div>
+
+  <section class="tab" id="tab-overview">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Territory points by TB</h2>
+        <p class="hint">Guild total for each territory battle tracked</p>
+        <div class="chart"><canvas id="tpChart" aria-label="Territory points by TB"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Wave completion by phase</h2>
+        <p class="hint" id="waveHint"></p>
+        <div class="chart"><canvas id="waveChart" aria-label="Wave completion by phase"></canvas></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Needs attention</h2>
+        <p class="hint">Current members marked Partial or Inactive in this TB, with the main thing to work on</p>
+        <ol class="list" id="attention"></ol>
+      </div>
+      <div class="card">
+        <h2>Top 10 territory points</h2>
+        <p class="hint" id="topHint"></p>
+        <ol class="list" id="top10"></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-members" hidden>
+    <div class="toolbar">
+      <input type="search" id="mSearch" placeholder="Search members&hellip;" aria-label="Search members">
+      <select id="mStatus" aria-label="Filter by status">
+        <option value="">All members</option>
+        <option value="active">Active</option>
+        <option value="partial">Partial</option>
+        <option value="inactive">Inactive</option>
+        <option value="focus">Has something to work on</option>
+      </select>
+      <label class="check"><input type="checkbox" id="mCurrent" checked> Current members only</label>
+    </div>
+    <div class="legend"><span><span class="dots"><i class="d-full"></i></span> Fully deployed</span><span><span class="dots"><i class="d-part"></i></span> Partly deployed</span><span><span class="dots"><i class="d-none"></i></span> Didn't deploy</span><span>One square per phase, P1 to P6. Click a member for their breakdown.</span></div>
+    <div class="tablewrap"><table id="mTable"></table></div>
+    <div class="card detail" id="mDetail" hidden></div>
+  </section>
+
+  <section class="tab" id="tab-phases" hidden>
+    <div class="phrow" id="phSwitch" role="group" aria-label="Phase"></div>
+    <div class="kpis" id="phKpis"></div>
+    <div class="tablewrap"><table id="phTable"></table></div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = n => n == null ? "–" : Math.abs(n) >= 1e9 ? (n / 1e9).toFixed(2) + "B" : Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1) + "M" : Math.abs(n) >= 1e3 ? (n / 1e3).toFixed(1) + "K" : Math.round(n).toString();
+  const signedPct = n => n == null ? "–" : (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(1) + "%";
+  const dcls = n => n > 0 ? "up" : n < 0 ? "down" : "";
+  const dfmt = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const dshort = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" });
+  const getJSON = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+  // tabs
+  document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => {
+    document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll(".tab").forEach(t => t.hidden = t.id !== "tab-" + b.dataset.tab);
+    try { history.replaceState(null, "", location.search + "#" + b.dataset.tab); } catch (e) {}
+  });
+  const h = location.hash.slice(1); if (h) document.querySelector(`nav.tabs button[data-tab="${h}"]`)?.click();
+
+  function chartTheme() {
+    Chart.defaults.font.family = '"Exo 2", system-ui, sans-serif';
+    Chart.defaults.color = css("--text-2");
+    Chart.defaults.borderColor = css("--grid");
+    Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--surface-solid"), titleColor: css("--text"), bodyColor: css("--text-2"), borderColor: css("--accent"), borderWidth: 1, padding: 10 });
+    Chart.defaults.maintainAspectRatio = false;
+  }
+  const axisY = cb => ({ beginAtZero: true, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: cb || (v => fmt(v)) } });
+  const axisX = () => ({ grid: { display: false }, border: { color: css("--border") }, ticks: { maxRotation: 0, autoSkipPadding: 12 } });
+  const spark = (vals, w = 72, hgt = 20) => {
+    const v = vals.slice(-8).filter(x => x > 0); if (v.length < 2) return "";
+    const mn = Math.min(...v), mx = Math.max(...v), sx = (w - 4) / (v.length - 1), sy = mx > mn ? (hgt - 4) / (mx - mn) : 0;
+    const pts = v.map((y, i) => [2 + i * sx, hgt - 2 - (y - mn) * sy]); const [lx, ly] = pts[pts.length - 1];
+    return `<svg class="spark" width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}" aria-hidden="true"><polyline fill="none" stroke="${css("--series-1")}" stroke-width="1.5" stroke-linejoin="round" points="${pts.map(p => p.join(",")).join(" ")}"/><circle cx="${lx}" cy="${ly}" r="2.5" fill="${css("--series-1")}"/></svg>`;
+  };
+  const TREND = { improving: ["b-good", "▲ Improving"], level: ["b-none", "■ Level"], declining: ["b-bad", "▼ Declining"], new: ["b-none", "● New"] };
+  const STATUS = { active: ["b-good", "✓ Active"], partial: ["b-warn", "● Partial"], inactive: ["b-bad", "○ Inactive"] };
+  const badge = (map, k) => k && map[k] ? `<span class="badge ${map[k][0]}">${map[k][1]}</span>` : `<span class="badge b-none">–</span>`;
+  const dots = phases => `<span class="dots" aria-label="Deployment by phase">${phases.map(x => `<i class="${x.dep ? "d-full" : x.gp > 0 ? "d-part" : "d-none"}" title="P${x.p}: ${x.dep ? "fully deployed" : x.gp > 0 ? "partly deployed (" + fmt(x.gp) + " GP)" : "didn't deploy"}"></i>`).join("")}</span>`;
+
+  // ---------------- guilds
+  const index = (await getJSON("guilds.json") || []).filter(g => g.tb && g.tb.count);
+  let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  if (!index.length) {
+    $("#guild").textContent = "Territory Battles";
+    $("#updated").textContent = "No territory battle results uploaded yet. Upload a TB export from the upload page.";
+    RaidTheme?.banner?.($("#bannerArt"), { slug: "tb" });
+    return;
+  }
+  const guild = index.find(g => g.slug === params.guild) || index[0];
+  const data = await getJSON(`data/${encodeURIComponent(guild.slug)}/tb.json`);
+  if (!data) { $("#updated").textContent = "Couldn't load this guild's TB data."; return; }
+  const tbs = data.tbs, latestI = tbs.length - 1;
+  let sel = Math.max(0, tbs.findIndex(t => t.id === params.tb)); if (!params.tb) sel = latestI;
+  let phase = 1;
+
+  const pills = (el, items, cur, label, onPick) => {
+    el.hidden = items.length < 2;
+    el.innerHTML = items.map(x => `<button type="button" aria-pressed="${x.id === cur}" data-id="${esc(x.id)}">${label(x)}</button>`).join("");
+    el.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.id !== cur) onPick(b.dataset.id); });
+  };
+  pills($("#guildSwitch"), index.map(g => ({ id: g.slug, name: g.name })), guild.slug, g => esc(g.name), id => { location.search = "?guild=" + encodeURIComponent(id); });
+  $("#raidLink").href = "./?guild=" + encodeURIComponent(guild.slug);
+  $("#platoonLink").href = "platoons.html?guild=" + encodeURIComponent(guild.slug);
+  $("#uploadLink").href = "upload.html?guild=" + encodeURIComponent(guild.slug) + "&type=tb";
+  document.title = guild.name + " · Territory Battles";
+  $("#guild").textContent = guild.name;
+  if (data.warnings?.length) $("#warnings").innerHTML = `<details class="warnings"><summary>Data notes (${data.warnings.length})</summary><ul>${data.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul></details>`;
+  $("#footer").textContent = `Updated ${new Date(data.generated_at).toLocaleString("en-GB")} · ${tbs.length} territory battle${tbs.length > 1 ? "s" : ""} tracked`;
+  const ready = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tb" }) : setTimeout(ready, 30);
+  ready();
+
+  const players = data.players;
+  const rowOf = (p, i) => p.detail[String(i)] || null;
+
+  function render() {
+    Object.values(Chart.instances).forEach(c => c.destroy());
+    chartTheme();
+    const t = tbs[sel], prev = tbs[sel - 1], isLatest = sel === latestI;
+    pills($("#tbSwitch"), tbs.map(x => ({ id: x.id, date: x.date, label: x.label })), t.id, x => dshort(x.date), id => {
+      sel = tbs.findIndex(x => x.id === id); selected = null;
+      try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&tb=${encodeURIComponent(id)}` + location.hash); } catch (e) {}
+      render();
+    });
+    const cur = players.filter(p => p.current);
+    $("#updated").textContent = `${t.label} · ${dfmt(t.date)} · ${t.members} members took part · ${tbs.length} TB${tbs.length > 1 ? "s" : ""} tracked`;
+
+    // ---- overview
+    const dtp = prev && prev.tp ? (t.tp - prev.tp) / prev.tp * 100 : null;
+    const st = isLatest ? data.status : null;
+    $("#kpis").innerHTML = [
+      ["Territory points", fmt(t.tp), prev ? `<span class="${dcls(dtp)}">${signedPct(dtp)}</span> vs ${dshort(prev.date)}` : "First TB tracked"],
+      ["Wave completion", t.wave_pct.toFixed(0) + "%", `${fmt(t.waves)} waves · ${fmt(t.att)} CM attempts`],
+      ["Platoon units", fmt(t.platoons), `Median ${t.median_platoons} per member`],
+      ["Fully deployed", `${t.all_deployed}<span class="sub"> / ${t.members}</span>`, `in all ${t.phases} phases`],
+      ["Participation", st ? `<span class="up">${st.active}</span><span class="sub"> ✓ </span><span style="color:var(--warn-ink)">${st.partial}</span><span class="sub"> ● </span><span class="down">${st.inactive}</span><span class="sub"> ○</span>` : "–", st ? "Active · partial · inactive" : "Shown for the latest TB"],
+    ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+
+    new Chart($("#tpChart"), {
+      type: "bar",
+      data: { labels: tbs.map(x => dshort(x.date)), datasets: [{ label: "Territory points", data: tbs.map(x => x.tp), backgroundColor: tbs.map((x, i) => i === sel ? css("--series-1") : css("--r3") || css("--series-1")), borderRadius: 4, maxBarThickness: 48 }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `${tbs[i[0].dataIndex].label} · ${dfmt(tbs[i[0].dataIndex].date)}`, label: c => ` ${c.parsed.y.toLocaleString("en-GB")} points`, afterLabel: c => ` ${tbs[c.dataIndex].members} members · ${tbs[c.dataIndex].wave_pct}% waves` } } }, scales: { y: axisY(), x: axisX() } }
+    });
+    $("#waveHint").textContent = `Waves completed ÷ the most each member could complete (${t.max_waves.map(v => Math.round(v)).join(" / ")} per phase)`;
+    new Chart($("#waveChart"), {
+      type: "bar",
+      data: { labels: t.phase.map(p => "P" + p.p), datasets: [{ label: "Wave completion", data: t.phase.map(p => p.wave_pct), backgroundColor: css("--series-1"), borderRadius: 4, maxBarThickness: 48 }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const p = t.phase[c.dataIndex]; return [` ${p.wave_pct}% of possible waves`, ` ${p.waves} waves · ${p.att} CM attempts`, ` ${p.deployed} fully deployed · ${p.partial} partly · ${p.none} not at all`]; } } } }, scales: { y: { ...axisY(v => v + "%"), max: 100 }, x: axisX() } }
+    });
+    const att = isLatest ? cur.filter(p => p.status === "partial" || p.status === "inactive").sort((a, b) => (a.status === "inactive" ? -1 : 0) - (b.status === "inactive" ? -1 : 0) || (a.last || 0) - (b.last || 0)) : [];
+    $("#attention").innerHTML = !isLatest ? `<li class="who"><small>Shown for the latest TB only.</small></li>` : att.length ? att.slice(0, 12).map(p => `<li><span class="who">${esc(p.name)}<small>${esc(p.focus[0] || "")}</small></span>${badge(STATUS, p.status)}</li>`).join("") + (att.length > 12 ? `<li><span class="who"><small>and ${att.length - 12} more on the Members tab</small></span></li>` : "") : `<li class="who"><small>Everyone took a full part. 🎉</small></li>`;
+    const top = players.map(p => ({ p, r: rowOf(p, sel) })).filter(x => x.r).sort((a, b) => b.r.tp - a.r.tp).slice(0, 10);
+    $("#topHint").textContent = dfmt(t.date);
+    $("#top10").innerHTML = top.map((x, i) => `<li><span class="who"><span class="rk num">${i + 1}</span>${esc(x.p.name)}${x.p.current ? "" : '<span class="former">left</span>'}</span><span class="num">${fmt(x.r.tp)}</span></li>`).join("");
+
+    renderMembers(); renderPhase();
+  }
+
+  // ---- members
+  let sortK = { k: "tp", d: -1 }, selected = null, detailCharts = [];
+  const mCols = () => {
+    const isLatest = sel === latestI, t = tbs[sel], maxTot = t.max_waves.reduce((a, b) => a + b, 0);
+    const cols = [
+      ["rank", "#", "r", (p, r) => r.rank],
+      ["name", "Member", "", p => `${esc(p.name)}${p.current ? "" : '<span class="former">left</span>'}`],
+      ...(isLatest ? [["status", "Status", "", p => badge(STATUS, p.status)]] : []),
+      ["tp", "Points", "r", (p, r) => fmt(r.tp)],
+      ...(isLatest ? [["delta_pct", "vs prev", "r", p => `<span class="${dcls(p.delta_pct)}">${signedPct(p.delta_pct)}</span>`],
+                      ["trend", "Trend", "", p => `${badge(TREND, p.trend)}${spark(p.tp)}`]] : []),
+      ["wave_pct", "Waves", "r", (p, r) => `<span title="${r.waves} of ${Math.round(maxTot)} waves"><span class="bar"><i style="width:${Math.min(100, r.wave_pct)}%"></i></span>${r.wave_pct.toFixed(0)}%</span>`],
+      ["att", "CMs", "r", (p, r) => r.att],
+      ["platoons", "Platoons", "r", (p, r) => r.platoons],
+      ["deploys", "Deployed", "", (p, r) => dots(r.phases)],
+      ...(isLatest ? [["focus", "To work on", "focus", p => `<span title="${esc(p.focus.join("\n"))}">${(p.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</span>`]] : []),
+    ];
+    return cols;
+  };
+  const sv = (p, r, k) => k === "name" ? p.name.toLowerCase() : k === "status" ? ({ active: 3, partial: 2, inactive: 1 }[p.status] || 0) : k === "trend" ? (p.trend_pct ?? -999) : k === "delta_pct" ? (p.delta_pct ?? -999) : k === "focus" ? p.focus.length : k === "deploys" ? r.full_deploys : (r[k] ?? -1);
+  function renderMembers() {
+    const q = $("#mSearch").value.toLowerCase(), curOnly = $("#mCurrent").checked, f = $("#mStatus").value;
+    const cols = mCols();
+    const rows = players.map(p => ({ p, r: rowOf(p, sel) })).filter(x => x.r && (!curOnly || x.p.current) && x.p.name.toLowerCase().includes(q)
+      && (!f || (f === "focus" ? x.p.focus.length && sel === latestI : x.p.status === f && sel === latestI)))
+      .sort((a, b) => { const x = sv(a.p, a.r, sortK.k), y = sv(b.p, b.r, sortK.k); return (x > y ? 1 : x < y ? -1 : 0) * sortK.d || a.p.name.localeCompare(b.p.name); });
+    $("#mTable").innerHTML = `<thead><tr>${cols.map(([k, l, c]) => `<th data-sort="${k}" class="${c === "r" ? "r" : ""} ${sortK.k === k ? (sortK.d > 0 ? "asc" : "desc") : ""}">${l}</th>`).join("")}</tr></thead><tbody>${rows.map(({ p, r }) => `<tr class="click ${p.id === selected ? "sel" : ""}" data-id="${esc(p.id)}" tabindex="0">${cols.map(([k, , c, fn]) => `<td class="${c === "r" ? "r num" : c === "focus" ? "focus" : k === "name" ? "name" : ""}">${fn(p, r)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${cols.length}" class="empty">No members match</td></tr>`}</tbody>`;
+    $("#mTable").querySelectorAll("th").forEach(th => th.onclick = () => { const k = th.dataset.sort; sortK = { k, d: sortK.k === k ? -sortK.d : (k === "name" ? 1 : -1) }; renderMembers(); });
+    $("#mTable").querySelectorAll("tbody tr.click").forEach(tr => { const open = () => { selected = tr.dataset.id; renderMembers(); showMember(players.find(p => p.id === selected)); }; tr.onclick = open; tr.onkeydown = e => { if (e.key === "Enter") open(); }; });
+    if (selected) { const p = players.find(x => x.id === selected); if (p && rowOf(p, sel)) showMember(p, true); else $("#mDetail").hidden = true; }
+  }
+  function showMember(p, quiet) {
+    const el = $("#mDetail"), r = rowOf(p, sel), t = tbs[sel], isLatest = sel === latestI;
+    el.hidden = false; detailCharts.forEach(c => c.destroy()); detailCharts = [];
+    const todo = isLatest ? (p.focus.length ? `<div class="todo"><b>To work on</b><ul>${p.focus.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : `<div class="todo ok"><b>Nothing flagged.</b> Fully deployed, solid combat and platoons this TB.</div>`) : "";
+    const ph = r.phases.map(x => { const mw = t.max_waves[x.p - 1]; return `<tr><td>P${x.p}</td><td>${x.dep ? '<span class="badge b-good">✓ Full</span>' : x.gp > 0 ? '<span class="badge b-warn">● Partial</span>' : '<span class="badge b-bad">✗ None</span>'}</td><td class="r num">${fmt(x.tp)}</td><td class="r num">${fmt(x.gp)}</td><td class="r num">${x.waves} / ${Math.round(mw)}</td><td class="r num">${Math.round(x.waves / mw * 100)}%</td><td class="r num">${x.att}</td><td class="r num">${x.spec}</td></tr>`; }).join("");
+    el.innerHTML = `<div class="head"><div><h2>${esc(p.name)} ${isLatest ? badge(STATUS, p.status) : ""} ${badge(TREND, p.trend)}</h2><div class="hint" style="margin:0">${dfmt(t.date)} · took part in ${p.tbs_played} of ${tbs.length} TBs tracked</div></div></div>
+      <div class="stats">
+        <div><b class="num">${fmt(r.tp)}</b><span>Points · #${r.rank} of ${t.members}</span></div>
+        <div><b class="num">${r.wave_pct.toFixed(0)}%</b><span>Waves (${r.waves} of ${Math.round(t.max_waves.reduce((a, b) => a + b, 0))})</span></div>
+        <div><b class="num">${r.att}</b><span>CM attempts</span></div>
+        <div><b class="num">${r.platoons}</b><span>Platoon units</span></div>
+        <div><b class="num">${r.full_deploys}/${t.phases}</b><span>Phases fully deployed</span></div>
+        <div><b class="num">${r.spec}</b><span>Special missions</span></div>
+        <div><b class="num">${r.rogue}</b><span>Rogue actions</span></div>
+      </div>
+      ${todo}
+      <div class="tablewrap" style="margin-bottom:14px"><table><thead><tr><th>Phase</th><th>Deployed</th><th class="r">Points</th><th class="r">GP deployed</th><th class="r">Waves</th><th class="r">%</th><th class="r">CM attempts</th><th class="r">Special</th></tr></thead><tbody>${ph}</tbody></table></div>
+      ${tbs.length > 1 ? `<div class="grid2" style="margin:0"><div><h2>Points by TB</h2><div class="legend"><span><i class="swatch" style="background:${css("--series-1")}"></i>${esc(p.name)}</span><span><i class="swatch" style="background:${css("--series-2")}"></i>Guild median</span></div><div class="chart"><canvas id="dTp"></canvas></div></div>
+        <div><h2>Wave completion by TB</h2><div class="legend"><span><i class="swatch" style="background:${css("--series-1")}"></i>${esc(p.name)}</span><span><i class="swatch" style="background:${css("--series-2")}"></i>Guild median</span></div><div class="chart"><canvas id="dWv"></canvas></div></div></div>` : `<p class="hint">Trend charts appear once more than one TB has been uploaded.</p>`}`;
+    if (tbs.length > 1) {
+      const labels = tbs.map(x => dshort(x.date));
+      const line = (id, mine, med, cb, max) => detailCharts.push(new Chart($(id), { type: "line", data: { labels, datasets: [
+        { label: p.name, data: mine, borderColor: css("--series-1"), backgroundColor: css("--series-1"), borderWidth: 2, pointRadius: 3, spanGaps: true, tension: .25 },
+        { label: "Guild median", data: med, borderColor: css("--series-2"), backgroundColor: css("--series-2"), borderWidth: 2, borderDash: [5, 4], pointRadius: 0, tension: .25 }] },
+        options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false } }, scales: { y: { ...axisY(cb), ...(max ? { max } : {}) }, x: axisX() } } }));
+      line("#dTp", p.tp.map(v => v || null), tbs.map(x => x.median_tp));
+      line("#dWv", p.wave_pct, tbs.map(x => x.median_wave_pct), v => v + "%", 100);
+    }
+    if (!quiet) el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+  }
+  $("#mSearch").oninput = renderMembers; $("#mCurrent").onchange = renderMembers; $("#mStatus").onchange = renderMembers;
+
+  // ---- phases
+  let phSort = { k: "tp", d: -1 };
+  function renderPhase() {
+    const t = tbs[sel]; if (phase > t.phases) phase = 1;
+    $("#phSwitch").innerHTML = t.phase.map(p => `<button type="button" aria-pressed="${p.p === phase}" data-p="${p.p}">Phase ${p.p}</button>`).join("");
+    $("#phSwitch").querySelectorAll("button").forEach(b => b.onclick = () => { phase = +b.dataset.p; renderPhase(); });
+    const P = t.phase[phase - 1], mw = P.max_waves;
+    $("#phKpis").innerHTML = [
+      ["Territory points", fmt(P.tp), `Phase ${phase} · ${dfmt(t.date)}`],
+      ["Wave completion", P.wave_pct.toFixed(0) + "%", `${P.waves} waves · up to ${Math.round(mw)} each${P.estimated ? " (best member)" : ""}`],
+      ["CM attempts", fmt(P.att), `${P.spec} special mission${P.spec === 1 ? "" : "s"}`],
+      ["Deployment", `${P.deployed}<span class="sub"> / ${t.members}</span>`, `${P.partial} partly · ${P.none} not at all`],
+    ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+    const curOnly = $("#mCurrent").checked;
+    const rows = players.map(p => ({ p, r: rowOf(p, sel) })).filter(x => x.r && (!curOnly || x.p.current)).map(x => ({ ...x, x: x.r.phases.find(y => y.p === phase) })).filter(x => x.x);
+    const val = (o, k) => k === "name" ? o.p.name.toLowerCase() : k === "dep" ? (o.x.dep ? 2 : o.x.gp > 0 ? 1 : 0) : o.x[k];
+    rows.sort((a, b) => { const x = val(a, phSort.k), y = val(b, phSort.k); return (x > y ? 1 : x < y ? -1 : 0) * phSort.d || a.p.name.localeCompare(b.p.name); });
+    const th = (k, l, c = "") => `<th data-sort="${k}" class="${c} ${phSort.k === k ? (phSort.d > 0 ? "asc" : "desc") : ""}">${l}</th>`;
+    $("#phTable").innerHTML = `<thead><tr>${th("name", "Member")}${th("dep", "Deployed")}${th("tp", "Points", "r")}${th("gp", "GP deployed", "r")}${th("waves", "Waves", "r")}${th("att", "CM attempts", "r")}${th("spec", "Special", "r")}</tr></thead><tbody>${rows.map(o => `<tr><td class="name">${esc(o.p.name)}${o.p.current ? "" : '<span class="former">left</span>'}</td><td>${o.x.dep ? '<span class="badge b-good">✓ Full</span>' : o.x.gp > 0 ? '<span class="badge b-warn">● Partial</span>' : '<span class="badge b-bad">✗ None</span>'}</td><td class="r num">${fmt(o.x.tp)}</td><td class="r num">${fmt(o.x.gp)}</td><td class="r num"><span class="bar"><i style="width:${Math.min(100, o.x.waves / mw * 100)}%"></i></span>${o.x.waves} / ${Math.round(mw)}</td><td class="r num">${o.x.att}</td><td class="r num">${o.x.spec}</td></tr>`).join("")}</tbody>`;
+    $("#phTable").querySelectorAll("th").forEach(h => h.onclick = () => { const k = h.dataset.sort; phSort = { k, d: phSort.k === k ? -phSort.d : (k === "name" ? 1 : -1) }; renderPhase(); });
+  }
+
+  window.addEventListener("themechange", render);
+  render();
+})();
+</script>
+</body>
+</html>

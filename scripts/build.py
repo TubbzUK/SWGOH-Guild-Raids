@@ -518,6 +518,10 @@ def trend_of(values: list[float], threshold_pct: float):
     return round(pct, 1), label
 
 
+def roster_names_of(roster: dict, players: "Players") -> list[str]:
+    return [players.info[k]["name"] for k in roster] if roster else []
+
+
 # ---------------------------------------------------------------- platoons
 def plan_unit_keys() -> set[str] | None:
     """Unit keys (BaseId and name) used by the RotE plan, to keep the platoon roster small."""
@@ -752,7 +756,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         loaded[d["slug"]] = load_raids(players, cfg, gdir / d["slug"], d["name"])
         raid_warn[d["slug"]] = list(WARNINGS)
     for extra in sorted(p.name for p in gdir.iterdir() if p.is_dir() and p.name not in loaded
-                        and p.name != "roster" and not p.name.startswith((".", "_"))):
+                        and p.name not in ("roster", "tb") and not p.name.startswith((".", "_"))):
         print(f"Note: folder {gdir.name}/{extra} doesn't match a raid in raids/ - ignored")
 
     WARNINGS.clear()
@@ -772,6 +776,18 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
 
     out_dir = SITE_DIR / "data" / gdir.name
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Territory Battles
+    import tb as TB
+    WARNINGS.clear()
+    tb_data = TB.build_tb(gdir, cfg, {norm(players.info[k]["name"]) for k in current} | {norm(n) for n in (roster_names_of(roster, players))})
+    if tb_data:
+        tb_data.update({"slug": gdir.name, "guild_name": cfg.get("guild_name", gdir.name),
+                        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
+                        "warnings": list(WARNINGS)})
+        (out_dir / "tb.json").write_text(json.dumps(tb_data, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+        print(f"Wrote site/data/{gdir.name}/tb.json: {len(tb_data['tbs'])} TBs, {len(tb_data['players'])} members")
+    tb_index = {"count": len(tb_data["tbs"]), "latest": tb_data["tbs"][-1]["date"]} if tb_data else None
 
     # Platoon planner: this guild's roster in the planner's format, and its saved assignments
     has_platoon_roster = False
@@ -811,7 +827,8 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
     return {"slug": gdir.name, "name": cfg.get("guild_name", gdir.name), "members": len(current),
             "raids": raids_index, "default_raid": default,
             "has_data": bool(with_scores or roster), "order": cfg.get("site_order", 99),
-            "platoons": {"roster": has_platoon_roster, "saved": platoons_saved}}
+            "platoons": {"roster": has_platoon_roster, "saved": platoons_saved},
+            "tb": tb_index}
 
 
 def main() -> int:
