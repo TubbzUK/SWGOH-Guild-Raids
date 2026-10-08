@@ -349,7 +349,6 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
       <a class="top-link" id="twLink" href="tw.html">✦ Territory wars</a>
       <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <span data-theme-toggle></span>
-      <button class="btn primary menubtn" id="menuBtn" aria-haspopup="dialog" aria-controls="menu"><svg viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"></path></svg>Menu</button>
     </div>
   </div>
   <header class="banner">
@@ -366,14 +365,14 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
   </header>
 </div>
 <main>
-  <p class="lede">Every operation slot, assigned across the guild as evenly as possible. Officers pick the operations and set the rules from the menu; everyone else sees the saved assignments.</p>
+  <p class="lede">Every operation slot, assigned across the guild as evenly as possible. Officers pick the operations and set the rules from ☰ Menu → Officers; everyone else sees the saved assignments.</p>
 
   <div class="track" id="track" role="group" aria-label="Phases"></div>
 
   <section class="panel" id="empty">
     <h2>No assignments yet</h2>
-    <p>Officers choose the operations and assign platoons from the menu.</p>
-    <button class="btn" data-open="ops">Open the menu</button>
+    <p>Officers choose the operations and assign platoons from ☰ Menu → Officers.</p>
+    <button class="btn" data-open="ops">Open the planner</button>
   </section>
 
   <details class="planets" id="planetSum" hidden open><summary id="planetSumTitle">Planets this guild is filling</summary><div id="planetSumBody"></div></details>
@@ -1176,8 +1175,8 @@ renderOps();
 const menu=$('#menu');let pane='sheets';
 function showPane(n){pane=n;document.querySelectorAll('.dtabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.pane===n));document.querySelectorAll('.pane').forEach(s=>s.hidden=s.dataset.pane!==n);$('.dbody').scrollTop=0}
 function openMenu(n){if(!unlocked){askPassword(n);return}showPane(n||pane);if(!menu.open){if(menu.showModal)menu.showModal();else menu.setAttribute('open','')}}
-function closeMenu(){if(!menu.open)return;if(menu.close)menu.close();else menu.removeAttribute('open');$('#menuBtn').focus()}
-$('#menuBtn').addEventListener('click',()=>openMenu());
+function closeMenu(){if(!menu.open)return;if(menu.close)menu.close();else menu.removeAttribute('open');$('.menu-btn')?.focus()}
+addEventListener('DOMContentLoaded',()=>{RaidTheme.menuItem('officer','⚙ Platoon planner: data',()=>openMenu('sheets'));RaidTheme.menuItem('officer','⚙ Platoon planner: operations to fill',()=>openMenu('ops'));RaidTheme.menuItem('officer','⚙ Platoon planner: rules',()=>openMenu('rules'));});  // theme.js is deferred
 $('#menuClose').addEventListener('click',closeMenu);
 menu.addEventListener('click',e=>{if(e.target===menu)closeMenu()});
 document.querySelectorAll('.dtabs button').forEach(b=>b.addEventListener('click',()=>showPane(b.dataset.pane)));

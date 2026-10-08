@@ -181,7 +181,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
       <a class="top-link" id="tbLink" href="tb.html">◈ Territory battles</a>
       <a class="top-link" id="rankLink" href="ranking.html">★ Contribution</a>
       <a class="top-link" id="twLink" href="tw.html">✦ Territory wars</a>
-      <button class="top-link" id="postBtn" type="button">📣 Post to Discord</button>
+      <button class="top-link" id="postBtn" type="button" data-menu="officer">📣 Post to officers' Discord</button>
       <span data-theme-toggle></span>
     </div>
   </div>
@@ -429,8 +429,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     line.className = "settings-line" + (previewing ? " preview" : "");
     line.innerHTML = `<span><b>${previewing ? "Preview (not saved):" : "Weighting:"}</b></span> <span class="chip on">Raids ${Math.round(S.weights.raids / ws * 100)}%</span> <span class="chip on">TBs ${Math.round(S.weights.tbs / ws * 100)}%</span> <span class="chip ${TWON ? "on" : "off"}">TWs ${TWON ? Math.round(S.weights.tws / ws * 100) + "%" : "off"}</span>
       <span class="grow">Last ${S.raids_last} raids · last ${S.tbs_last} TBs${TWON ? ` · last ${S.tws_last} TWs` : ""} · TB phases: ${TBS.phases.map(n => "P" + n).join(", ")}</span>
-      ${previewing ? `<button type="button" class="btn" id="cancelPrev">Back to saved</button>` : ""}<button type="button" class="btn" id="openMenu">⚙ Officer settings</button>`;
-    $("#openMenu").onclick = openMenu;
+      ${previewing ? `<button type="button" class="btn" id="cancelPrev">Back to saved</button>` : ""}`;
     if (previewing) $("#cancelPrev").onclick = () => { S = cleanS(SAVED); previewing = false; render(); };
 
     // KPIs
@@ -575,6 +574,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   const remembered = async () => { const pw = store.get("raidTrackerPassword"), tk = store.get("raidTrackerToken"); if (pw && KB) { const t = await unlockBlob(KB, pw); if (t) return t; } return tk || null; };
   const showMsg = (sel, cls, text) => { $(sel).innerHTML = cls ? `<div class="msg ${cls}">${text}</div>` : ""; };
   const dlg = el => el.showModal ? el.showModal() : el.setAttribute("open", ""), close = el => el.close ? el.close() : el.removeAttribute("open");
+  RaidTheme.menuItem("officer", "⚙ Effectiveness weighting", () => openMenu());
   async function openMenu() {
     if (!TOKEN) TOKEN = await remembered();
     if (!TOKEN) {

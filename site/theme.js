@@ -46,6 +46,100 @@
   }
   darkQuery.addEventListener?.("change", () => { if (!store.get()) announce(); });
 
+  // ---------------- site menu: theme, officer tools and uploads tucked behind one button ----------------
+  // Pages mark things to move into it with data-menu="officer" or data-menu="upload"; RaidTheme.menuItem() adds more.
+  let menuPanel = null;
+  const MENU_CSS = `
+  .site-menu-wrap { position: relative; display: inline-flex; }
+  .site-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; width: 290px; max-width: calc(100vw - 24px);
+    background: var(--surface-solid); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 8px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+  .site-menu[hidden] { display: none !important; }
+  .site-menu .sm-h { font: 700 10px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-2); padding: 10px 10px 6px; }
+  .site-menu .sm-sec + .sm-sec { border-top: 1px solid var(--border); margin-top: 6px; }
+  .site-menu .sm-sec:empty, .site-menu .sm-sec.empty { display: none; }
+  .site-menu .sm-item, .site-menu [data-menu] { display: flex !important; align-items: center; gap: 8px; width: 100%; text-align: left; box-sizing: border-box;
+    background: none !important; border: 0 !important; border-radius: 8px !important; padding: 9px 10px !important; margin: 0 !important; box-shadow: none !important;
+    font: 600 13.5px var(--font-ui) !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--text) !important; text-decoration: none; cursor: pointer; }
+  .site-menu .sm-item:hover, .site-menu [data-menu]:hover { background: var(--surface-2) !important; color: var(--accent) !important; }
+  .site-menu [data-menu][hidden] { display: none !important; }
+  .site-menu .sm-themes { display: flex; gap: 4px; padding: 2px 6px 6px; }
+  .site-menu .sm-themes button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-2); border-radius: 8px; padding: 7px 6px; font: 600 12.5px var(--font-ui); cursor: pointer; }
+  .site-menu .sm-themes button svg { width: 14px; height: 14px; }
+  .site-menu .sm-themes button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .site-menu .sm-note { font-size: 12px; color: var(--text-2); padding: 0 10px 8px; }
+  .menu-btn svg { width: 14px; height: 12px; }
+  html.cardmode .site-menu-wrap { display: none !important; }`;
+  function mountMenu(el) {
+    if (!el || menuPanel) { if (el) el.remove(); return; }
+    const st = document.createElement("style"); st.textContent = MENU_CSS; document.head.appendChild(st);
+    const wrap = document.createElement("span"); wrap.className = "site-menu-wrap";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "top-link theme-toggle menu-btn"; btn.setAttribute("aria-haspopup", "true"); btn.setAttribute("aria-expanded", "false");
+    btn.innerHTML = `<svg viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"/></svg><span>Menu</span>`;
+    const panel = document.createElement("div"); panel.className = "site-menu"; panel.hidden = true; panel.setAttribute("role", "menu");
+    panel.innerHTML = `<div class="sm-sec" data-sec="appearance"><div class="sm-h">Theme</div><div class="sm-themes"></div></div>
+      <div class="sm-sec" data-sec="officer"><div class="sm-h">Officers</div></div>
+      <div class="sm-sec" data-sec="upload"><div class="sm-h">Upload</div></div>`;
+    const themes = panel.querySelector(".sm-themes");
+    const paint = () => themes.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === (store.get() || "system")));
+    MODES.forEach(m => {
+      const b = document.createElement("button"); b.type = "button"; b.dataset.mode = m.id; b.innerHTML = `${m.ic}<span>${m.label}</span>`;
+      b.onclick = () => { store.set(m.id === "system" ? null : m.id); apply(m.id); paint(); announce(); };
+      themes.appendChild(b);
+    });
+    paint();
+    wrap.append(btn, panel); el.replaceWith(wrap);
+    menuPanel = panel;
+    const place = () => {   // keep the panel on screen: under the button, nudged in from either edge
+      panel.style.left = panel.style.right = ""; panel.style.position = "";
+      const r = btn.getBoundingClientRect(), w = Math.min(290, innerWidth - 24);
+      if (r.right - w < 12 || r.right > innerWidth - 4) {
+        panel.style.position = "fixed"; panel.style.top = (r.bottom + 8) + "px";
+        panel.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + "px"; panel.style.right = "auto";
+      } else panel.style.top = "";
+    };
+    const open = v => { panel.hidden = !v; btn.setAttribute("aria-expanded", String(v)); if (v) place(); };
+    addEventListener("resize", () => { if (!panel.hidden) place(); });
+    addEventListener("scroll", () => { if (!panel.hidden && panel.style.position === "fixed") place(); }, { passive: true });
+    btn.onclick = e => { e.stopPropagation(); open(panel.hidden); };
+    document.addEventListener("click", e => { if (!panel.hidden && !wrap.contains(e.target)) open(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !panel.hidden) { open(false); btn.focus(); } });
+    panel.addEventListener("click", e => { if (e.target.closest("[data-menu], .sm-item")) setTimeout(() => open(false), 0); });
+    // move the page's officer and upload controls into the menu
+    document.querySelectorAll("[data-menu]").forEach(n => panel.querySelector(`[data-sec="${n.dataset.menu}"]`)?.appendChild(n));
+    // always available: add a guild, and forget a saved officer login
+    if (!panel.querySelector('[data-sec="upload"] [data-menu]') && !/upload\.html$/.test(location.pathname)) menuItem("upload", "⬆ Upload a WookieeBot file", "upload.html" + (/[?&]guild=([^&#]*)/.exec(location.search) ? "?guild=" + /[?&]guild=([^&#]*)/.exec(location.search)[1] : ""));
+    menuItem("upload", "＋ Add a new guild", "upload.html#newguild");
+    menuItem("officer", "🔒 Forget my officer login", () => {
+      try { localStorage.removeItem("raidTrackerPassword"); localStorage.removeItem("raidTrackerToken"); } catch (e) {}
+      alertish("Officer login forgotten on this device.");
+    }, true);
+    tidy();
+  }
+  function alertish(text) {
+    const t = document.createElement("div"); t.textContent = text;
+    t.style.cssText = "position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;background:var(--surface-solid);color:var(--text);border:1px solid var(--accent);border-radius:12px;padding:10px 16px;font:14px var(--font-ui);box-shadow:0 10px 30px rgba(0,0,0,.4)";
+    document.body.appendChild(t); setTimeout(() => t.remove(), 4000);
+  }
+  function tidy() {
+    if (!menuPanel) return;
+    menuPanel.querySelectorAll(".sm-sec").forEach(sec => sec.classList.toggle("empty", sec.dataset.sec !== "appearance" && !sec.querySelector("[data-menu]:not([hidden]), .sm-item:not([hidden])")));
+  }
+  /** Add an item to the site menu: section "officer" or "upload"; action is a URL or a function. */
+  function menuItem(section, label, action, last) {
+    if (!menuPanel) { pending.push([section, label, action, last]); return null; }
+    const sec = menuPanel.querySelector(`[data-sec="${section}"]`); if (!sec) return null;
+    const it = typeof action === "string" ? Object.assign(document.createElement("a"), { href: action }) : Object.assign(document.createElement("button"), { type: "button", onclick: action });
+    it.className = "sm-item"; it.textContent = label;
+    const tail = sec.querySelector("[data-last]");
+    if (last || !tail) sec.appendChild(it); else sec.insertBefore(it, tail);
+    if (last) it.dataset.last = "1";
+    tidy(); return it;
+  }
+  const pending = [];
+
   // ---------------- starfield ----------------
   let canvas, ctx, stars = [], twinklers = [], raf = 0, lastT = 0;
   function seeded(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
@@ -256,7 +350,7 @@
     document.body.dataset.cardw = w;
     document.body.dataset.ready = "1";
   }
-  window.RaidTheme = { banner, isDark, emblem, cardReady };
+  window.RaidTheme = { banner, isDark, emblem, cardReady, menuItem, mountToggle };
   // card mode: no chart animations, and a small footer with the site address
   const cardMode = document.documentElement.classList.contains("cardmode");
   if (cardMode && window.Chart) Chart.defaults.animation = false;
@@ -267,6 +361,6 @@
     f.innerHTML = `<span class="wordmark"><span data-emblem></span>Guild Statistics</span><span>${site.replace(/^https?:\/\//, "").replace(/\?.*$/, "").replace(/[<>&"]/g, "")}</span>`;
     document.body.appendChild(f);
   }
-  const ready = () => { cardFoot(); mountSky(); document.querySelectorAll("[data-theme-toggle]").forEach(mountToggle); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
+  const ready = () => { cardFoot(); mountSky(); document.querySelectorAll("[data-theme-toggle], [data-site-menu]").forEach(mountMenu); pending.splice(0).forEach(a => menuItem(...a)); if (window.MutationObserver && menuPanel) new MutationObserver(tidy).observe(menuPanel, { subtree: true, attributes: true, attributeFilter: ["hidden"] }); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
 })();

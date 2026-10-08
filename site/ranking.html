@@ -439,8 +439,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     const line = $("#settingsLine");
     line.className = "settings-line" + (previewing ? " preview" : "");
     line.innerHTML = `<span>${previewing ? "<b>Preview (not saved):</b>" : "<b>Phases counted:</b>"}</span> ${chips} <span class="grow">${esc(wtxt)}</span>
-      ${previewing ? `<button type="button" class="btn" id="cancelPrev">Back to saved</button>` : ""}<button type="button" class="btn" id="openMenu">⚙ Officer settings</button>`;
-    $("#openMenu").onclick = openMenu;
+      ${previewing ? `<button type="button" class="btn" id="cancelPrev">Back to saved</button>` : ""}`;
     if (previewing) $("#cancelPrev").onclick = () => { S = clean(SAVED); previewing = false; render(); };
 
     const curOnly = $("#curOnly").checked, q = $("#search").value.trim().toLowerCase();
@@ -590,6 +589,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   const showMsg = (sel, cls, text) => { $(sel).innerHTML = cls ? `<div class="msg ${cls}">${text}</div>` : ""; };
   const dlg = el => el.showModal ? el.showModal() : el.setAttribute("open", "");
   const close = el => el.close ? el.close() : el.removeAttribute("open");
+  RaidTheme.menuItem("officer", "⚙ Contribution settings", () => openMenu());
   async function openMenu() {
     if (!TOKEN) TOKEN = await remembered();
     if (!TOKEN) {

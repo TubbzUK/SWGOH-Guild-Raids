@@ -578,6 +578,8 @@ a { color: var(--accent); }
   const secretOf = slug => "DISCORD_WEBHOOK_" + slug.toUpperCase().replace(/-/g, "_");
   $("#newGuildLink").onclick = () => { $("#newGuild").hidden = false; $("#newGuildLink").hidden = true; $("#ngName").focus(); ngCheck(); };
   $("#ngCancel").onclick = () => { $("#newGuild").hidden = true; $("#newGuildLink").hidden = false; $("#ngProgress").innerHTML = ""; };
+  const ngFromHash = () => { if (location.hash === "#newguild") { $("#newGuildLink").click(); $("#newGuild").scrollIntoView({ block: "center" }); } };
+  addEventListener("hashchange", ngFromHash); ngFromHash();
   function ngCheck() {
     const name = $("#ngName").value.trim(), slug = slugify(name);
     const login = mode === "password" ? $("#password").value : $("#token").value.trim();
