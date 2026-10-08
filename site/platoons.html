@@ -346,6 +346,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
     <div class="top-actions">
       <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
       <a class="top-link" id="tbLink" href="tb.html">◈ <span class="lw">Territory battles</span><span class="ls">TBs</span></a>
+      <a class="top-link" id="twLink" href="tw.html">✦ Territory wars</a>
       <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <span data-theme-toggle></span>
       <button class="btn primary menubtn" id="menuBtn" aria-haspopup="dialog" aria-controls="menu"><svg viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"></path></svg>Menu</button>
@@ -1335,6 +1336,7 @@ function describePlan(){
   gs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.id!==GUILD)location.search='?guild='+encodeURIComponent(b.dataset.id)}));
   $('#pageGuild').textContent=guildName()||'Platoons';document.title=(guildName()||'RotE')+' · RotE platoons';
   $('#effLink').href='effectiveness.html?guild='+encodeURIComponent(GUILD);
+  $('#twLink').href='tw.html?guild='+encodeURIComponent(GUILD);
   $('#guildSel').addEventListener('change',e=>{location.search='?guild='+encodeURIComponent(e.target.value)});
   $('#raidLink').href='./?guild='+encodeURIComponent(GUILD);$('#tbLink').href='tb.html?guild='+encodeURIComponent(GUILD);
   $('#rosterUpLink').href='upload.html?guild='+encodeURIComponent(GUILD)+'&type=roster';

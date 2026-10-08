@@ -268,6 +268,8 @@ def main():
                 post_guild(slug, it["raid"], hook)
             elif kind == "tb":
                 post_tb(slug, it.get("tb"), hook)
+            elif kind == "tw":
+                post_tw(slug, it.get("tw"), hook)
             elif kind == "effectiveness":
                 post_effectiveness(slug, hook)
             elif kind == "platoons":
@@ -324,6 +326,25 @@ def post_tb(slug, tb_id, hook):
         fields.append({"name": "Participation", "value": f"✓ {st.get('active', 0)} active · ● {st.get('partial', 0)} partial · ○ {st.get('inactive', 0)} inactive", "inline": False})
     post_panel(hook, slug, "tb", f"{guild_name(slug)} · Territory battle results", f"{t['label']} of {t['date']}", link, png, fields,
                f"{len(tbs)} territory battles tracked")
+
+
+def post_tw(slug, tw_id, hook):
+    d = json.loads((ROOT / "site" / "data" / slug / "tw.json").read_text(encoding="utf-8"))
+    tws = d["tws"]
+    t = next((x for x in tws if x["id"] == tw_id), tws[-1])
+    link = site_link(f"tw.html?guild={slug}&tw={t['id']}")
+    shots = render_page("tw.html", {"guild": slug, "tw": t["id"], "card": "1", "site": link})
+    res = {"win": "🏆 Won", "loss": "Lost", "draw": "Draw"}.get(t.get("result") or "", "Result not recorded yet")
+    score = f" {t['our_score']:,} – {t['their_score']:,}" if t.get("our_score") is not None and t.get("their_score") is not None else ""
+    fields = [
+        {"name": "Result", "value": res + score, "inline": True},
+        {"name": "Joined", "value": f"{t['joined']}" + (f"/{t['members']}" if t.get("members") else ""), "inline": True},
+        {"name": "Banners", "value": f"{t['total']:,.0f} (defence {t['defense']:,.0f} · offence {t['offense']:,.0f})", "inline": False},
+    ]
+    if t.get("not_joined"):
+        fields.append({"name": f"Didn't join ({len(t['not_joined'])})", "value": clip(", ".join(t["not_joined"])), "inline": False})
+    post_panel(hook, slug, "tw", f"{guild_name(slug)} · Territory war" + (f" vs {t['opponent']}" if t.get("opponent") else ""),
+               f"{res}{score} · {t['date']}", link, shots, fields, f"{len(tws)} territory wars tracked")
 
 
 def post_effectiveness(slug, hook):

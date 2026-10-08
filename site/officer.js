@@ -97,7 +97,7 @@
     const d = $("#offDlg");
     if (!TOKEN) TOKEN = await remembered();
     const s = await loadSite();
-    $("#offTitle").textContent = "Post to Discord";
+    $("#offTitle").textContent = "Post to Discord"; $("#offGo").textContent = "Post";
     $("#offText").innerHTML = `Post <b>${esc(req.label)}</b> to the guild's ${req.kind === "platoons" ? "platoons" : req.kind === "effectiveness" ? "officers'" : "Discord"} channel? It appears about 3 minutes from now, once the site has updated.`
       + (TOKEN ? "" : `<br><br>${s.key ? "Enter the officer password (the same one as the upload page)." : "No officer password is set up yet: enter a GitHub access token."}`);
     $("#offPw").hidden = !!TOKEN; $("#offPass").value = ""; msg(); $("#offGo").disabled = false;
@@ -123,10 +123,52 @@
     if (!TOKEN) setTimeout(() => $("#offPass").focus(), 50);
   }
 
+  async function getJSONFile(path) {
+    const st = await loadSite();
+    const res = await gh(`/repos/${st.repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(st.branch)}`);
+    if (!res.ok) return { data: null, sha: null };
+    const j = await res.json();
+    try { return { data: JSON.parse(td.decode(unb64(j.content.replace(/\s/g, "")))), sha: j.sha }; } catch (e) { return { data: null, sha: j.sha }; }
+  }
+  async function putFileSha(path, text, message, sha) {
+    const st = await loadSite();
+    const bytes = te.encode(text); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+    const res = await gh(`/repos/${st.repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`, { method: "PUT", body: JSON.stringify({ message, content: btoa(bin), branch: st.branch, ...(sha ? { sha } : {}) }) });
+    if (!res.ok) throw new Error(res.status === 401 ? "GitHub didn't accept the login" : res.status === 409 ? "someone else saved at the same time - try again" : `GitHub said ${res.status}`);
+  }
+
+  /** A general officer form: title, body HTML, a button label, and run() which saves (after the password). */
+  async function form({ title, html, button, run, done }) {
+    mount();
+    const d = $("#offDlg");
+    if (!TOKEN) TOKEN = await remembered();
+    const s = await loadSite();
+    $("#offTitle").textContent = title;
+    $("#offText").innerHTML = html + (TOKEN ? "" : `<br><br>${s.key ? "Enter the officer password (the same one as the upload page)." : "No officer password is set up yet: enter a GitHub access token."}`);
+    $("#offPw").hidden = !!TOKEN; $("#offPass").value = ""; msg(); $("#offGo").disabled = false; $("#offGo").textContent = button || "Save";
+    $("#offForm").onsubmit = async e => {
+      e.preventDefault();
+      $("#offGo").disabled = true;
+      if (!TOKEN) {
+        const secret = $("#offPass").value.trim(); if (!secret) { $("#offGo").disabled = false; return; }
+        msg("info", "Checking…");
+        const r = await login(secret);
+        if (!r) { msg("err", s.key ? "That password isn't right." : "That doesn't look like a GitHub token (they start github_pat_)."); $("#offGo").disabled = false; return; }
+        TOKEN = r.t;
+        if ($("#offRemember").checked) store.set(r.kind === "pw" ? "raidTrackerPassword" : "raidTrackerToken", secret);
+      }
+      msg("info", "Saving…");
+      try { await run({ getJSONFile, putFile: putFileSha }); d.close(); if (done) toast(done); }
+      catch (err) { msg("err", `Couldn't save: ${esc(err.message)}.`); $("#offGo").disabled = false; }
+    };
+    d.showModal ? d.showModal() : d.setAttribute("open", "");
+    if (!TOKEN) setTimeout(() => $("#offPass").focus(), 50);
+  }
+
   function postButton(btn, getReq) {
     if (!btn) return;
     btn.addEventListener("click", () => { const r = getReq(); if (r) post(r); });
   }
 
-  window.Officer = { post, postButton, requestPost, setToken: t => { TOKEN = t; } };
+  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; } };
 })();

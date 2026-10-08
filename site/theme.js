@@ -190,6 +190,29 @@
         <path d="${route}" fill="none" stroke="#9fd4ff" stroke-width="1.6" stroke-dasharray="2 7" stroke-linecap="round" opacity=".7"/>
         ${planets}`;
     },
+    tw(rnd) {
+      // two fleets facing off across the map: red banners on the left, blue on the right, crossing fire
+      const flag = (x, y, c, flip) => `<g transform="translate(${x} ${y})${flip ? " scale(-1 1)" : ""}"><rect x="-1" y="-46" width="3" height="58" fill="#cfd6e6" opacity=".8"/><path d="M2 -46 L40 -38 L2 -28 Z" fill="${c}" opacity=".9"/></g>`;
+      let flags = "";
+      [[650, 205], [720, 190], [790, 212], [860, 196]].forEach(([x, y]) => flags += flag(x, y, "#ff4d6a", false));
+      [[960, 200], [1030, 186], [1100, 208], [1165, 192]].forEach(([x, y]) => flags += flag(x, y, "#4cc9f0", true));
+      let shots = "";
+      for (let i = 0; i < 10; i++) {
+        const y = 60 + rnd() * 100, x = 700 + rnd() * 380, len = 40 + rnd() * 60, red = i % 2 === 0;
+        shots += `<line x1="${x.toFixed(0)}" y1="${y.toFixed(0)}" x2="${(x + (red ? len : -len)).toFixed(0)}" y2="${(y + (rnd() - .5) * 20).toFixed(0)}" stroke="${red ? "#ff4d6a" : "#5ec8ff"}" stroke-width="2.5" stroke-linecap="round" opacity=".85" filter="url(#g)"/>`;
+      }
+      return `<defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#05040c"/><stop offset=".55" stop-color="#140b26"/><stop offset="1" stop-color="#04070f"/></linearGradient>
+        <filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+        <filter id="g" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="2"/></filter></defs>
+        <rect width="1200" height="260" fill="url(#bg)"/>
+        <ellipse cx="760" cy="120" rx="260" ry="110" fill="#d0163a" opacity=".32" filter="url(#b)"/>
+        <ellipse cx="1060" cy="120" rx="260" ry="110" fill="#2a7cf0" opacity=".32" filter="url(#b)"/>
+        ${starsSVG(rnd, 170, 260)}
+        ${shots}
+        <path d="M560 260 L640 214 L900 222 L1200 206 L1200 260 Z" fill="#07060d"/>
+        ${flags}`;
+    },
     default(rnd) {
       return `<defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03060f"/><stop offset=".6" stop-color="#0b1a3a"/><stop offset="1" stop-color="#04070f"/></linearGradient>

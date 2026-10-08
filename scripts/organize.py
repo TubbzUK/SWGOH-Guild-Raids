@@ -59,8 +59,12 @@ def organize_guild(gdir: Path, defs: list[dict], log: list[str]) -> dict[str, st
 
     # 1) loose files in the guild folder -> roster/, tb/ or a raid folder
     import tb as TB
+    import tw as TW
     for path in build.data_files(gdir):
-        if TB.is_tb_file(path):
+        if TW.is_tw_file(path):          # before raids: a TW export also has a Score column
+            (gdir / "tw").mkdir(exist_ok=True)
+            dest = gdir / "tw" / path.name
+        elif TB.is_tb_file(path):
             (gdir / "tb").mkdir(exist_ok=True)
             dest = gdir / "tb" / path.name
         elif is_roster(path):
@@ -112,6 +116,19 @@ def organize_guild(gdir: Path, defs: list[dict], log: list[str]) -> dict[str, st
             target.unlink()
         path.replace(target)
         log.append(f"{gdir.name}/tb: {path.name} -> {target.name}")
+
+    # 3b) TW exports without a date in the name -> '<end date> TW.ext' (the date is inside the file)
+    tw_dir = gdir / "tw"
+    for path in build.data_files(tw_dir) if tw_dir.exists() else []:
+        if DATED.match(path.stem):
+            continue
+        parsed = TW.read_tw(path)
+        d = (parsed or {}).get("end") or dt.date.today()
+        target = path.with_name(f"{d.isoformat()} TW{path.suffix.lower()}")
+        if target.exists() and target != path:
+            target.unlink()
+        path.replace(target)
+        log.append(f"{gdir.name}/tw: {path.name} -> {target.name}")
 
     # 4) newest roster only, dated today
     today = dt.date.today().isoformat()

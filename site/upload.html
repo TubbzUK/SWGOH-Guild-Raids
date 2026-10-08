@@ -74,7 +74,7 @@ a { color: var(--accent); }
   <header>
     <a id="back" href="./">← Back to raid results</a>
     <h1>Upload a WookieeBot file</h1>
-    <div class="sub">For officers. Adds a raid result, territory battle or roster export to the site; it updates about two minutes later.</div>
+    <div class="sub">For officers. Adds a raid result, territory battle, territory war or roster export to the site; it updates about two minutes later.</div>
   </header>
 
   <form class="card" id="form" novalidate>
@@ -106,6 +106,7 @@ a { color: var(--accent); }
           <label><input type="radio" name="kind" value="raid" id="kindRaid" checked> <span>Raid results<small>WookieeBot raid export, e.g. Order66_Raid_1.csv</small></span></label>
           <label><input type="radio" name="kind" value="roster" id="kindRoster"> <span>Guild roster<small>Relic levels for the readiness pages</small></span></label>
           <label><input type="radio" name="kind" value="tb" id="kindTb"> <span>Territory battle<small>TB results, one row per member</small></span></label>
+          <label><input type="radio" name="kind" value="tw" id="kindTw"> <span>Territory war<small>WookieeBot TW stats (twstats.csv)</small></span></label>
         </div>
       </div>
     </div>
@@ -115,6 +116,21 @@ a { color: var(--accent); }
       <div>
         <label class="title" for="raid">Which raid?</label>
         <select id="raid"></select>
+      </div>
+    </div>
+
+    <div class="step" id="twStep" hidden>
+      <span class="n">3</span>
+      <div>
+        <span class="title">Did we win?</span>
+        <div class="choices">
+          <label><input type="radio" name="twres" value="win"> <span>Won</span></label>
+          <label><input type="radio" name="twres" value="loss"> <span>Lost</span></label>
+          <label><input type="radio" name="twres" value="draw"> <span>Draw</span></label>
+          <label><input type="radio" name="twres" value="" checked> <span>Not known yet<small>Officers can set it later on the TW page</small></span></label>
+        </div>
+        <div class="row" style="margin-top:8px"><input type="text" inputmode="numeric" id="twOur" placeholder="Our score (optional)" style="flex:1"><input type="text" inputmode="numeric" id="twTheir" placeholder="Their score (optional)" style="flex:1"></div>
+        <div class="sub" style="margin-top:6px">The export doesn't include the result, so it's recorded here. The date and opponent come from the file.</div>
       </div>
     </div>
 
@@ -263,6 +279,7 @@ a { color: var(--accent); }
   if (raids.some(r => r.slug === params.raid)) $("#raid").value = params.raid;
   if (params.type === "roster") $("#kindRoster").checked = true;
   if (params.type === "tb") $("#kindTb").checked = true;
+  if (params.type === "tw") $("#kindTw").checked = true;
   { const d = new Date(); $("#tbDate").value = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
   const backLink = () => { $("#back").href = `./?guild=${encodeURIComponent($("#guild").value)}&raid=${encodeURIComponent($("#raid").value)}`; };
   backLink();
@@ -328,6 +345,14 @@ a { color: var(--accent); }
     const dateI = findCol(hdr, ["date", "raiddate", "raidend", "enddate"], 4);
     const allies = new Set(allyI >= 0 ? body.map(r => (r[allyI] || "").replace(/\D/g, "")).filter(a => a.length === 9) : []);
     const names = new Set(nameI >= 0 ? body.map(r => (r[nameI] || "").trim()).filter(Boolean) : []);
+    const statI = hdr.indexOf("mapstatid"), twScoreI = hdr.indexOf("score");
+    if (statI >= 0 && twScoreI >= 0) {     // Territory war: one row per member per statistic
+      const endI = hdr.indexOf("currentroundendtime"), instI = hdr.indexOf("instance");
+      const ms = endI >= 0 ? body.map(r => +(r[endI] || 0)).find(v => v > 0) : 0;
+      const date = ms ? new Date(ms > 1e11 ? ms : ms * 1000).toISOString().slice(0, 10) : null;
+      const opp = instI >= 0 ? ((body.find(r => (r[instI] || "").trim()) || [])[instI] || "").replace(/^\s*vs\.?\s*/i, "").trim() : "";
+      return { type: "tw", players: names.size, allies, names, date, opponent: opp };
+    }
     const tbPhases = new Set(hdr.map(h => (/^p(\d+)(territorypoints|waves|deployed)$/.exec(h) || [])[1]).filter(Boolean));
     if (hdr.includes("totalterritorypoints") || tbPhases.size) return { type: "tb", players: names.size, allies, names, phases: tbPhases.size };
     if (unitI >= 0 && relicI >= 0) return { type: "roster", players: names.size || allies.size, allies, units: body.length };
@@ -380,10 +405,11 @@ a { color: var(--accent); }
     } else {
       info = inspect(await file.text());
       const gName = $("#guild").selectedOptions[0]?.text || "this guild";
-      const KIND = { raid: ["raid results", "Raid results"], roster: ["roster", "Guild roster"], tb: ["territory battle", "Territory battle"] };
-      if (info.type === "unknown") out.push(["bad", "This doesn't look like a raid, roster or territory battle export (no player name and score, relic or territory point columns found)."]);
+      const KIND = { raid: ["raid results", "Raid results"], roster: ["roster", "Guild roster"], tb: ["territory battle", "Territory battle"], tw: ["territory war", "Territory war"] };
+      if (info.type === "unknown") out.push(["bad", "This doesn't look like a raid, roster, territory battle or territory war export (no player name and score, relic or territory point columns found)."]);
       else if (info.type !== kind()) out.push(["bad", `This looks like a ${KIND[info.type][0]} file, but you chose ${KIND[kind()][1]}. Change step 2 to match.`]);
       else if (info.type === "tb") out.push(["ok", `Territory battle · ${info.players} members${info.phases ? ` · ${info.phases} phases` : ""}`]);
+      else if (info.type === "tw") out.push(info.date ? ["ok", `Territory war · ${info.players} members joined${info.opponent ? ` · vs ${esc(info.opponent)}` : ""} · ended ${esc(fmtDate(info.date))}`] : ["bad", "This territory war file has no end date (CurrentRoundEndTime), so it can't be filed."]);
       else if (info.type === "raid") out.push(["ok", `Raid results · ${info.players} players, ${info.scored} with a score${info.date ? ` · raid date ${esc(fmtDate(info.date))}` : ""}`]);
       else out.push(["ok", `Guild roster · ${info.players} players · ${info.units.toLocaleString("en-GB")} units`]);
       if (info.type === "raid" && kind() === "raid") {
@@ -413,11 +439,12 @@ a { color: var(--accent); }
 
   // ---------- form behaviour ----------
   function update() {
-    const raidKind = kind() === "raid", tbKind = kind() === "tb";
+    const raidKind = kind() === "raid", tbKind = kind() === "tb", twKind = kind() === "tw";
     $("#raidStep").hidden = !raidKind;
     $("#tbStep").hidden = !tbKind;
-    $("#fileN").textContent = raidKind || tbKind ? "4" : "3";
-    $("#tokenN").textContent = raidKind || tbKind ? "5" : "4";
+    $("#twStep").hidden = !twKind;
+    $("#fileN").textContent = raidKind || tbKind || twKind ? "4" : "3";
+    $("#tokenN").textContent = raidKind || tbKind || twKind ? "5" : "4";
     const blocked = !!$("#check .bad");
     const login = mode === "password" ? $("#password").value : $("#token").value.trim();
     $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && (!tbKind || /^\d{4}-\d{2}-\d{2}$/.test($("#tbDate").value)) && !blocked && repo);
@@ -471,18 +498,34 @@ a { color: var(--accent); }
     const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
     const safeName = file.name.replace(/[\\/:*?"<>|#%]+/g, "_");
     const isTb = kind() === "tb", tbDate = $("#tbDate").value;
+    const isTw = kind() === "tw", twDate = (info && info.type === "tw" && info.date) || null;
     const ext = (/\.(csv|tsv|txt|xlsx|xls)$/i.exec(file.name) || [".csv"])[0].toLowerCase();
     const path = isRaid ? `guilds/${g}/${$("#raid").value}/upload-${stamp} ${safeName}`
-      : isTb ? `guilds/${g}/tb/${tbDate} RotE${ext}` : `guilds/${g}/roster/upload-${stamp} ${safeName}`;
-    const what = isRaid ? `${gName} ${rName} results` : isTb ? `${gName} territory battle (${fmtDate(tbDate)})` : `${gName} roster`;
-    const viewUrl = isTb ? `tb.html?guild=${encodeURIComponent(g)}&tb=${tbDate}` : `./?guild=${encodeURIComponent(g)}${isRaid ? "&raid=" + encodeURIComponent($("#raid").value) : ""}`;
+      : isTb ? `guilds/${g}/tb/${tbDate} RotE${ext}`
+      : isTw ? (twDate ? `guilds/${g}/tw/${twDate} TW${ext}` : `guilds/${g}/tw/upload-${stamp} ${safeName}`)
+      : `guilds/${g}/roster/upload-${stamp} ${safeName}`;
+    const what = isRaid ? `${gName} ${rName} results` : isTb ? `${gName} territory battle (${fmtDate(tbDate)})` : isTw ? `${gName} territory war${twDate ? ` (${fmtDate(twDate)})` : ""}` : `${gName} roster`;
+    const viewUrl = isTw ? `tw.html?guild=${encodeURIComponent(g)}${twDate ? "&tw=" + twDate : ""}` : isTb ? `tb.html?guild=${encodeURIComponent(g)}&tb=${tbDate}` : `./?guild=${encodeURIComponent(g)}${isRaid ? "&raid=" + encodeURIComponent($("#raid").value) : ""}`;
     const list = [["run", `Uploading ${esc(what)}…`], ["todo", "Updating the site"], ["todo", "Done"]];
     progress(list);
     try {
       const content = await toBase64(file);
       const api = `/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
       let sha0;   // replacing a file with the same name (a TB re-uploaded for the same date)
-      if (isTb) { const ex = await gh(`${api}?ref=${encodeURIComponent(branch)}`, token); if (ex.ok) sha0 = (await ex.json()).sha; }
+      if (isTb || isTw) { const ex = await gh(`${api}?ref=${encodeURIComponent(branch)}`, token); if (ex.ok) sha0 = (await ex.json()).sha; }
+      // a TW result (not in the export) goes into guilds/<guild>/tw/results.json first
+      const twRes = isTw ? document.querySelector('input[name="twres"]:checked').value : "";
+      if (isTw && twDate && twRes) {
+        const rp = `/repos/${repo}/contents/guilds/${encodeURIComponent(g)}/tw/results.json`;
+        const cur = await gh(`${rp}?ref=${encodeURIComponent(branch)}`, token);
+        let all = {}, rsha;
+        if (cur.ok) { const j = await cur.json(); rsha = j.sha; try { all = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\s/g, "")), c => c.charCodeAt(0)))); } catch (e) {} }
+        const num = v => { const n = parseInt(String(v).replace(/[^\d]/g, ""), 10); return isNaN(n) ? null : n; };
+        all[twDate] = { result: twRes, our_score: num($("#twOur").value), their_score: num($("#twTheir").value), opponent: info.opponent || undefined };
+        const bytes = new TextEncoder().encode(JSON.stringify(all, null, 1)); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+        const rr = await gh(rp, token, { method: "PUT", body: JSON.stringify({ message: `Record ${gName} TW result for ${twDate}`, content: btoa(bin), branch, ...(rsha ? { sha: rsha } : {}) }) });
+        if (!rr.ok) { list[0] = ["fail", "Couldn't save the result: " + await explain(rr)]; progress(list); $("#go").disabled = false; return; }
+      }
       const res = await gh(api, token, {
         method: "PUT", body: JSON.stringify({ message: `Upload ${what} from the website`, content, branch, ...(sha0 ? { sha: sha0 } : {}) }),
       });

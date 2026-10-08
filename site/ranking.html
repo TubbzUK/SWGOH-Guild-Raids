@@ -169,6 +169,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     <div class="top-actions">
       <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
       <a class="top-link" id="tbLink" href="tb.html">◈ Territory battles</a>
+      <a class="top-link" id="twLink" href="tw.html">✦ Territory wars</a>
       <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <span data-theme-toggle></span>
     </div>
@@ -303,6 +304,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   $("#raidLink").href = "./?guild=" + encodeURIComponent(guild.slug);
   $("#tbLink").href = "tb.html?guild=" + encodeURIComponent(guild.slug);
   $("#effLink").href = "effectiveness.html?guild=" + encodeURIComponent(guild.slug);
+  $("#twLink").href = "tw.html?guild=" + encodeURIComponent(guild.slug);
   const gp = $("#guildSwitch"); gp.hidden = guilds.length < 2;
   gp.innerHTML = guilds.map(g => `<button type="button" aria-pressed="${g.slug === guild.slug}" data-id="${esc(g.slug)}">${esc(g.name)}</button>`).join("");
   gp.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.id !== guild.slug) location.search = "?guild=" + encodeURIComponent(b.dataset.id); });

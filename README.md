@@ -182,6 +182,26 @@ in 2+ phases, or wave % under half the guild median. *To work on* flags phases n
 partly deployed, combat waves under ¾ of the guild median, few or no platoon units, no special
 missions, and falling points.
 
+## Territory wars
+
+The **✦ Territory wars** page (`…/tw.html?guild=oanr`) tracks every TW: who joined, banners on defence
+and offence, and the result.
+
+**After each TW:** on the upload page choose **Territory war**, pick Won / Lost / Draw (and the scores if
+you like) and drop in WookieeBot's `twstats.csv`. The date and opponent come from the file, which is
+saved as `guilds/<guild>/tw/<date> TW.csv`. The export doesn't include the result, so it's saved in
+`guilds/<guild>/tw/results.json`; officers can also set or change it later with **✎ Set result** on the
+TW page.
+
+- **Overview** – result and win/loss record, banners (vs the last TW), defence and offence banners,
+  how many joined, charts of banners and participation by TW, and lists of who didn't join, who joined
+  but set no defence, and who got no offence banners; top 10 banners and top offence.
+- **Members** – everyone's banners, change vs their last TW, trend, defence, offence, times disobeyed,
+  how many TWs they joined, and this TW's status (defence + offence, no offence, no defence, did
+  nothing, didn't join). Click a member for their defence and offence in every TW.
+
+"Didn't join" means current guild members (from the latest roster or raid upload) missing from the file.
+
 ## TB contribution ranking (for officers)
 
 **★ Contribution** on the Territory Battles page (`…/ranking.html?guild=oanr`) ranks members by a
@@ -213,7 +233,10 @@ score per member.
   they'd joined.
 - **TB contribution** – the overall score from the Contribution page (same phases and weighting the
   officers chose there), averaged over the last 3 TBs. A missed TB counts as 0 once they'd joined.
-- **Effectiveness** = raids 50% + TBs 50% by default.
+- **TW score** – in each of the last 3 territory wars, the member's banners as a % of the guild's best
+  member in that TW. Not joining counts as 0 for members who were already in the guild.
+- **Effectiveness** = raids 45% + TBs 45% + TWs 10% by default. Officers can change the weights, how
+  many recent raids, TBs and TWs count, and switch territory wars on or off (⚙ Officer settings).
 
 The page shows a raids-vs-TBs chart (strong in both, stronger in one, or below the guild median in
 both), a ranking, and a table with each member's raid and TB scores, trends and attendance. Click
@@ -237,7 +260,7 @@ Webhooks are GitHub secrets (Settings → Secrets and variables → Actions):
 
 | Posts | Secret |
 |---|---|
-| OANR raids and TBs | `DISCORD_WEBHOOK_OANR` |
+| OANR raids, TBs and TWs | `DISCORD_WEBHOOK_OANR` |
 | OANR effectiveness (officers' channel) | `OFFICER_OANR` (falls back to `DISCORD_WEBHOOK_OANR` if missing) |
 | OANR platoons | `DISCORD_WEBHOOK_OANR_PLATOONS` |
 | Endor Legacy raids and TBs | `DISCORD_WEBHOOK_ENDOR_LEGACY` |

@@ -120,6 +120,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <a class="wordmark" href="./"><span data-emblem></span>Guild Statistics</a>
     <div class="top-actions">
       <a class="top-link" id="tbLink" href="tb.html" hidden>◈ Territory battles</a>
+      <a class="top-link" id="twLink" href="tw.html" hidden>✦ Territory wars</a>
       <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
       <button class="top-link" id="postBtn" type="button" hidden>📣 Post to Discord</button>
@@ -516,6 +517,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     $("#tbLink").href = `tb.html?guild=${encodeURIComponent(guild.slug)}`;
     $("#tbLink").hidden = !(guild.tb && guild.tb.count);
     $("#effLink").href = "effectiveness.html?guild=" + encodeURIComponent(guild.slug);
+    $("#twLink").href = "tw.html?guild=" + encodeURIComponent(guild.slug); $("#twLink").hidden = !(guild.tw && guild.tw.count);
     const data = await load(guild.slug, raid);
     openPlayerId = null;
     render(data);

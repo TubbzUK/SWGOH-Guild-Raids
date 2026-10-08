@@ -756,7 +756,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         loaded[d["slug"]] = load_raids(players, cfg, gdir / d["slug"], d["name"])
         raid_warn[d["slug"]] = list(WARNINGS)
     for extra in sorted(p.name for p in gdir.iterdir() if p.is_dir() and p.name not in loaded
-                        and p.name not in ("roster", "tb", "posts") and not p.name.startswith((".", "_"))):
+                        and p.name not in ("roster", "tb", "tw", "posts") and not p.name.startswith((".", "_"))):
         print(f"Note: folder {gdir.name}/{extra} doesn't match a raid in raids/ - ignored")
 
     WARNINGS.clear()
@@ -789,6 +789,21 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         (out_dir / "tb.json").write_text(json.dumps(tb_data, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
         print(f"Wrote site/data/{gdir.name}/tb.json: {len(tb_data['tbs'])} TBs, {len(tb_data['players'])} members")
     tb_index = {"count": len(tb_data["tbs"]), "latest": tb_data["tbs"][-1]["date"]} if tb_data else None
+
+    # Territory Wars
+    import tw as TW
+    WARNINGS.clear()
+    cur_names = {norm(players.info[k]["name"]): players.info[k]["name"] for k in current}
+    for n in roster_names_of(roster, players):
+        cur_names.setdefault(norm(n), n)
+    tw_data = TW.build_tw(gdir, cfg, cur_names)
+    if tw_data:
+        tw_data.update({"slug": gdir.name, "guild_name": cfg.get("guild_name", gdir.name),
+                        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
+                        "warnings": list(WARNINGS)})
+        (out_dir / "tw.json").write_text(json.dumps(tw_data, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+        print(f"Wrote site/data/{gdir.name}/tw.json: {len(tw_data['tws'])} TWs, {len(tw_data['players'])} members")
+    tw_index = {"count": len(tw_data["tws"]), "latest": tw_data["tws"][-1]["date"]} if tw_data else None
 
     # Platoon planner: this guild's roster in the planner's format, and its saved assignments
     has_platoon_roster = False
@@ -830,9 +845,9 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         (raids_index[0]["slug"] if raids_index else None)
     return {"slug": gdir.name, "name": cfg.get("guild_name", gdir.name), "members": len(current),
             "raids": raids_index, "default_raid": default,
-            "has_data": bool(with_scores or roster or tb_data), "order": cfg.get("site_order", 99),
+            "has_data": bool(with_scores or roster or tb_data or tw_data), "order": cfg.get("site_order", 99),
             "platoons": {"roster": has_platoon_roster, "saved": platoons_saved},
-            "tb": tb_index}
+            "tb": tb_index, "tw": tw_index}
 
 
 def main() -> int:
