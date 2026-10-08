@@ -3,39 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RotE Platoon Planner</title>
+<title>RotE Platoons · Guild Statistics</title>
 <meta name="robots" content="noindex">
 <script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&amp;family=Oxanium:wght@500;600;700&amp;family=Exo+2:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js" defer></script>
 <style>
-/* Hoth (light) */
+/* The planner's own names for colours and fonts, mapped onto the site's shared theme (theme.css),
+   so it follows the same light/dark palette, fonts and starfield as every other page. */
 :root{
-  --bg:#E8EEF5;--panel:#FFFFFF;--ink:#0B1426;--muted:#4D5B73;--line:#C5D0DE;
-  --amber:#7A6200;--amber-bg:#FFF6C2;--holo:#0A6FA8;--holo-bg:#DDF0FB;
-  --bad:#B3261E;--bad-bg:#FCE3E1;--ok:#1F7A45;--track:#D3DCE7;
-  --gold:#FFD60A;--gold-ink:#0B0B0B;--saber:#1E9BE0;--glow:rgba(10,111,168,.25);
-  --stars:none;--panel-bg:#FFFFFF;
-  --f-display:Orbitron,"Eurostile","Arial Black",system-ui,sans-serif;
-  --f-head:Oxanium,"Arial Narrow",system-ui,sans-serif;
-  --f-body:"Exo 2",system-ui,-apple-system,"Segoe UI",sans-serif;
-  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --panel:var(--surface-solid);--panel-bg:var(--surface);--ink:var(--text);--line:var(--border);
+  --amber:var(--accent);--amber-bg:color-mix(in srgb,var(--accent) 14%,transparent);
+  --holo:var(--accent);--holo-bg:color-mix(in srgb,var(--accent) 10%,transparent);
+  --ok:var(--good-ink);--track:var(--surface-2);
+  --gold:var(--accent);--gold-ink:var(--accent-ink);--saber:var(--accent);--pglow:color-mix(in srgb,var(--accent) 35%,transparent);
+  --stars:none;
+  --f-display:var(--font-display);--f-head:var(--font-ui);--f-body:var(--font-ui);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
-/* Deep space (dark) */
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#04060C;--panel:#0B111E;--ink:#E6ECF5;--muted:#8C9AB3;--line:#1E2A41;
-  --amber:#FFE81F;--amber-bg:rgba(255,232,31,.12);--holo:#4FC3F7;--holo-bg:rgba(79,195,247,.12);
-  --bad:#FF5252;--bad-bg:rgba(255,82,82,.14);--ok:#5BFF8F;--track:#131B2D;
-  --gold:#FFE81F;--gold-ink:#0A0A0A;--saber:#4FC3F7;--glow:rgba(79,195,247,.45);
-  --panel-bg:rgba(11,17,30,.9);
-  --stars:radial-gradient(1px 1px at 20px 30px,#fff8,transparent),radial-gradient(1px 1px at 120px 80px,#fff6,transparent),radial-gradient(1.5px 1.5px at 200px 160px,#fffa,transparent),radial-gradient(1px 1px at 60px 210px,#fff5,transparent),radial-gradient(1px 1px at 260px 40px,#9cf8,transparent),radial-gradient(1px 1px at 300px 240px,#fff6,transparent),radial-gradient(1.5px 1.5px at 160px 280px,#ffe8,transparent);}}
-:root[data-theme="dark"]{
-  --bg:#04060C;--panel:#0B111E;--ink:#E6ECF5;--muted:#8C9AB3;--line:#1E2A41;
-  --amber:#FFE81F;--amber-bg:rgba(255,232,31,.12);--holo:#4FC3F7;--holo-bg:rgba(79,195,247,.12);
-  --bad:#FF5252;--bad-bg:rgba(255,82,82,.14);--ok:#5BFF8F;--track:#131B2D;
-  --gold:#FFE81F;--gold-ink:#0A0A0A;--saber:#4FC3F7;--glow:rgba(79,195,247,.45);
-  --panel-bg:rgba(11,17,30,.9);
-  --stars:radial-gradient(1px 1px at 20px 30px,#fff8,transparent),radial-gradient(1px 1px at 120px 80px,#fff6,transparent),radial-gradient(1.5px 1.5px at 200px 160px,#fffa,transparent),radial-gradient(1px 1px at 60px 210px,#fff5,transparent),radial-gradient(1px 1px at 260px 40px,#9cf8,transparent),radial-gradient(1px 1px at 300px 240px,#fff6,transparent),radial-gradient(1.5px 1.5px at 160px 280px,#ffe8,transparent);}
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 60px)}
 [hidden]{display:none!important}
 .ls{display:none}
@@ -48,7 +36,7 @@ h1{font-size:clamp(34px,7vw,52px);font-weight:700;letter-spacing:.01em}
 h2{font-size:24px;font-weight:600;margin-bottom:10px}
 h3{font-size:18px;font-weight:600}
 p{margin:0 0 10px}
-.lede{color:var(--muted);max-width:62ch;margin-top:6px}
+.lede{color:var(--text-2);max-width:62ch;margin-top:6px}
 /* phase track: the hero */
 .track{position:relative;z-index:0;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:22px 0 26px}
 .ph{appearance:none;border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
@@ -58,7 +46,7 @@ p{margin:0 0 10px}
 .ph .fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--amber);transition:width .6s ease}
 .ph.part .fill{background:var(--holo)}
 .ph .lab{font-family:var(--f-head);font-weight:600;font-size:15px;margin-top:4px;display:flex;justify-content:space-between;gap:4px}
-.ph .lab>span:last-child{color:var(--muted);font-weight:500}
+.ph .lab>span:last-child{color:var(--text-2);font-weight:500}
 .ph[aria-pressed="true"] .lab{color:var(--amber)}
 .ph[aria-pressed="true"] .bar{outline:2px solid var(--amber);outline-offset:2px}
 section.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;margin-bottom:16px}
@@ -75,7 +63,7 @@ button.primary{background:var(--amber);border-color:var(--amber);color:#1A1406}
 button.big{font-family:var(--f-head);font-size:20px;padding:10px 22px}
 button.btn:disabled{opacity:.5;cursor:default}
 .file{font-size:13px}
-.note{font-size:13px;color:var(--muted)}
+.note{font-size:13px;color:var(--text-2)}
 .msg{font-size:13px;padding:8px 10px;border-radius:4px;margin-top:8px}
 .msg.ok{background:var(--holo-bg);color:var(--ink)}
 .msg.err{background:var(--bad-bg);color:var(--ink)}
@@ -84,15 +72,15 @@ details{margin-top:10px}
 summary{cursor:pointer;font-size:13px;color:var(--holo);font-weight:500}
 details pre{font-size:12px;background:var(--bg);padding:8px;border-radius:4px;overflow-x:auto}
 .relics{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.relics label{margin:0 0 2px;font-size:12px;color:var(--muted)}
+.relics label{margin:0 0 2px;font-size:12px;color:var(--text-2)}
 .check{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px}
 .check input{margin-top:4px}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:14px}
-.tabs button{font:inherit;font-weight:500;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px;color:var(--muted);cursor:pointer}
+.tabs button{font:inherit;font-weight:500;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px;color:var(--text-2);cursor:pointer}
 .tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--amber)}
 .stats{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px}
 .stat b{font-family:var(--f-head);font-size:28px;display:block;line-height:1}
-.stat span{font-size:13px;color:var(--muted)}
+.stat span{font-size:13px;color:var(--text-2)}
 .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .pc{border:1px solid var(--line);border-radius:4px;padding:10px 12px}
 .pc h3{display:flex;justify-content:space-between;gap:8px}
@@ -101,12 +89,12 @@ details pre{font-size:12px;background:var(--bg);padding:8px;border-radius:4px;ov
 .tag{font-size:11px;font-weight:600;color:var(--bad);background:var(--bad-bg);padding:0 5px;border-radius:3px;margin-left:4px}
 .pc ul{list-style:none;margin:6px 0 0;padding:0;font-size:13px}
 .pc li{padding:2px 0;border-top:1px dashed var(--line)}
-.pc li small{color:var(--muted)}
+.pc li small{color:var(--text-2)}
 .gl{font-size:11px;font-weight:600;color:var(--amber);background:var(--amber-bg);padding:0 5px;border-radius:3px;margin-left:4px}
 .scroll{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-weight:600;color:var(--muted)}
+th{font-weight:600;color:var(--text-2)}
 td.empty{color:var(--bad);font-weight:500}
 .opblock{margin-bottom:16px}
 .opblock h3{margin-bottom:4px}
@@ -117,8 +105,8 @@ td.empty{color:var(--bad);font-weight:500}
 .opsph h3{margin-bottom:6px}
 .oprow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0;border-top:1px dashed var(--line)}
 .oprow .pl{font:inherit;font-size:14px;font-weight:500;background:none;border:0;color:var(--ink);cursor:pointer;min-width:190px;text-align:left;padding:4px 0}
-.oprow .pl small{color:var(--muted);font-weight:400}
-.opb{font:inherit;font-size:13px;font-weight:600;width:34px;height:30px;border-radius:4px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
+.oprow .pl small{color:var(--text-2);font-weight:400}
+.opb{font:inherit;font-size:13px;font-weight:600;width:34px;height:30px;border-radius:4px;border:1px solid var(--line);background:var(--bg);color:var(--text-2);cursor:pointer}
 .opb[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#1A1406}
 .opsbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 
@@ -131,7 +119,7 @@ dialog.drawer[open]{display:flex;flex-direction:column}
 dialog.drawer::backdrop{background:rgba(10,14,22,.55)}
 .dhead{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 0;border-bottom:1px solid var(--line)}
 .dtabs{display:flex;gap:2px;overflow-x:auto}
-.dtabs button{font:inherit;font-weight:500;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;padding:10px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.dtabs button{font:inherit;font-weight:500;font-size:14px;background:none;border:0;border-bottom:2px solid transparent;padding:10px;color:var(--text-2);cursor:pointer;white-space:nowrap}
 .dtabs button[aria-selected="true"]{color:var(--ink);border-color:var(--amber)}
 .dhead #menuClose{margin-bottom:8px}
 .dbody{flex:1;overflow-y:auto;padding:18px 16px}
@@ -152,7 +140,7 @@ dialog.drawer::backdrop{background:rgba(10,14,22,.55)}
 .task h3{margin-bottom:6px}
 .task ul{list-style:none;margin:0;padding:0;font-size:14px}
 .task li{padding:3px 0;border-top:1px dashed var(--line)}
-.task li small{color:var(--muted)}
+.task li small{color:var(--text-2)}
 .gate{border:1px solid var(--line);border-radius:6px;padding:20px;width:min(380px,calc(100% - 32px));background:var(--panel);color:var(--ink)}
 .gate::backdrop{background:rgba(10,14,22,.55)}
 .gate h2{margin-bottom:8px}
@@ -169,10 +157,10 @@ dialog.drawer::backdrop{background:rgba(10,14,22,.55)}
 .sumtable .stick{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1}
 .sumtable th.grp{text-align:center;color:var(--ink);border-bottom:1px solid var(--line)}
 .sumtable .gs{border-left:1px solid var(--line)}
-.sumtable th.sort button{font:inherit;font-weight:600;color:var(--muted);background:none;border:0;padding:0;cursor:pointer}
+.sumtable th.sort button{font:inherit;font-weight:600;color:var(--text-2);background:none;border:0;padding:0;cursor:pointer}
 .sumtable th.sort[aria-sort="ascending"] button,.sumtable th.sort[aria-sort="descending"] button{color:var(--ink)}
 .sumtable tfoot td{font-weight:600;border-top:2px solid var(--line);border-bottom:0}
-.sumtable .z{color:var(--muted);opacity:.6}
+.sumtable .z{color:var(--text-2);opacity:.6}
 .sumtable tbody tr:hover td{background:var(--bg)}
 
 /* ===== Galactic theme ===== */
@@ -183,7 +171,7 @@ h1{font-family:var(--f-display);font-weight:800;text-transform:uppercase;letter-
 h2{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:20px;font-weight:700}
 h3{font-family:var(--f-head);letter-spacing:.03em}
 .lede{font-size:15px}
-.topbar{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--glow)}
+.topbar{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--pglow)}
 .brand{font-family:var(--f-display);font-weight:800;font-size:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
 section.panel,.pc,.task,.pane .modebox{border-radius:2px}
 section.panel{position:relative;background:var(--panel-bg);border:1px solid var(--line)}
@@ -192,12 +180,12 @@ section.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
 section.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
 .pc,.task{background:color-mix(in srgb,var(--panel) 70%,var(--bg));border-left:2px solid var(--saber)}
 button.btn{border-radius:2px;font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:13px;font-weight:600;transition:box-shadow .15s,border-color .15s}
-button.btn:hover:not(:disabled){border-color:var(--saber);box-shadow:0 0 0 1px var(--saber),0 0 12px var(--glow)}
+button.btn:hover:not(:disabled){border-color:var(--saber);box-shadow:0 0 0 1px var(--saber),0 0 12px var(--pglow)}
 button.primary{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
 button.primary:hover:not(:disabled){border-color:var(--gold);box-shadow:0 0 16px rgba(255,214,10,.55)}
 .btn[aria-pressed="true"]{border-color:var(--gold);background:var(--amber-bg);color:var(--ink);box-shadow:inset 0 -2px 0 var(--gold)}
 input[type=text],input[type=url],input[type=number],input[type=password],textarea,select{border-radius:2px;background:color-mix(in srgb,var(--bg) 70%,var(--panel))}
-input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--saber);outline-offset:2px;box-shadow:0 0 12px var(--glow)}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--saber);outline-offset:2px;box-shadow:0 0 12px var(--pglow)}
 label{font-family:var(--f-head);letter-spacing:.03em}
 /* phase track as lightsaber blades */
 .ph .bar{background:var(--track)}
@@ -223,9 +211,9 @@ th{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.06em;font-
 .savebar{border-radius:2px;border-left:3px solid var(--saber)}
 .savebar.dirty{border-left-color:var(--gold)}
 .warn{border-radius:2px;border-left:3px solid var(--bad)}
-dialog.drawer{background:var(--panel);border-left:1px solid var(--saber);box-shadow:-8px 0 30px var(--glow)}
+dialog.drawer{background:var(--panel);border-left:1px solid var(--saber);box-shadow:-8px 0 30px var(--pglow)}
 dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filter:blur(2px)}
-.gate{border-radius:2px;border:1px solid var(--saber);box-shadow:0 0 30px var(--glow)}
+.gate{border-radius:2px;border:1px solid var(--saber);box-shadow:0 0 30px var(--pglow)}
 .opb{border-radius:2px;font-family:var(--f-head)}
 .opb[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--gold-ink);box-shadow:0 0 8px rgba(255,214,10,.4)}
 .modebox{border-radius:2px;border-color:var(--saber)}
@@ -234,7 +222,7 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .oprow{padding:6px 0}
 .opb{position:relative;width:40px;height:36px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 .opb small{font-size:9px;font-weight:600;margin-top:2px;letter-spacing:.04em}
-.opb.else{border-style:dashed;color:var(--muted)}
+.opb.else{border-style:dashed;color:var(--text-2)}
 .carry{font-size:11px;font-weight:600;color:var(--saber);border:1px dashed var(--saber);border-radius:2px;padding:0 5px;margin-left:6px;font-family:var(--f-head);letter-spacing:.04em;vertical-align:middle;white-space:nowrap}
 .reqphase{margin-bottom:22px}
 .reqph{font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:12px}
@@ -245,52 +233,135 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .reqtable th{white-space:normal;line-height:1.2;vertical-align:bottom;letter-spacing:.02em;font-size:10px}
 .reqtable td{font-size:13px}
 .reqtable td,.reqtable th{padding:6px 5px}
-.reqtable small{color:var(--muted)}
+.reqtable small{color:var(--text-2)}
 .reqtable .neg,.neg{color:var(--bad)}
 .reqtable .pos{color:var(--ok)}
 .reqtable tr.isneg td{background:var(--bad-bg)}
-.reqtable .z{color:var(--muted);opacity:.6}
+.reqtable .z{color:var(--text-2);opacity:.6}
 
 /* ===== site navigation (raid tracker integration) ===== */
 .topbar{flex-wrap:wrap}
 .navr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.navlink{font-family:var(--f-head);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:2px;padding:7px 10px}
+.navlink{font-family:var(--f-head);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;padding:7px 10px}
 .navlink:hover{color:var(--ink);border-color:var(--saber)}
 .gsel{width:auto;min-width:0;padding:6px 8px;font-family:var(--f-head);font-size:13px}
 .themebtn{display:inline-flex;align-items:center;gap:6px}
 .themebtn svg{width:14px;height:14px}
-.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.sub{color:var(--text-2);font-size:14px;margin-top:4px}
 .datacard{border:1px solid var(--line);border-left:2px solid var(--saber);padding:10px 12px;margin-bottom:12px}
 .datacard h3{margin-bottom:4px}
 .datacard a{color:var(--holo)}
 .selbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:8px 10px;margin:4px 0 12px;border-left:3px solid var(--saber);background:var(--holo-bg);font-size:14px}
 .selbar.dirty{border-left-color:var(--gold);background:var(--amber-bg)}
-.gname{color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0}
+.gname{color:var(--text-2);font-weight:500;text-transform:none;letter-spacing:0}
 .planets{margin:0 0 14px;border:1px solid var(--line);border-left:2px solid var(--saber);padding:8px 12px;background:var(--panel-bg)}
 .planets summary{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--ink)}
 .planets .prow{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-top:1px dashed var(--line);font-size:14px}
 .planets .prow:first-of-type{border-top:0}
 .planets .prow b{font-family:var(--f-head);min-width:62px;color:var(--amber)}
 .planets .pp{display:inline-block;margin-right:12px}
-.planets .pp small{color:var(--muted)}
-.planets .stale{font-size:13px;color:var(--muted);margin-top:6px}
+.planets .pp small{color:var(--text-2)}
+.planets .stale{font-size:13px;color:var(--text-2);margin-top:6px}
 @media (max-width:560px){.navlink .lw{display:none}}
+
+/* ===== Guild Statistics look: same layout, buttons, cards, headings and tables as the other pages ===== */
+body{background:var(--bg);background-image:none;color:var(--text);font:15px/1.5 var(--font-ui)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+main{max-width:1240px;margin:0 auto;padding:0 16px 60px}
+.topbar{position:static;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:18px 0 14px}
+h2{font:700 13px var(--font-display);letter-spacing:.1em;text-transform:uppercase;margin:0 0 10px;color:var(--text)}
+h3{font:600 15px var(--font-ui);letter-spacing:0;text-transform:none}
+.lede{color:var(--text-2);font-size:14px;max-width:75ch;margin:0 0 4px}
+section.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--glow);padding:16px 18px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+section.panel::before,section.panel::after{display:none}
+.pc,.task,.datacard,.modebox,.planets{border:1px solid var(--border);border-left:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+.planets{background:var(--surface);border-radius:12px;padding:10px 14px}
+.planets summary{font:700 12px var(--font-display);letter-spacing:.1em;color:var(--text)}
+.planets .prow b{font-family:var(--font-display);font-size:12px;color:var(--accent)}
+button.btn,.navlink{font:600 13px var(--font-ui);letter-spacing:.02em;text-transform:none;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);padding:7px 14px;box-shadow:none}
+button.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);box-shadow:none}
+button.primary,button.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.primary:hover:not(:disabled){color:var(--accent-ink);filter:brightness(1.08);box-shadow:none}
+button.big{font:700 14px var(--font-display);letter-spacing:.1em;text-transform:uppercase;padding:11px 22px}
+.btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:none}
+#mainbar .btn[aria-pressed="true"]:hover{color:var(--accent-ink)}
+.menubtn svg{width:14px;height:11px}
+input[type=text],input[type=url],input[type=number],input[type=password],textarea,select{border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-ui)}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;box-shadow:none}
+label{font-family:var(--font-ui);letter-spacing:0;color:var(--text)}
+.tabs button,.dtabs button{font:700 11px var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--text-2)}
+.tabs button[aria-selected="true"],.dtabs button[aria-selected="true"]{color:var(--text);border-color:var(--accent);box-shadow:none}
+th{font:700 10.5px var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--text-2)}
+.sumtable th.sort button{font:700 10.5px var(--font-display);letter-spacing:.1em;text-transform:uppercase}
+td{font-variant-numeric:tabular-nums}
+.stat b{font:700 24px var(--font-display);letter-spacing:.02em;color:var(--text)}
+.stat span{font:700 10.5px var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--text-2)}
+.phchip{border-radius:999px;font:600 12.5px var(--font-ui);letter-spacing:.02em;background:var(--surface);border:1px solid var(--border);padding:5px 12px}
+.phchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.phchip b{font-family:var(--font-num);font-size:13px}
+.opb{border-radius:8px;font-family:var(--font-ui);background:var(--surface)}
+.opb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:none}
+.gl{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 7px}
+.tier,.carry{border-radius:999px;font-family:var(--font-ui);color:var(--accent);border-color:var(--accent)}
+.tag{border-radius:999px;padding:0 7px}
+.msg,.savebar,.warn,.selbar{border-radius:10px;border-left:0}
+.savebar,.selbar{background:var(--surface-2);border:1px solid var(--border)}
+.savebar.dirty,.selbar.dirty{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent}
+.msg.ok{background:var(--good-bg);color:var(--good-ink)} .msg.err,.warn{background:var(--bad-bg);color:var(--bad-ink)}
+.reqph{font:700 13px var(--font-display);letter-spacing:.12em;color:var(--text);border-bottom:1px solid var(--border)}
+.reqplanet{border-left:2px solid var(--accent)}
+/* phase track */
+.track{margin:4px 0 18px}
+.ph .bar{background:var(--surface-2);border-radius:0}
+.ph .fill{background:var(--good);box-shadow:none}
+.ph.part .fill{background:var(--accent);box-shadow:none}
+.ph .lab{font:700 11px var(--font-display);letter-spacing:.1em}
+.ph[aria-pressed="true"] .lab{color:var(--accent)}
+.ph[aria-pressed="true"] .bar{outline:2px solid var(--accent);outline-offset:2px}
+/* menu drawer and password box */
+dialog.drawer{background:var(--surface-solid);color:var(--text);border-left:1px solid var(--border);box-shadow:-12px 0 40px rgba(0,0,0,.35)}
+.gate{background:var(--surface-solid);color:var(--text);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+dialog.drawer::backdrop,.gate::backdrop{background:rgba(3,5,11,.6);backdrop-filter:none}
+.dbody .pane>h2{margin-bottom:12px}
+.sumtable .stick{background:var(--surface-solid)}
+.sumtable tbody tr:hover td{background:var(--surface-2)}
+.track{grid-template-columns:repeat(6,minmax(0,1fr))}
+.ph .bar{height:30px}
+.ph .fill{background:color-mix(in srgb,var(--good) 80%,var(--surface-solid))}
+.ph .lab{padding-right:12px;min-width:0;overflow:hidden;white-space:nowrap}
+@media (max-width:560px){.ph .lab{font-size:9.5px;letter-spacing:.04em;padding-right:4px}.ph .bar{height:24px}}
+.banner h1{color:#f2f5ff;font:800 clamp(26px,5vw,44px)/1.05 var(--font-display);letter-spacing:.06em;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+.banner .sub{color:rgba(230,236,255,.82);font-size:13.5px;margin-top:0}
+.theme-toggle{font:600 12.5px var(--font-ui)}
+.gate input[type=password]{width:100%;padding:9px 12px;font-size:14px}
 </style>
 </head>
 <body>
-<header class="topbar">
-  <span class="brand">RotE platoons</span>
-  <div class="navr">
-  <a class="navlink" id="raidLink" href="./">⟵ <span class="lw">Raid </span>results</a>
-  <a class="navlink" id="tbLink" href="tb.html"><span class="lw">Territory </span>battles</a>
-  <label class="vh" for="guildSel">Guild</label><select id="guildSel" class="gsel" hidden></select>
-  <button class="btn themebtn" id="themeBtn" type="button"></button>
-  <button class="btn menubtn" id="menuBtn" aria-haspopup="dialog" aria-controls="menu"><svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"></path></svg>Menu</button>
+<div class="wrap">
+  <div class="topbar">
+    <a class="wordmark" href="./"><span data-emblem></span>Guild Statistics</a>
+    <div class="top-actions">
+      <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
+      <a class="top-link" id="tbLink" href="tb.html">◈ <span class="lw">Territory battles</span><span class="ls">TBs</span></a>
+      <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
+      <span data-theme-toggle></span>
+      <button class="btn primary menubtn" id="menuBtn" aria-haspopup="dialog" aria-controls="menu"><svg viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"></path></svg>Menu</button>
+    </div>
   </div>
-</header>
+  <header class="banner">
+    <div class="art" id="bannerArt"></div>
+    <div>
+      <div class="eyebrow">Rise of the Empire platoons</div>
+      <h1 id="pageGuild">Platoons</h1>
+      <div class="sub" id="guildLine"></div>
+    </div>
+    <div class="banner-switch">
+      <div class="pills" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+      <label class="vh" for="guildSel">Guild</label><select id="guildSel" class="gsel" hidden></select>
+    </div>
+  </header>
+</div>
 <main>
-  <h1>Rise of the Empire platoons</h1>
-  <div class="sub" id="guildLine"></div>
   <p class="lede">Every operation slot, assigned across the guild as evenly as possible. Officers pick the operations and set the rules from the menu; everyone else sees the saved assignments.</p>
 
   <div class="track" id="track" role="group" aria-label="Phases"></div>
@@ -1046,7 +1117,7 @@ function renderMissing(){
     return list.slice(0,6).map(x=>`${esc(x.p)} <small>${lvlText(x.u)}</small>`).join(', ')+(list.length>6?` <span class="note">and ${list.length-6} more</span>`:'')};
   let html=`<h3 style="margin-bottom:8px">Characters the guild is short on</h3>
     <p class="note">Short by is how many more members need the unit at the required level. Closest lists members who own it but haven’t reached that level yet.</p>
-    <div class="scroll"><table><thead><tr>${MPHASE?'':'<th>Phase</th>'}<th>Unit and closest members</th><th>Short by</th><th>Needs</th></tr></thead><tbody>${rows.map(x=>`<tr style="vertical-align:top">${MPHASE?'':`<td>P${x.s.phase}</td>`}<td style="white-space:normal;min-width:180px">${esc(x.s.unit)}${x.s.gl?'<span class="gl">GL</span>':''}<br><small style="color:var(--muted)">Closest: ${close(x.s)}</small></td><td><b>${x.count}</b></td><td>${need(x.s)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="scroll"><table><thead><tr>${MPHASE?'':'<th>Phase</th>'}<th>Unit and closest members</th><th>Short by</th><th>Needs</th></tr></thead><tbody>${rows.map(x=>`<tr style="vertical-align:top">${MPHASE?'':`<td>P${x.s.phase}</td>`}<td style="white-space:normal;min-width:180px">${esc(x.s.unit)}${x.s.gl?'<span class="gl">GL</span>':''}<br><small style="color:var(--text-2)">Closest: ${close(x.s)}</small></td><td><b>${x.count}</b></td><td>${need(x.s)}</td></tr>`).join('')}</tbody></table></div>
     <h3 style="margin:20px 0 8px">Incomplete operations</h3>`;
   html+=broken.map(o=>`<div class="task"><h3>${MPHASE?'':`Phase ${o.phase}, `}${esc(o.planet)}, operation ${esc(o.op)} <span class="note">${o.total-o.missing.length}/${o.total} filled</span></h3><ul>${o.missing.sort(slotSort).map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${s.row!=null?` <small>row ${s.row}</small>`:''}<br><small>${esc(s.reason||'')}</small></li>`).join('')}</ul></div>`).join('');
   $('#mView').innerHTML=html;
@@ -1217,14 +1288,9 @@ $('#lock').addEventListener('click',()=>setTimeout(renderSaved,0));
 const guildName=()=>(SITE.guilds.find(g=>g.slug===GUILD)||{}).name||GUILD;
 const getJSON=u=>fetch(u,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
 function rosterFromJSON(d){return{players:new Map(d.players.map((p,i)=>[p,new Map(Object.entries(d.roster[i]||{}))])),names:new Map(),raw:!!d.raw,gp:new Map(d.players.map((p,i)=>[p,(d.gp||[])[i]||0]))}}
-// theme toggle shared with the rest of the site
-(function(){const M=[['system','System','<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.8a6.2 6.2 0 0 1 0 12.4z" fill="currentColor"/></svg>'],['light','Light','<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.2" fill="currentColor"/><path d="M8 .8v2.2M8 13v2.2M.8 8H3M13 8h2.2M2.9 2.9l1.6 1.6M11.5 11.5l1.6 1.6M2.9 13.1l1.6-1.6M11.5 4.5l1.6-1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'],['dark','Dark','<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.6 10.4A6.2 6.2 0 0 1 5.6 2.4a6.2 6.2 0 1 0 8 8z" fill="currentColor"/></svg>']];
-  const cur=()=>{try{return localStorage.getItem('raidTheme')||'system'}catch(e){return'system'}};
-  const paint=()=>{const m=M.find(x=>x[0]===cur())||M[0];$('#themeBtn').innerHTML=m[2]+'<span>'+m[1]+'</span>';$('#themeBtn').setAttribute('aria-label','Theme: '+m[1]+'. Click to change.')};
-  $('#themeBtn').addEventListener('click',()=>{const i=M.findIndex(x=>x[0]===cur());const n=M[(i+1)%M.length][0];
-    try{n==='system'?localStorage.removeItem('raidTheme'):localStorage.setItem('raidTheme',n)}catch(e){}
-    if(n==='system')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=n;paint()});
-  paint()})();
+// banner art (theme.js loads after this script)
+(function art(){if(window.RaidTheme)RaidTheme.banner(document.getElementById('bannerArt'),{slug:'tb'});else setTimeout(art,30)})();
+window.addEventListener('themechange',()=>{});
 $('#clearPaste').addEventListener('click',()=>{$('#rText').value='';$('#pText').value='';showMsg('#rMsg');showMsg('#pMsg');renderOps()});
 $('#planFile').addEventListener('change',()=>{
   const f=$('#planFile').files[0];if(!f)return;const fr=new FileReader();
@@ -1252,7 +1318,12 @@ function describePlan(){
   DEPLOY=new Map(Object.entries(JSON.parse(store.get(K('rote-deploy'))||'{}')).map(([k,v])=>[k,+v]));
   restore();
   $('#guildSel').innerHTML=SITE.guilds.map(g=>`<option value="${esc(g.slug)}"${g.slug===GUILD?' selected':''}>${esc(g.name)}</option>`).join('');
-  $('#guildSel').hidden=SITE.guilds.length<2;
+  $('#guildSel').hidden=true;
+  const gs=$('#guildSwitch');gs.hidden=SITE.guilds.length<2;
+  gs.innerHTML=SITE.guilds.map(g=>`<button type="button" aria-pressed="${g.slug===GUILD}" data-id="${esc(g.slug)}">${esc(g.name)}</button>`).join('');
+  gs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.id!==GUILD)location.search='?guild='+encodeURIComponent(b.dataset.id)}));
+  $('#pageGuild').textContent=guildName()||'Platoons';document.title=(guildName()||'RotE')+' · RotE platoons';
+  $('#effLink').href='effectiveness.html?guild='+encodeURIComponent(GUILD);
   $('#guildSel').addEventListener('change',e=>{location.search='?guild='+encodeURIComponent(e.target.value)});
   $('#raidLink').href='./?guild='+encodeURIComponent(GUILD);$('#tbLink').href='tb.html?guild='+encodeURIComponent(GUILD);
   $('#rosterUpLink').href='upload.html?guild='+encodeURIComponent(GUILD)+'&type=roster';
