@@ -336,7 +336,7 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(3,5,11,.6);backdrop-filt
 .banner .sub{color:rgba(230,236,255,.82);font-size:13.5px;margin-top:0}
 .theme-toggle{font:600 12.5px var(--font-ui)}
 .gate input[type=password]{width:100%;padding:9px 12px;font-size:14px}
-html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmode #results .toolbar,html.cardmode #toolMsg,html.cardmode #tabs,html.cardmode #view,html.cardmode .who,html.cardmode #selBar,html.cardmode .selbar{display:none!important}
+html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmode #results .toolbar,html.cardmode #toolMsg,html.cardmode #tabs,html.cardmode .who,html.cardmode #selBar,html.cardmode .selbar{display:none!important}
 </style>
 </head>
 <body>
@@ -1367,7 +1367,7 @@ function describePlan(){
   if(CARD){const ph=+new URLSearchParams(location.search).get('phase');if(ph)PHASE=ph;MODE='assign'}
   if(SHARED){showResult();$('#reshuffle').disabled=false}else renderTrack();
   if(CARD&&RESULT){setMode('assign',false);render()}
-  if(CARD){await document.fonts.ready;setTimeout(()=>{document.body.dataset.ready='1'},400)}
+  if(CARD){VIEW='players';WHO=new URLSearchParams(location.search).get('who')||'';if(RESULT)render();(function cr(){if(!window.RaidTheme)return setTimeout(cr,30);RaidTheme.cardReady()})()}
 })();
 
 /* ---------- This guild's operation selections ---------- */

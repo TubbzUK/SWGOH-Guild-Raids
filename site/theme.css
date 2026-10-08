@@ -184,11 +184,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
 
-/* ---- card mode (?card=1): a fixed-width "panel" of a page that the Discord step photographs ---- */
-html.cardmode body { width: 1100px; min-height: 0; }
-html.cardmode .topbar, html.cardmode nav.tabs, html.cardmode footer, html.cardmode .no-card { display: none !important; }
-html.cardmode .wrap, html.cardmode main { max-width: none !important; width: 1100px; padding: 20px 24px 8px !important; }
-.cardfoot { display: flex; justify-content: space-between; align-items: center; width: 1100px; padding: 6px 24px 18px; color: var(--text-2); font-size: 12.5px; }
+/* ---- card mode (?card=1): the whole page at a fixed width, which the Discord step photographs ---- */
+html.cardmode body { width: auto; min-width: 0; min-height: 0; overflow: hidden; }
+html.cardmode .topbar, html.cardmode nav.tabs, html.cardmode nav[role="tablist"], html.cardmode footer, html.cardmode .no-card,
+html.cardmode .banner-switch, html.cardmode #settingsLine, html.cardmode .topscroll, html.cardmode .toolbar { display: none !important; }
+html.cardmode section.tab.card-show[hidden] { display: block !important; }
+html.cardmode section.tab.card-show + section.tab.card-show { margin-top: 18px; }
+html.cardmode .wrap, html.cardmode main { max-width: none !important; width: var(--cardw, 1100px); padding: 20px 24px 8px !important; }
+html.cardmode .tablewrap { overflow: visible; }
+.cardtitle { font: 700 13px var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); margin: 8px 0 10px; }
+.cardfoot { display: flex; justify-content: space-between; align-items: center; width: var(--cardw, 1100px); padding: 6px 24px 18px; color: var(--text-2); font-size: 12.5px; }
 .cardfoot .wordmark { font-size: 11px; }
-html.cardmode .banner-switch, html.cardmode #settingsLine { display: none !important; }
-html.cardmode body { overflow: hidden; }

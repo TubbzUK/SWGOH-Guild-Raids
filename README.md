@@ -224,13 +224,13 @@ many recent raids and TBs count under **⚙ Officer settings** (saved to
 
 ## Posting to Discord
 
-Results panels (a picture of the page plus a link) are posted by GitHub after the site updates.
+Each post is the whole page as pictures (cut between sections so they stay readable), plus a link, posted by GitHub after the site updates.
 
 - **Raids** post automatically whenever new raid results are uploaded.
 - Officers can post any time with the **📣 Post to Discord** buttons: on the raid page (the raid shown),
   the Territory Battles page (the TB shown), the Effectiveness page, and the platoon planner
-  (**📣 Post phase N to Discord** next to "Copy phase for Discord": a picture of the phase plus each
-  member's list as messages). The button asks for the officer password, then the post appears about
+  (**📣 Post phase N to Discord** next to "Copy phase for Discord": the phase's planets, totals and
+  every member's assignments). The button asks for the officer password, then the post appears about
   3 minutes later.
 
 Webhooks are GitHub secrets (Settings → Secrets and variables → Actions):

@@ -218,7 +218,22 @@
   // wordmark emblem (generic targeting reticle)
   const emblem = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 0v6M12 18v6M0 12h6M18 12h6" stroke="currentColor" stroke-width="1.5"/></svg>`;
 
-  window.RaidTheme = { banner, isDark, emblem };
+  // card mode: once a page has drawn, size it to its widest table, label each section, then say it's ready
+  async function cardReady() {
+    if (!document.documentElement.classList.contains("cardmode")) return;
+    document.querySelectorAll("section.tab.card-show").forEach(sec => {
+      const t = sec.dataset.cardTitle; if (t && !sec.querySelector(":scope > .cardtitle")) sec.insertAdjacentHTML("afterbegin", `<div class="cardtitle">${t}</div>`);
+    });
+    const widest = Math.max(0, ...[...document.querySelectorAll(".tablewrap table, .scroll table")].filter(t => t.offsetParent).map(t => t.scrollWidth));
+    const w = Math.max(1100, Math.ceil(widest + 52));
+    document.documentElement.style.setProperty("--cardw", w + "px");
+    try { await document.fonts.ready; } catch (e) {}
+    window.dispatchEvent(new Event("resize"));
+    await new Promise(r => setTimeout(r, 700));
+    document.body.dataset.cardw = w;
+    document.body.dataset.ready = "1";
+  }
+  window.RaidTheme = { banner, isDark, emblem, cardReady };
   // card mode: no chart animations, and a small footer with the site address
   const cardMode = document.documentElement.classList.contains("cardmode");
   if (cardMode && window.Chart) Chart.defaults.animation = false;

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>try{if(/[?&]card=1/.test(location.search)){document.documentElement.dataset.theme="dark";document.documentElement.classList.add("cardmode")}else{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}}catch(e){}</script>
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
 <script src="officer.js" defer></script>
@@ -144,10 +144,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <button role="tab" aria-selected="false" data-tab="players">Players</button>
     <button role="tab" aria-selected="false" data-tab="readiness">Readiness</button>
   </nav>
-  <div id="warnings"></div>
+  <div id="warnings" class="no-card"></div>
 
   <!-- OVERVIEW -->
-  <section class="tab" id="tab-overview">
+  <section class="tab card-show" id="tab-overview" data-card-title="Overview">
     <div class="kpis" id="kpis"></div>
     <div id="ovBody">
     <div class="grid2">
@@ -191,7 +191,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   </section>
 
   <!-- PLAYERS -->
-  <section class="tab" id="tab-players" hidden>
+  <section class="tab card-show" id="tab-players" data-card-title="Players" hidden>
     <div class="toolbar">
       <input type="search" id="pSearch" placeholder="Search players&hellip;" aria-label="Search players">
       <select id="pTrend" aria-label="Filter by trend">
@@ -208,7 +208,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   </section>
 
   <!-- READINESS -->
-  <section class="tab" id="tab-readiness" hidden>
+  <section class="tab card-show" id="tab-readiness" data-card-title="Raid readiness" hidden>
     <div class="kpis" id="rKpis"></div>
     <div id="rBody">
     <div class="card" style="margin-bottom:12px">
@@ -523,7 +523,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     const onOverview = !document.querySelector("#tab-overview").hidden;
     if (!data.raids.length && data.readiness_summary && onOverview && (!first || !location.hash)) document.querySelector('nav button[data-tab="readiness"]').click();
   }
-  show(true);
+  await show(true);
+  (function cr() { if (!window.RaidTheme) return setTimeout(cr, 30); RaidTheme.cardReady(); })();
 })();
 </script>
 </body>

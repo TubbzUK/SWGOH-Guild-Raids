@@ -231,7 +231,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     <input type="search" id="search" placeholder="Search members&hellip;" aria-label="Search members">
     <label class="check"><input type="checkbox" id="curOnly" checked> Current members only</label>
   </div>
-  <div class="tablewrap no-card"><table id="table"></table></div>
+  <div class="tablewrap"><table id="table"></table></div>
 
   <details class="card how no-card" style="margin-top:12px">
     <summary>How effectiveness is worked out</summary>
@@ -444,8 +444,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     $("#rankLegend").innerHTML = CL.map(([, l, c]) => `<span><i class="sq" style="background:${css(c)}"></i>${l}</span>`).join("");
     $("#rankHint").textContent = "Each bar is a member's effectiveness; the colours show how much raids and TBs added. Click a bar for that member.";
     const CARD = document.documentElement.classList.contains("cardmode");
-    const ro = CARD ? order.slice(0, 15) : order;
-    if (CARD) { $("#rankHint").textContent = `Top ${ro.length} of ${order.length} members. Each bar is a member's effectiveness; the colours show how much raids and TBs added.`; document.querySelector("#rankChart").closest(".card").querySelector("h2").textContent = "Most effective"; }
+    const ro = order;
     $("#rankBox").style.height = Math.max(160, ro.length * 20 + 40) + "px";
     charts.push(new Chart($("#rankChart"), {
       type: "bar",
@@ -588,7 +587,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   (function hook() { if (!window.Officer) return setTimeout(hook, 50);
     Officer.postButton($("#postBtn"), () => ({ guild: guild.slug, kind: "effectiveness", label: `${guild.name} guild effectiveness` })); })();
   render();
-  if (document.documentElement.classList.contains("cardmode")) { await document.fonts.ready; setTimeout(() => { document.body.dataset.ready = "1"; }, 400); }
+  (function cr() { if (!window.RaidTheme) return setTimeout(cr, 30); RaidTheme.cardReady(); })();
 })();
 </script>
 </body>

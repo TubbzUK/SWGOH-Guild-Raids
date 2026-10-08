@@ -141,7 +141,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   </nav>
   <div id="warnings" class="no-card"></div>
 
-  <section class="tab" id="tab-overview">
+  <section class="tab card-show" id="tab-overview" data-card-title="Overview">
     <div class="kpis" id="kpis"></div>
     <div class="grid2">
       <div class="card">
@@ -169,7 +169,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     </div>
   </section>
 
-  <section class="tab" id="tab-members" hidden>
+  <section class="tab card-show" id="tab-members" data-card-title="Members" hidden>
     <div class="toolbar">
       <input type="search" id="mSearch" placeholder="Search members&hellip;" aria-label="Search members">
       <select id="mStatus" aria-label="Filter by status">
@@ -600,7 +600,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   (function hook() { if (!window.Officer) return setTimeout(hook, 50);
     Officer.postButton($("#postBtn"), () => ({ guild: guild.slug, kind: "tb", tb: tbs[sel].id, label: `${guild.name} territory battle of ${dfmt(tbs[sel].date)}` })); })();
   render();
-  if (document.documentElement.classList.contains("cardmode")) { await document.fonts.ready; setTimeout(() => { document.body.dataset.ready = "1"; }, 400); }
+  (function cr() { if (!window.RaidTheme) return setTimeout(cr, 30); RaidTheme.cardReady(); })();
 })();
 </script>
 </body>

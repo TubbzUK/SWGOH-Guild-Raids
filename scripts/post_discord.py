@@ -92,14 +92,15 @@ def render_card(slug: str, raid: str, site: str) -> bytes | None:
     return render_page("card.html", {"guild": slug, "raid": raid, "site": site}, "#card")
 
 
-def render_page(page_name: str, query: dict, selector: str | None = None) -> bytes | None:
-    """Photograph a page (card.html, or another page with ?card=1) once it says it's ready."""
-    slug, raid = query.get("guild", ""), query.get("raid") or query.get("kind", "")
+def render_page(page_name: str, query: dict, selector: str | None = None) -> list[bytes]:
+    """Photograph a page (?card=1) once it says it's ready: the whole page, cut between sections into
+    pictures of up to about 1,600px tall so Discord shows them readably. Returns [] if it can't."""
+    slug, what = query.get("guild", ""), query.get("raid") or page_name
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
         print("Playwright isn't installed - posting the text summary only")
-        return None
+        return []
     port = _serve_site()
     url = f"http://127.0.0.1:{port}/{page_name}?" + urllib.parse.urlencode(query)
     try:
@@ -113,42 +114,119 @@ def render_page(page_name: str, query: dict, selector: str | None = None) -> byt
                     continue
             if browser is None:
                 print("No browser available - posting the text summary only")
-                return None
-            page = browser.new_page(viewport={"width": 1100, "height": 900 if selector else 300}, device_scale_factor=2, color_scheme="dark")
-            page.goto(url, wait_until="networkidle", timeout=60000)
-            page.wait_for_selector("body[data-ready]", state="attached", timeout=40000)
+                return []
+            page = browser.new_page(viewport={"width": 1100, "height": 600}, device_scale_factor=1.5, color_scheme="dark")
+            page.goto(url, wait_until="networkidle", timeout=90000)
+            page.wait_for_selector("body[data-ready]", state="attached", timeout=60000)
             err = page.evaluate("document.body.dataset.error || ''")
             if err:
-                print(f"{slug}/{raid}: results panel didn't draw ({err}) - posting the text summary only")
+                print(f"{slug}/{what}: the page didn't draw ({err}) - posting the text summary only")
                 browser.close()
-                return None
-            png = page.locator(selector).screenshot(type="png") if selector else page.screenshot(type="png", full_page=True)
+                return []
+            if selector:
+                shots = [page.locator(selector).screenshot(type="png")]
+                browser.close()
+                return shots
+            width = int(page.evaluate("+document.body.dataset.cardw || document.documentElement.scrollWidth"))
+            page.set_viewport_size({"width": width, "height": 600})
+            page.wait_for_timeout(800)
+            # the page's blocks, top to bottom (each card section split into its own pieces)
+            blocks = page.evaluate("""(limit) => {
+                const out = [], y = window.scrollY;
+                const visible = el => el.offsetParent || getComputedStyle(el).position === 'fixed';
+                const box = el => { const r = el.getBoundingClientRect(); return [r.top + y, r.bottom + y, r.height]; };
+                // break tall things into smaller pieces we can cut between: table rows, cards, list items
+                const collect = el => {
+                    if (!visible(el)) return;
+                    const [t, b, h] = box(el);
+                    if (h <= 2) return;
+                    if (h <= limit) { out.push([t, b]); return; }
+                    if (el.tagName === 'TABLE') {
+                        const head = el.tHead ? box(el.tHead) : null;
+                        const rows = [...el.rows].filter(r => !el.tHead || r.parentNode !== el.tHead);
+                        if (head) out.push([t, head[1]]);
+                        rows.forEach(r => { const [rt, rb] = box(r); out.push([rt, rb]); });
+                        return;
+                    }
+                    const kids = [...el.children].filter(visible);
+                    if (!kids.length) { out.push([t, b]); return; }
+                    out.push([t, Math.min(...kids.map(k => box(k)[0]))]);   // padding / heading above the children
+                    kids.forEach(collect);
+                    out.push([Math.max(...kids.map(k => box(k)[1])), b]);   // padding below
+                };
+                document.querySelectorAll('.wrap, main').forEach(root => [...root.children].forEach(collect));
+                document.querySelectorAll('.cardfoot').forEach(collect);
+                return out.filter(([t, b]) => b - t > 0.5).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+            }""", 1500)
+            total = page.evaluate("document.documentElement.scrollHeight")
+            # cut only where nothing spans the cut, and never leave a sliver on its own
+            chunks, start, end, limit = [], 0, 0, 1500
+            for top, bottom in blocks:
+                if end and top >= end - 1 and bottom - start > limit and end - start > 300:
+                    chunks.append((start, end))
+                    start = end
+                end = max(end, bottom)
+            if chunks and end - start < 220:          # fold a short tail (the footer) into the last picture
+                start = chunks.pop()[0]
+            chunks.append((start, min(total, end + 18)))
+            shots = []
+            for a, b in chunks:
+                if b - a < 8:
+                    continue
+                shots.append(page.screenshot(type="png", full_page=True,
+                                             clip={"x": 0, "y": max(0, a - 6), "width": width, "height": b - max(0, a - 6)}))
             browser.close()
-            return png
+            return shots
     except Exception as e:
-        print(f"{slug}/{raid}: couldn't take the results panel picture ({e}) - posting the text summary only")
-        return None
+        print(f"{slug}/{what}: couldn't take the pictures ({e}) - posting the text summary only")
+        return []
 
 
-def send(hook: str, payload: dict, png: bytes | None, filename: str) -> int:
-    """Post JSON, or multipart with the picture attached when there is one."""
+def send(hook: str, payload: dict, png, filename: str = "") -> int:
+    """Post JSON, or multipart with pictures attached: png is one picture (bytes) or a list of
+    (filename, bytes)."""
     headers = {"User-Agent": "swgoh-guild-raids (github actions)"}
-    if png is None:
+    files = [] if png is None else ([(filename, png)] if isinstance(png, (bytes, bytearray)) else list(png))
+    if not files:
         body, headers["Content-Type"] = json.dumps(payload).encode(), "application/json"
     else:
         b = uuid.uuid4().hex
-        parts = [
-            f"--{b}\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n".encode()
-            + json.dumps(payload).encode() + b"\r\n",
-            f"--{b}\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\"{filename}\"\r\nContent-Type: image/png\r\n\r\n".encode()
-            + png + b"\r\n",
-            f"--{b}--\r\n".encode(),
-        ]
+        parts = [f"--{b}\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n".encode()
+                 + json.dumps(payload).encode() + b"\r\n"]
+        for n, (fname, data) in enumerate(files):
+            parts.append(f"--{b}\r\nContent-Disposition: form-data; name=\"files[{n}]\"; filename=\"{fname}\"\r\nContent-Type: image/png\r\n\r\n".encode()
+                         + data + b"\r\n")
+        parts.append(f"--{b}--\r\n".encode())
         body, headers["Content-Type"] = b"".join(parts), f"multipart/form-data; boundary={b}"
     req = urllib.request.Request(hook, data=body, method="POST", headers=headers)
-    with urllib.request.urlopen(req, timeout=30) as r:
+    with urllib.request.urlopen(req, timeout=60) as r:
         return r.status
 
+
+def send_pictures(hook: str, embed: dict, shots: list[bytes], stem: str) -> int:
+    """The first embed carries the title and link; each picture gets its own embed below it.
+    Discord allows 10 pictures and about 10 MB per message, so long pages go out in several messages."""
+    import time
+    batches, cur, size = [], [], 0
+    for n, png in enumerate(shots, 1):
+        if cur and (len(cur) == 10 or size + len(png) > 9_000_000):
+            batches.append(cur); cur, size = [], 0
+        cur.append((f"{stem}-{n}.png", png)); size += len(png)
+    if cur:
+        batches.append(cur)
+    status = 0
+    for k, batch in enumerate(batches):
+        embeds = []
+        for m, (fname, _) in enumerate(batch):
+            e = dict(embed) if (k == 0 and m == 0) else {"color": embed.get("color", 0x2A78D6)}
+            if k == 0 and m == 0:
+                e.pop("fields", None)
+            e["image"] = {"url": f"attachment://{fname}"}
+            embeds.append(e)
+        if k:
+            time.sleep(1)
+        status = send(hook, {"username": "Guild Statistics", "embeds": embeds}, batch)
+    return status
 
 def main():
     items = []
@@ -219,14 +297,13 @@ def post_panel(hook, slug, kind, title, description, link, png, fallback_fields=
         embed["url"] = link
     if footer:
         embed["footer"] = {"text": footer}
-    fname = ""
     if png:
-        fname = f"{slug}-{kind}.png"
-        embed["image"] = {"url": f"attachment://{fname}"}
-    elif fallback_fields:
-        embed["fields"] = fallback_fields
-    status = send(hook, {"username": "Guild Statistics", "embeds": [embed]}, png, fname)
-    print(f"{slug}/{kind}: posted to Discord{' with the panel' if png else ''} (HTTP {status})")
+        status = send_pictures(hook, embed, png, f"{slug}-{kind}")
+    else:
+        if fallback_fields:
+            embed["fields"] = fallback_fields
+        status = send(hook, {"username": "Guild Statistics", "embeds": [embed]}, None)
+    print(f"{slug}/{kind}: posted to Discord{f' with {len(png)} picture(s)' if png else ''} (HTTP {status})")
 
 
 def post_tb(slug, tb_id, hook):
@@ -259,34 +336,15 @@ def post_effectiveness(slug, hook):
 
 def post_platoons(slug, it, hook):
     phase = int(it.get("phase") or 1)
-    link = site_link(f"platoons.html?guild={slug}")
-    png = render_page("platoons.html", {"guild": slug, "phase": str(phase), "card": "1", "site": link})
     who = it.get("who") or ""
+    link = site_link(f"platoons.html?guild={slug}")
+    q = {"guild": slug, "phase": str(phase), "card": "1", "site": link}
+    if who:
+        q["who"] = who
+    shots = render_page("platoons.html", q)
     post_panel(hook, slug, f"platoons-p{phase}", f"{guild_name(slug)} · RotE phase {phase} platoons" + (f" · {who}" if who else ""),
-               "Who places what this phase. Lists follow below.", link, png)
-    # the member lists, split into Discord-sized messages at member boundaries
-    text = (it.get("text") or "").strip()
-    chunks, cur = [], ""
-    for block in text.split("\n\n"):
-        block = block.strip()
-        if not block:
-            continue
-        while len(block) > 1900:            # a single very long block: hard split on lines
-            cut = block.rfind("\n", 0, 1900)
-            cut = cut if cut > 0 else 1900
-            chunks.append(block[:cut]); block = block[cut:].lstrip("\n")
-        if len(cur) + len(block) + 2 > 1900:
-            chunks.append(cur); cur = block
-        else:
-            cur = (cur + "\n\n" + block) if cur else block
-    if cur:
-        chunks.append(cur)
-    import time
-    for n, c in enumerate(chunks):
-        time.sleep(0.8)
-        send(hook, {"username": "Guild Statistics", "content": c, "allowed_mentions": {"parse": []}}, None, "")
-    print(f"{slug}/platoons: posted phase {phase} lists in {len(chunks)} message(s)")
-
+               "Who places what this phase.", link, shots,
+               [{"name": "Assignments", "value": "The pictures couldn't be made this time - open the planner for this phase's lists.", "inline": False}])
 
 def post_guild(slug, raid, hook):
     data = json.loads((ROOT / "site" / "data" / slug / f"{raid}.json").read_text(encoding="utf-8"))
@@ -355,16 +413,13 @@ def post_guild(slug, raid, hook):
     }
     if site:
         embed["url"] = site
-    png = render_card(slug, raid, site)
-    if png:
-        # with the panel picture the embed stays short: title, link and the picture itself
-        fname = f"{slug}-{raid}-{latest['date']}.png"
-        embed = {"title": embed["title"], "description": embed["description"], "color": embed["color"],
-                 "image": {"url": f"attachment://{fname}"}, "footer": embed["footer"], **({"url": site} if site else {})}
+    # the whole raid page (overview, players, readiness) as pictures; the text summary if that can't be done
+    shots = render_page("index.html", {"guild": slug, "raid": raid, "card": "1", "site": site})
+    if shots:
+        status = send_pictures(hook, embed, shots, f"{slug}-{raid}-{latest['date']}")
     else:
-        fname = ""
-    status = send(hook, {"username": "Guild Statistics", "embeds": [embed]}, png, fname)
-    print(f"{slug}/{raid}: posted to Discord{' with the results panel' if png else ''} (HTTP {status})")
+        status = send(hook, {"username": "Guild Statistics", "embeds": [embed]}, None)
+    print(f"{slug}/{raid}: posted to Discord{f' with {len(shots)} picture(s)' if shots else ''} (HTTP {status})")
 
 
 if __name__ == "__main__":
