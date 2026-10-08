@@ -7,9 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>try{if(/[?&]card=1/.test(location.search)){document.documentElement.dataset.theme="dark";document.documentElement.classList.add("cardmode")}else{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}}catch(e){}</script>
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
+<script src="officer.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* Layout: banner with guild and TB pickers, then tabs - summary tiles and charts, the member table with a
@@ -115,6 +116,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       <a class="top-link" id="rankLink" href="ranking.html">★ Contribution</a>
       <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
+      <button class="top-link" id="postBtn" type="button">📣 Post to Discord</button>
       <a class="top-link" id="uploadLink" href="upload.html?type=tb">⬆ Upload results</a>
       <span data-theme-toggle></span>
     </div>
@@ -137,7 +139,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <button role="tab" aria-selected="false" data-tab="phases">Phases</button>
     <button role="tab" aria-selected="false" data-tab="player">Player</button>
   </nav>
-  <div id="warnings"></div>
+  <div id="warnings" class="no-card"></div>
 
   <section class="tab" id="tab-overview">
     <div class="kpis" id="kpis"></div>
@@ -595,7 +597,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   $("#pCurrent").onchange = renderPlayer;
 
   window.addEventListener("themechange", render);
+  (function hook() { if (!window.Officer) return setTimeout(hook, 50);
+    Officer.postButton($("#postBtn"), () => ({ guild: guild.slug, kind: "tb", tb: tbs[sel].id, label: `${guild.name} territory battle of ${dfmt(tbs[sel].date)}` })); })();
   render();
+  if (document.documentElement.classList.contains("cardmode")) { await document.fonts.ready; setTimeout(() => { document.body.dataset.ready = "1"; }, 400); }
 })();
 </script>
 </body>

@@ -20,6 +20,7 @@ With --new it writes 'post=<guild>/<raid> ...' to $GITHUB_OUTPUT for the Discord
 """
 import argparse
 import datetime as dt
+import json
 import os
 import re
 import sys
@@ -146,6 +147,21 @@ def main() -> int:
                     and any(parts[2] == d["slug"] for d in defs)
                     and Path(final).suffix.lower() in build.TABLE_EXTS):
                 post.add(f"{gdir.name}/{parts[2]}")
+
+    # "Post to Discord" requests from the site's buttons: queue them for the Discord step and remove them
+    queue = []
+    for req in sorted(build.GUILDS_DIR.glob("*/posts/*.json")):
+        try:
+            item = json.loads(req.read_text(encoding="utf-8"))
+            item["guild"] = req.parent.parent.name          # always the folder it was saved in
+            queue.append(item)
+            log.append(f"{item['guild']}: Discord post requested ({item.get('kind', '?')})")
+        except (OSError, ValueError) as e:
+            print(f"Couldn't read post request {req.name}: {e}")
+        req.unlink()
+    if queue:
+        (build.ROOT / ".post-queue.json").write_text(json.dumps(queue, indent=1), encoding="utf-8")
+        post.add("queue")
 
     for line in log:
         print("Filed:", line)

@@ -7,9 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>try{if(/[?&]card=1/.test(location.search)){document.documentElement.dataset.theme="dark";document.documentElement.classList.add("cardmode")}else{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}}catch(e){}</script>
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
+<script src="officer.js" defer></script>
 <script src="tbscore.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -179,6 +180,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
       <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
       <a class="top-link" id="tbLink" href="tb.html">◈ Territory battles</a>
       <a class="top-link" id="rankLink" href="ranking.html">★ Contribution</a>
+      <button class="top-link" id="postBtn" type="button">📣 Post to Discord</button>
       <span data-theme-toggle></span>
     </div>
   </div>
@@ -194,8 +196,8 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     </div>
   </header>
 
-  <div class="settings-line" id="settingsLine"></div>
-  <div id="warnings"></div>
+  <div class="settings-line no-card" id="settingsLine"></div>
+  <div id="warnings" class="no-card"></div>
   <div class="kpis" id="kpis"></div>
 
   <div class="card" style="margin-bottom:12px">
@@ -212,7 +214,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     <div class="chart rank" id="rankBox"><canvas id="rankChart" aria-label="Effectiveness ranking"></canvas></div>
   </div>
 
-  <div class="card" style="margin-bottom:12px" id="memberCard" hidden>
+  <div class="card no-card" style="margin-bottom:12px" id="memberCard" hidden>
     <div class="mhead">
       <div><h2 id="mName">Member</h2><div class="hint" id="mInfo" style="margin:0"></div></div>
       <div class="picker"><button type="button" class="stepbtn" id="mPrev" aria-label="Previous member">‹</button><select id="mSel" aria-label="Member"></select><button type="button" class="stepbtn" id="mNext" aria-label="Next member">›</button></div>
@@ -225,13 +227,13 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     <div class="mlinks" id="mLinks"></div>
   </div>
 
-  <div class="toolbar" style="margin-top:4px">
+  <div class="toolbar no-card" style="margin-top:4px">
     <input type="search" id="search" placeholder="Search members&hellip;" aria-label="Search members">
     <label class="check"><input type="checkbox" id="curOnly" checked> Current members only</label>
   </div>
-  <div class="tablewrap"><table id="table"></table></div>
+  <div class="tablewrap no-card"><table id="table"></table></div>
 
-  <details class="card how" style="margin-top:12px">
+  <details class="card how no-card" style="margin-top:12px">
     <summary>How effectiveness is worked out</summary>
     <ul id="howList"></ul>
   </details>
@@ -436,20 +438,25 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     });
     charts.push(sc);
 
-    // ranking chart
+    // ranking chart (the Discord panel shows the top 15)
+    {
     const CL = [["raids", "Raids", "--series-1"], ["tbs", "Territory battles", "--series-2"]];
     $("#rankLegend").innerHTML = CL.map(([, l, c]) => `<span><i class="sq" style="background:${css(c)}"></i>${l}</span>`).join("");
     $("#rankHint").textContent = "Each bar is a member's effectiveness; the colours show how much raids and TBs added. Click a bar for that member.";
-    $("#rankBox").style.height = Math.max(160, order.length * 20 + 40) + "px";
+    const CARD = document.documentElement.classList.contains("cardmode");
+    const ro = CARD ? order.slice(0, 15) : order;
+    if (CARD) { $("#rankHint").textContent = `Top ${ro.length} of ${order.length} members. Each bar is a member's effectiveness; the colours show how much raids and TBs added.`; document.querySelector("#rankChart").closest(".card").querySelector("h2").textContent = "Most effective"; }
+    $("#rankBox").style.height = Math.max(160, ro.length * 20 + 40) + "px";
     charts.push(new Chart($("#rankChart"), {
       type: "bar",
-      data: { labels: order.map((x, i) => `${i + 1}. ${x.p.name}`), datasets: CL.map(([k, l, c]) => ({ label: l, data: order.map(x => x.share[k] || 0), backgroundColor: css(c), barThickness: 13 })) },
+      data: { labels: ro.map((x, i) => `${i + 1}. ${x.p.name}`), datasets: CL.map(([k, l, c]) => ({ label: l, data: ro.map(x => x.share[k] || 0), backgroundColor: css(c), barThickness: 13 })) },
       options: { indexAxis: "y", interaction: { mode: "index", intersect: false },
-        onClick: (e, els) => { if (els.length) { const id = order[els[0].index].p.id; setTimeout(() => select(id, true)); } },
+        onClick: (e, els) => { if (els.length) { const id = ro[els[0].index].p.id; setTimeout(() => select(id, true)); } },
         onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `${order[i[0].dataIndex].p.name} · ${P(order[i[0].dataIndex].eff)}`, label: c => { const x = order[c.dataIndex]; return ` ${c.dataset.label}: ${P(c.datasetIndex ? x.tbPct : x.raidPct)} (adds ${c.raw.toFixed(1)})`; } } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `${ro[i[0].dataIndex].p.name} · ${P(ro[i[0].dataIndex].eff)}`, label: c => { const x = ro[c.dataIndex]; return ` ${c.dataset.label}: ${P(c.datasetIndex ? x.tbPct : x.raidPct)} (adds ${c.raw.toFixed(1)})`; } } } },
         scales: { x: { stacked: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, font: { size: 11.5 } } } } },
     }));
+    }
 
     // table
     const val = (x, k) => k === "name" ? x.p.name.toLowerCase() : k === "rank" ? -rank.get(x.p.id) : (x[k] ?? -999);
@@ -578,7 +585,10 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     } catch (e) { showMsg("#menuMsg", "err", `Couldn't reach GitHub (${esc(e.message)}).`); $("#saveBtn").disabled = false; }
   };
 
+  (function hook() { if (!window.Officer) return setTimeout(hook, 50);
+    Officer.postButton($("#postBtn"), () => ({ guild: guild.slug, kind: "effectiveness", label: `${guild.name} guild effectiveness` })); })();
   render();
+  if (document.documentElement.classList.contains("cardmode")) { await document.fonts.ready; setTimeout(() => { document.body.dataset.ready = "1"; }, 400); }
 })();
 </script>
 </body>

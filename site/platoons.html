@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RotE Platoons · Guild Statistics</title>
 <meta name="robots" content="noindex">
-<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>try{if(/[?&]card=1/.test(location.search)){document.documentElement.dataset.theme="dark";document.documentElement.classList.add("cardmode")}else{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
+<script src="officer.js" defer></script>
 <style>
 /* The planner's own names for colours and fonts, mapped onto the site's shared theme (theme.css),
    so it follows the same light/dark palette, fonts and starfield as every other page. */
@@ -22,6 +23,7 @@
   --gold:var(--accent);--gold-ink:var(--accent-ink);--saber:var(--accent);--pglow:color-mix(in srgb,var(--accent) 35%,transparent);
   --stars:none;
   --f-display:var(--font-display);--f-head:var(--font-ui);--f-body:var(--font-ui);
+  box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 60px)}
@@ -334,6 +336,7 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(3,5,11,.6);backdrop-filt
 .banner .sub{color:rgba(230,236,255,.82);font-size:13.5px;margin-top:0}
 .theme-toggle{font:600 12.5px var(--font-ui)}
 .gate input[type=password]{width:100%;padding:9px 12px;font-size:14px}
+html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmode #results .toolbar,html.cardmode #toolMsg,html.cardmode #tabs,html.cardmode #view,html.cardmode .who,html.cardmode #selBar,html.cardmode .selbar{display:none!important}
 </style>
 </head>
 <body>
@@ -415,6 +418,7 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(3,5,11,.6);backdrop-filt
       <div class="who"><label for="who">Show</label><select id="who"><option value="">Everyone</option></select></div></div>
     <div class="stats" id="stats"></div>
     <div class="toolbar">
+      <button class="btn primary" id="postDiscord">📣 Post phase to Discord</button>
       <button class="btn" id="copyDiscord">Copy phase for Discord</button>
       <button class="btn" id="dlCsv">Download all as CSV</button>
       <button class="btn" id="copyTsv">Copy all for Sheets</button>
@@ -915,7 +919,7 @@ function renderMember(){
   const ss=mine.filter(s=>s.phase===PHASE).sort(slotSort);
   $('#resTitle').innerHTML=`Phase ${PHASE}: ${esc(p)}${tierBadge(p)}`;
   $('#tabs').hidden=true;
-  $('#copyDiscord').textContent='Copy '+p+'’s list';
+  $('#copyDiscord').textContent='Copy '+p+'’s list';$('#postDiscord').textContent='📣 Post '+p+'’s list to Discord';
   $('#stats').innerHTML=`<div class="stat"><b${ss.length>cap?' style="color:var(--bad)"':''}>${ss.length}</b><span>units to place</span></div>
     <div class="stat"><b>${new Set(ss.map(opId)).size}</b><span>operations</span></div>
     <div class="stat"><b>${ss.filter(s=>s.gl).length}</b><span>GLs</span></div>
@@ -932,7 +936,7 @@ function render(){
   renderTrack();
   if(WHO){renderMember();return}
   $('#tabs').hidden=false;
-  $('#copyDiscord').textContent='Copy phase for Discord';
+  $('#copyDiscord').textContent='Copy phase for Discord';$('#postDiscord').textContent='📣 Post phase '+PHASE+' to Discord';
   const ss=phaseSlots(PHASE).sort(slotSort),filled=ss.filter(s=>s.player);
   const loads=new Map(RESULT.players.map(p=>[p,0]));filled.forEach(s=>loads.set(s.player,loads.get(s.player)+1));
   const active=[...loads.values()].filter(v=>v>0);
@@ -1137,14 +1141,21 @@ async function copy(text,label){
   catch(e){showMsg('#toolMsg','err','Copy was blocked here. Select the text below and copy it.<textarea readonly style="margin-top:6px">'+esc(text)+'</textarea>')}
 }
 $('#who').addEventListener('change',e=>{WHO=e.target.value;render()});
-$('#copyDiscord').addEventListener('click',()=>{
+function discordText(){
   if(WHO){const a=phaseSlots(PHASE).filter(s=>s.player===WHO).sort(slotSort);
-    copy(`**RotE Phase ${PHASE}: ${WHO}** (${a.length})\n`+a.map(s=>`• ${s.planet} op ${s.op}${s.row!=null?` row ${s.row}`:''}: ${s.unit}`).join('\n'),'Copied '+WHO+'’s Phase '+PHASE+' list.');return}
+    return `**RotE Phase ${PHASE}: ${WHO}** (${a.length})\n`+a.map(s=>`• ${s.planet} op ${s.op}${s.row!=null?` row ${s.row}`:''}: ${s.unit}`).join('\n')}
   const by=new Map();phaseSlots(PHASE).filter(s=>s.player).sort(slotSort).forEach(s=>{if(!by.has(s.player))by.set(s.player,[]);by.get(s.player).push(s)});
   let t=`**RotE Phase ${PHASE} platoons**\n`;
   for(const[p,a]of [...by].sort((x,y)=>x[0].localeCompare(y[0]))){t+=`\n**${p}** (${a.length})\n`+a.map(s=>`• ${s.planet} op ${s.op}: ${s.unit}`).join('\n')+'\n'}
-  copy(t,'Copied Phase '+PHASE+' for Discord.');
-});
+  return t}
+$('#copyDiscord').addEventListener('click',()=>copy(discordText(),WHO?'Copied '+WHO+'’s Phase '+PHASE+' list.':'Copied Phase '+PHASE+' for Discord.'));
+// Officers: post this phase's assignments (picture + member lists) to the guild's platoon channel
+(function hook(){if(!window.Officer)return setTimeout(hook,50);
+  if(TOKEN)Officer.setToken(TOKEN);
+  Officer.postButton($('#postDiscord'),()=>{
+    if(DIRTY){showMsg('#toolMsg','err','Save and share these assignments first, so the post matches what members see.');return null}
+    if(TOKEN)Officer.setToken(TOKEN);
+    return{guild:GUILD,kind:'platoons',phase:PHASE,who:WHO||'',text:discordText(),label:`${guildName()} RotE phase ${PHASE} platoons${WHO?' for '+WHO:''}`}})})();
 $('#copyTsv').addEventListener('click',()=>copy(table('\t'),'Copied. Paste into cell A1 of a new tab.'));
 let downloads=null;
 (async()=>{try{if(window.claude&&claude.use)downloads=await claude.use('downloads')}catch(e){}})();
@@ -1352,7 +1363,11 @@ function describePlan(){
   if(sel&&sel.v===1&&(!SHARED||new Date(sel.savedAt)>new Date(SHARED.savedAt))){applySharedSettings(sel);SELSAVED=sel.savedAt;SELNEWER=!!SHARED}
   SELDIRTY=false;
   renderOps();renderSel();renderPlanets();
+  const CARD=document.documentElement.classList.contains('cardmode');
+  if(CARD){const ph=+new URLSearchParams(location.search).get('phase');if(ph)PHASE=ph;MODE='assign'}
   if(SHARED){showResult();$('#reshuffle').disabled=false}else renderTrack();
+  if(CARD&&RESULT){setMode('assign',false);render()}
+  if(CARD){await document.fonts.ready;setTimeout(()=>{document.body.dataset.ready='1'},400)}
 })();
 
 /* ---------- This guild's operation selections ---------- */

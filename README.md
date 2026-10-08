@@ -222,6 +222,32 @@ results are listed but not ranked until they have both. Officers can change the 
 many recent raids and TBs count under **⚙ Officer settings** (saved to
 `guilds/<guild>/stats-settings.json`).
 
+## Posting to Discord
+
+Results panels (a picture of the page plus a link) are posted by GitHub after the site updates.
+
+- **Raids** post automatically whenever new raid results are uploaded.
+- Officers can post any time with the **📣 Post to Discord** buttons: on the raid page (the raid shown),
+  the Territory Battles page (the TB shown), the Effectiveness page, and the platoon planner
+  (**📣 Post phase N to Discord** next to "Copy phase for Discord": a picture of the phase plus each
+  member's list as messages). The button asks for the officer password, then the post appears about
+  3 minutes later.
+
+Webhooks are GitHub secrets (Settings → Secrets and variables → Actions):
+
+| Posts | Secret |
+|---|---|
+| OANR raids and TBs | `DISCORD_WEBHOOK_OANR` |
+| OANR effectiveness (officers' channel) | `OFFICER_OANR` (falls back to `DISCORD_WEBHOOK_OANR` if missing) |
+| OANR platoons | `DISCORD_WEBHOOK_OANR_PLATOONS` |
+| Endor Legacy raids and TBs | `DISCORD_WEBHOOK_ENDOR_LEGACY` |
+| Endor Legacy effectiveness (officers' channel) | `OFFICER_ENDOR_LEGACY` (falls back to the main one) |
+| Endor Legacy platoons | `DISCORD_WEBHOOK_ENDOR_LEGACY_PLATOONS` |
+
+(A guild's `config.yml` can name different secrets with `discord_secret`, `discord_platoons_secret` and `discord_officer_secret`.)
+How it works: the button saves a small request in `guilds/<guild>/posts/`; the next site update posts it
+and removes the request.
+
 ## Look and feel
 
 The site has a dark space theme and a light theme. Everyone can switch with the **System / Light /

@@ -219,6 +219,16 @@
   const emblem = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 0v6M12 18v6M0 12h6M18 12h6" stroke="currentColor" stroke-width="1.5"/></svg>`;
 
   window.RaidTheme = { banner, isDark, emblem };
-  const ready = () => { mountSky(); document.querySelectorAll("[data-theme-toggle]").forEach(mountToggle); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
+  // card mode: no chart animations, and a small footer with the site address
+  const cardMode = document.documentElement.classList.contains("cardmode");
+  if (cardMode && window.Chart) Chart.defaults.animation = false;
+  function cardFoot() {
+    if (!cardMode || document.querySelector(".cardfoot")) return;
+    let site = ""; try { site = new URLSearchParams(location.search).get("site") || ""; } catch (e) {}
+    const f = document.createElement("div"); f.className = "cardfoot";
+    f.innerHTML = `<span class="wordmark"><span data-emblem></span>Guild Statistics</span><span>${site.replace(/^https?:\/\//, "").replace(/\?.*$/, "").replace(/[<>&"]/g, "")}</span>`;
+    document.body.appendChild(f);
+  }
+  const ready = () => { cardFoot(); mountSky(); document.querySelectorAll("[data-theme-toggle]").forEach(mountToggle); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
 })();

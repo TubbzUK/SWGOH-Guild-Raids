@@ -756,7 +756,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         loaded[d["slug"]] = load_raids(players, cfg, gdir / d["slug"], d["name"])
         raid_warn[d["slug"]] = list(WARNINGS)
     for extra in sorted(p.name for p in gdir.iterdir() if p.is_dir() and p.name not in loaded
-                        and p.name not in ("roster", "tb") and not p.name.startswith((".", "_"))):
+                        and p.name not in ("roster", "tb", "posts") and not p.name.startswith((".", "_"))):
         print(f"Note: folder {gdir.name}/{extra} doesn't match a raid in raids/ - ignored")
 
     WARNINGS.clear()

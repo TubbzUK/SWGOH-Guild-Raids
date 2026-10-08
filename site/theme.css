@@ -183,3 +183,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .pills .soon { opacity: 0.7; font-weight: 400; }
 
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* ---- card mode (?card=1): a fixed-width "panel" of a page that the Discord step photographs ---- */
+html.cardmode body { width: 1100px; min-height: 0; }
+html.cardmode .topbar, html.cardmode nav.tabs, html.cardmode footer, html.cardmode .no-card { display: none !important; }
+html.cardmode .wrap, html.cardmode main { max-width: none !important; width: 1100px; padding: 20px 24px 8px !important; }
+.cardfoot { display: flex; justify-content: space-between; align-items: center; width: 1100px; padding: 6px 24px 18px; color: var(--text-2); font-size: 12.5px; }
+.cardfoot .wordmark { font-size: 11px; }
+html.cardmode .banner-switch, html.cardmode #settingsLine { display: none !important; }
+html.cardmode body { overflow: hidden; }

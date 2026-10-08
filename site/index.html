@@ -10,6 +10,7 @@
 <script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
+<script src="officer.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* Page layout: raid banner, then tabs - summary tiles, charts and watch lists, then the detailed tables. Colours, fonts and the banner live in theme.css. */
@@ -121,6 +122,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       <a class="top-link" id="tbLink" href="tb.html" hidden>◈ Territory battles</a>
       <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
+      <button class="top-link" id="postBtn" type="button" hidden>📣 Post to Discord</button>
       <a class="top-link" id="uploadLink" href="upload.html">⬆ Upload results</a>
       <span data-theme-toggle></span>
     </div>
@@ -496,6 +498,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     el.innerHTML = items.map(x => `<button type="button" aria-pressed="${x.slug === cur}" data-slug="${esc(x.slug)}">${label(x)}</button>`).join("");
     el.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.slug !== cur) onPick(b.dataset.slug); });
   };
+  // Officers: post this guild's latest results panel for the raid shown to Discord
+  (function hook() { if (!window.Officer) return setTimeout(hook, 50);
+    Officer.postButton($("#postBtn"), () => { const r = guild.raids.find(x => x.slug === raid); return { guild: guild.slug, kind: "raid", raid, label: `${guild.name} ${r ? r.name : ""} results` }; }); })();
   async function show(first) {
     pills($("#guildSwitch"), index, guild.slug, g => esc(g.name), async s => {
       guild = index.find(g => g.slug === s);
@@ -505,6 +510,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     pills($("#raidSwitch"), guild.raids, raid, r => esc(r.name) + (r.raids ? "" : ' <span class="soon">· no results yet</span>'), s => { raid = s; show(); });
     try { history.replaceState(null, "", `?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}` + location.hash); } catch (e) {}
     $("#uploadLink").href = `upload.html?guild=${encodeURIComponent(guild.slug)}&raid=${encodeURIComponent(raid)}`;
+    { const r = guild.raids.find(x => x.slug === raid); $("#postBtn").hidden = !(r && r.raids); }
     $("#platoonLink").href = `platoons.html?guild=${encodeURIComponent(guild.slug)}`;
     $("#platoonLink").hidden = !(guild.platoons && (guild.platoons.roster || guild.platoons.saved));
     $("#tbLink").href = `tb.html?guild=${encodeURIComponent(guild.slug)}`;
