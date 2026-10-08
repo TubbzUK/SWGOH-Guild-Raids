@@ -8,12 +8,20 @@ Posts a raid summary to each guild's own Discord channel.
 Each guild's webhook comes from the GitHub secret named in its config.yml (discord_secret),
 default DISCORD_WEBHOOK_<FOLDER NAME IN CAPITALS>, e.g. DISCORD_WEBHOOK_OANR.
 The Action passes all secrets in SECRETS_JSON. SITE_URL (optional) adds a link to the dashboard.
+
+The post includes a picture of the results panel (site/card.html), taken with Playwright using the
+Chrome that GitHub's runners already have. If that can't be done, it posts the text summary instead.
 """
+import functools
+import http.server
 import json
 import os
 import re
 import sys
+import threading
+import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
 
 import yaml
@@ -43,6 +51,79 @@ def webhook_for(slug: str) -> tuple[str, str]:
     except json.JSONDecodeError:
         secrets = {}
     return name, (secrets.get(name) or os.getenv(name) or "").strip()
+
+
+# ---------- results panel picture ----------
+_server = None
+
+
+def _serve_site() -> int:
+    """Serve site/ on a free local port (once) so card.html can load the built data."""
+    global _server
+    if _server is None:
+        class Quiet(http.server.SimpleHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+        handler = functools.partial(Quiet, directory=str(ROOT / "site"))
+        _server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        threading.Thread(target=_server.serve_forever, daemon=True).start()
+    return _server.server_address[1]
+
+
+def render_card(slug: str, raid: str, site: str) -> bytes | None:
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print("Playwright isn't installed - posting the text summary only")
+        return None
+    port = _serve_site()
+    url = f"http://127.0.0.1:{port}/card.html?" + urllib.parse.urlencode({"guild": slug, "raid": raid, "site": site})
+    try:
+        with sync_playwright() as p:
+            browser = None
+            for opts in ({"channel": "chrome"}, {}):   # GitHub's runners have Chrome; otherwise Playwright's own
+                try:
+                    browser = p.chromium.launch(**opts)
+                    break
+                except Exception:
+                    continue
+            if browser is None:
+                print("No browser available - posting the text summary only")
+                return None
+            page = browser.new_page(viewport={"width": 1100, "height": 900}, device_scale_factor=2, color_scheme="dark")
+            page.goto(url, wait_until="networkidle", timeout=45000)
+            page.wait_for_selector("body[data-ready]", timeout=30000)
+            err = page.evaluate("document.body.dataset.error || ''")
+            if err:
+                print(f"{slug}/{raid}: results panel didn't draw ({err}) - posting the text summary only")
+                browser.close()
+                return None
+            png = page.locator("#card").screenshot(type="png")
+            browser.close()
+            return png
+    except Exception as e:
+        print(f"{slug}/{raid}: couldn't take the results panel picture ({e}) - posting the text summary only")
+        return None
+
+
+def send(hook: str, payload: dict, png: bytes | None, filename: str) -> int:
+    """Post JSON, or multipart with the picture attached when there is one."""
+    headers = {"User-Agent": "swgoh-guild-raids (github actions)"}
+    if png is None:
+        body, headers["Content-Type"] = json.dumps(payload).encode(), "application/json"
+    else:
+        b = uuid.uuid4().hex
+        parts = [
+            f"--{b}\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n".encode()
+            + json.dumps(payload).encode() + b"\r\n",
+            f"--{b}\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\"{filename}\"\r\nContent-Type: image/png\r\n\r\n".encode()
+            + png + b"\r\n",
+            f"--{b}--\r\n".encode(),
+        ]
+        body, headers["Content-Type"] = b"".join(parts), f"multipart/form-data; boundary={b}"
+    req = urllib.request.Request(hook, data=body, method="POST", headers=headers)
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return r.status
 
 
 def main():
@@ -138,12 +219,16 @@ def post_guild(slug, raid, hook):
     }
     if site:
         embed["url"] = site
-    body = json.dumps({"username": "Guild Statistics", "embeds": [embed]}).encode()
-    req = urllib.request.Request(hook, data=body, method="POST",
-                                 headers={"Content-Type": "application/json",
-                                          "User-Agent": "swgoh-guild-raids (github actions)"})
-    with urllib.request.urlopen(req, timeout=20) as r:
-        print(f"{slug}/{raid}: posted to Discord (HTTP {r.status})")
+    png = render_card(slug, raid, site)
+    if png:
+        # with the panel picture the embed stays short: title, link and the picture itself
+        fname = f"{slug}-{raid}-{latest['date']}.png"
+        embed = {"title": embed["title"], "description": embed["description"], "color": embed["color"],
+                 "image": {"url": f"attachment://{fname}"}, "footer": embed["footer"], **({"url": site} if site else {})}
+    else:
+        fname = ""
+    status = send(hook, {"username": "Guild Statistics", "embeds": [embed]}, png, fname)
+    print(f"{slug}/{raid}: posted to Discord{' with the results panel' if png else ''} (HTTP {status})")
 
 
 if __name__ == "__main__":

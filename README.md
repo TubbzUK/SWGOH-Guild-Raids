@@ -113,6 +113,8 @@ results yet (Droid Destruction for now) opens straight on this tab.
 5. **Run it once.** **Actions** tab → *Update raid site* → **Run workflow**. The site appears at
    `https://<your-github-name>.github.io/<repo-name>/`.
 
+Each post includes a picture of the results panel (`site/card.html`: banner, totals, a chart of the last 10 raids, top 10, biggest jumps, the declining watch list and who didn't score), taken automatically on GitHub. If the picture can't be made, the text summary is posted instead.
+
 Discord posts only when a **new raid file** is uploaded, and only for that guild; roster and settings
 changes update the site quietly. To re-post each guild's latest raid: Actions → *Update raid site* →
 Run workflow → tick *Post to Discord*.

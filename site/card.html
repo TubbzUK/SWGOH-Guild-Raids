@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1100">
+<title>Raid card · Guild Statistics</title>
+<meta name="robots" content="noindex">
+<!-- A fixed-size results "panel" that the Discord step photographs and posts after each raid.
+     Open it yourself: card.html?guild=oanr&raid=order-66 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+body { width: 1100px; margin: 0; }
+#card { width: 1100px; padding: 22px 24px 18px; }
+.banner { min-height: 170px; margin-bottom: 14px; }
+.banner h1 { font-size: 40px; }
+.kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 12px; }
+.kpi { padding: 12px 14px; }
+.kpi .label { color: var(--text-2); font: 700 10px var(--font-display); text-transform: uppercase; letter-spacing: .16em; }
+.kpi .value { font: 700 24px var(--font-display); margin-top: 6px; letter-spacing: .02em; white-space: nowrap; }
+.kpi .value .sub { font: 500 13px var(--font-num); color: var(--text-2); }
+.kpi .note { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+.up { color: var(--good-ink); } .down { color: var(--bad-ink); }
+.grid { display: grid; gap: 12px; margin-bottom: 12px; }
+.g2 { grid-template-columns: 1.35fr 1fr; }
+.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.card { padding: 14px 16px; min-width: 0; }
+h2 { font: 700 12px var(--font-display); letter-spacing: .12em; text-transform: uppercase; margin: 0 0 8px; }
+.chart { position: relative; height: 312px; }
+ol { margin: 0; padding: 0; list-style: none; }
+ol li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+ol li:last-child { border-bottom: 0; }
+ol .rk { color: var(--muted); width: 22px; display: inline-block; font-family: var(--font-num); }
+ol .v { font-family: var(--font-num); white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; }
+.chips span { padding: 2px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+.empty { color: var(--text-2); font-size: 13.5px; }
+.foot { display: flex; justify-content: space-between; align-items: center; color: var(--text-2); font-size: 12.5px; }
+.foot .wordmark { font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="card">
+  <header class="banner">
+    <div class="art" id="art"></div>
+    <div>
+      <div class="eyebrow" id="eyebrow">Raid results</div>
+      <h1 id="guild">Guild</h1>
+      <div class="sub" id="sub"></div>
+    </div>
+  </header>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid g2">
+    <div class="card"><h2 id="chartTitle">Guild total by raid</h2><div class="chart"><canvas id="chart"></canvas></div></div>
+    <div class="card"><h2>Top 10</h2><ol id="top"></ol></div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><h2>Biggest jumps</h2><ol id="jumps"></ol></div>
+    <div class="card"><h2>Declining · watch list</h2><ol id="decl"></ol></div>
+    <div class="card"><h2 id="nsTitle">No score</h2><div class="chips" id="noscore"></div></div>
+  </div>
+  <div class="foot"><span class="wordmark"><span data-emblem></span>Guild Statistics</span><span id="link"></span></div>
+</div>
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const fmt = n => n == null ? "–" : Math.abs(n) >= 1e9 ? (n / 1e9).toFixed(2) + "B" : Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(1) + "M" : Math.abs(n) >= 1e3 ? (n / 1e3).toFixed(1) + "K" : Math.round(n).toString();
+  const dfmt = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const dshort = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" });
+  const done = () => { document.body.dataset.ready = "1"; };
+  let q = {}; try { q = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  try {
+    const index = await fetch("guilds.json", { cache: "no-store" }).then(r => r.json());
+    const g = index.find(x => x.slug === q.guild) || index[0];
+    const raidSlug = q.raid || g.default_raid;
+    const d = await fetch(`data/${encodeURIComponent(g.slug)}/${encodeURIComponent(raidSlug)}.json`, { cache: "no-store" }).then(r => r.json());
+    const raids = d.raids, L = raids[raids.length - 1], prev = raids[raids.length - 2];
+    RaidTheme.banner($("#art"), (g.raids || []).find(r => r.slug === raidSlug) || { slug: raidSlug });
+    $("#eyebrow").textContent = `${d.raid_name} results`;
+    $("#guild").textContent = d.guild_name;
+    $("#sub").textContent = `Raid of ${dfmt(L.date)} · ${raids.length} raids tracked`;
+    if (q.site) $("#link").textContent = q.site.replace(/^https?:\/\//, "").replace(/\?.*$/, "");
+
+    const pct = prev && prev.total ? (L.total - prev.total) / prev.total * 100 : null;
+    const ch = v => v == null ? "" : `<span class="${v > 0 ? "up" : v < 0 ? "down" : ""}">${v > 0 ? "▲ +" : v < 0 ? "▼ " : ""}${v.toFixed(1)}%</span> vs last raid`;
+    const kp = [
+      ["Guild total", fmt(L.total), pct == null ? "First raid tracked" : ch(pct)],
+      ["Participation", `${L.participants}<span class="sub"> / ${L.members}</span>`, `${L.members - L.participants} without a score`],
+      ["Average", fmt(L.average), prev ? ch(prev.average ? (L.average - prev.average) / prev.average * 100 : null) : "per member who scored"],
+      ["Median", fmt(L.median), "middle score"],
+      ["Best score", fmt(L.max), d.target_score ? `${L.below_target} below ${fmt(d.target_score)} target` : ""],
+    ];
+    $("#kpis").innerHTML = kp.map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
+
+    const cur = d.players.filter(p => p.current);
+    const top = cur.filter(p => p.last > 0).sort((a, b) => b.last - a.last).slice(0, 10);
+    $("#top").innerHTML = top.map((p, i) => `<li><span><span class="rk">${i + 1}</span>${esc(p.name)}</span><span class="v">${fmt(p.last)}</span></li>`).join("") || `<li class="empty">No scores yet</li>`;
+    const jumps = cur.filter(p => p.delta_pct > 0 && p.prev > 0).sort((a, b) => b.delta_pct - a.delta_pct).slice(0, 6);
+    $("#jumps").innerHTML = jumps.map(p => `<li><span>${esc(p.name)}</span><span class="v up">+${p.delta_pct.toFixed(1)}%</span></li>`).join("") || `<li class="empty">Nobody improved on last raid</li>`;
+    const decl = cur.filter(p => p.trend === "declining").sort((a, b) => a.trend_pct - b.trend_pct).slice(0, 6);
+    $("#decl").innerHTML = decl.map(p => `<li><span>${esc(p.name)}</span><span class="v down">${p.trend_pct.toFixed(0)}%/raid</span></li>`).join("") || `<li class="empty">Nobody declining 🎉</li>`;
+    const ns = L.no_score || [];
+    $("#nsTitle").textContent = `No score (${ns.length})`;
+    $("#noscore").innerHTML = ns.map(n => `<span>${esc(n)}</span>`).join("") || `<span class="empty" style="border:0;background:none">Everyone scored 🎉</span>`;
+
+    const last = raids.slice(-10);
+    $("#chartTitle").textContent = `Guild total · last ${last.length} raids`;
+    Chart.defaults.font.family = '"Exo 2", system-ui, sans-serif'; Chart.defaults.color = css("--text-2");
+    new Chart($("#chart"), {
+      type: "bar",
+      data: { labels: last.map(r => dshort(r.date)), datasets: [{ data: last.map(r => r.total), backgroundColor: last.map((r, i) => i === last.length - 1 ? css("--series-1") : css("--r3")), borderRadius: 4, maxBarThickness: 46 }] },
+      options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { y: { beginAtZero: true, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => fmt(v) } }, x: { grid: { display: false } } } },
+    });
+    await document.fonts.ready;
+    const img = $("#art img"); if (img && !img.complete) await new Promise(r => { img.onload = img.onerror = r; });
+  } catch (e) {
+    document.body.dataset.error = String(e);
+  }
+  done();
+})();
+</script>
+</body>
+</html>
