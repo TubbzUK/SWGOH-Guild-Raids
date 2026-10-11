@@ -46,71 +46,172 @@
   }
   darkQuery.addEventListener?.("change", () => { if (!store.get()) announce(); });
 
-  // ---------------- site menu: theme, officer tools and uploads tucked behind one button ----------------
-  // Pages mark things to move into it with data-menu="officer" or data-menu="upload"; RaidTheme.menuItem() adds more.
+  // ---------------- side menu: every page, officer tools, uploads and the theme, down the left ----------------
+  // Pages mark controls to move into it with data-menu="officer" or data-menu="upload"; RaidTheme.menuItem() adds more.
+  // Desktop: expanded (labels) or collapsed (icon rail), remembered per device. Phones: slides in from the ☰ button.
   let menuPanel = null;
-  const MENU_CSS = `
-  .site-menu-wrap { position: relative; display: inline-flex; }
-  .site-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; width: 290px; max-width: calc(100vw - 24px);
-    background: var(--surface-solid); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 8px;
-    box-shadow: 0 18px 50px rgba(0,0,0,.4); }
-  .site-menu[hidden] { display: none !important; }
-  .site-menu .sm-h { font: 700 10px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-2); padding: 10px 10px 6px; }
-  .site-menu .sm-sec + .sm-sec { border-top: 1px solid var(--border); margin-top: 6px; }
-  .site-menu .sm-sec:empty, .site-menu .sm-sec.empty { display: none; }
-  .site-menu .sm-item, .site-menu [data-menu] { display: flex !important; align-items: center; gap: 8px; width: 100%; text-align: left; box-sizing: border-box;
-    background: none !important; border: 0 !important; border-radius: 8px !important; padding: 9px 10px !important; margin: 0 !important; box-shadow: none !important;
-    font: 600 13.5px var(--font-ui) !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--text) !important; text-decoration: none; cursor: pointer; }
-  .site-menu .sm-item:hover, .site-menu [data-menu]:hover { background: var(--surface-2) !important; color: var(--accent) !important; }
-  .site-menu [data-menu][hidden] { display: none !important; }
-  .site-menu .sm-themes { display: flex; gap: 4px; padding: 2px 6px 6px; }
-  .site-menu .sm-themes button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); background: var(--surface);
-    color: var(--text-2); border-radius: 8px; padding: 7px 6px; font: 600 12.5px var(--font-ui); cursor: pointer; }
-  .site-menu .sm-themes button svg { width: 14px; height: 14px; }
-  .site-menu .sm-themes button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .site-menu .sm-note { font-size: 12px; color: var(--text-2); padding: 0 10px 8px; }
-  .menu-btn svg { width: 14px; height: 12px; }
-  html.cardmode .site-menu-wrap { display: none !important; }`;
+  const SB_KEY = "gsSidebar", G_KEY = "gsGuild";
+  const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
+  const PAGES = [
+    { id: "raidLink", file: "./", match: /(^|\/)(index\.html)?$/, ic: "⚔", label: "Raids" },
+    { id: "tbLink", file: "tb.html", match: /tb\.html$/, ic: "◈", label: "Territory battles" },
+    { id: "rankLink", file: "ranking.html", match: /ranking\.html$/, ic: "★", label: "TB contribution" },
+    { id: "twLink", file: "tw.html", match: /tw\.html$/, ic: "✦", label: "Territory wars" },
+    { id: "effLink", file: "effectiveness.html", match: /effectiveness\.html$/, ic: "◎", label: "Guild effectiveness" },
+    { id: "platoonLink", file: "platoons.html", match: /platoons\.html$/, ic: "⚑", label: "RotE platoons" },
+  ];
+  const SB_CSS = `
+  :root { --sbw: 248px; }
+  body.sb-on { padding-left: var(--sbw); transition: padding-left .18s ease; }
+  body.sb-on.sb-min { --sbw: 68px; }
+  body.sb-on .topbar { display: none; }
+  body.sb-on .wrap { padding-top: 22px; }
+  .sb { position: fixed; left: 0; top: 0; bottom: 0; width: var(--sbw); z-index: 50; display: flex; flex-direction: column;
+    background: color-mix(in srgb, var(--surface-solid) 92%, transparent); border-right: 1px solid var(--border);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: width .18s ease, transform .2s ease; overflow: hidden; }
+  .sb-head { display: flex; align-items: center; gap: 8px; padding: 16px 12px 12px 18px; min-height: 58px; box-sizing: border-box; }
+  .sb-head .wordmark { flex: 1; min-width: 0; font-size: 11.5px; letter-spacing: .22em; white-space: nowrap; overflow: hidden; }
+  .sb-iconbtn { flex: none; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-2); cursor: pointer; padding: 0; }
+  .sb-iconbtn:hover { color: var(--accent); border-color: var(--accent); }
+  .sb-iconbtn svg { width: 15px; height: 15px; }
+  .sb-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 10px 10px; display: flex; flex-direction: column; }
+  .sb-sec + .sb-sec { border-top: 1px solid var(--border); margin-top: 8px; padding-top: 4px; }
+  .sb-sec.empty, .sb-sec:empty { display: none; }
+  .sb-h { font: 700 10px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-2); padding: 12px 10px 6px; white-space: nowrap; }
+  .sb a.sb-item, .sb button.sb-item, .sb [data-menu] { display: flex !important; align-items: center; gap: 12px; width: 100%; text-align: left; box-sizing: border-box;
+    background: none !important; border: 0 !important; border-radius: 9px !important; padding: 9px 10px !important; margin: 1px 0 !important; box-shadow: none !important;
+    font: 600 13.5px var(--font-ui) !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--text) !important;
+    text-decoration: none; cursor: pointer; white-space: nowrap; min-height: 38px; position: relative; }
+  .sb .sb-item:hover, .sb [data-menu]:hover { background: var(--surface-2) !important; color: var(--accent) !important; }
+  .sb .sb-item[aria-current="page"] { background: color-mix(in srgb, var(--accent) 16%, transparent) !important; color: var(--accent) !important; }
+  .sb .sb-item[aria-current="page"]::before { content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+  .sb .sb-item[hidden], .sb [data-menu][hidden] { display: none !important; }
+  .sb .ic { flex: none; width: 24px; text-align: center; font-size: 15px; line-height: 1; }
+  .sb .tx { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .sb-foot { border-top: 1px solid var(--border); padding: 8px 10px 12px; }
+  .sb-themes { display: flex; gap: 4px; padding: 0 0 2px; }
+  .sb-themes button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-2); border-radius: 8px; padding: 7px 4px; font: 600 12px var(--font-ui); cursor: pointer; min-width: 0; }
+  .sb-themes button svg { width: 14px; height: 14px; flex: none; }
+  .sb-themes button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .sb .sb-foot .sb-cycle { display: none !important; }
+  /* collapsed: icon rail */
+  body.sb-min .sb .tx, body.sb-min .sb .sb-h, body.sb-min .sb-head .wordmark, body.sb-min .sb-themes { display: none !important; }
+  body.sb-min .sb-head { padding: 16px 0 12px; justify-content: center; }
+  body.sb-min .sb .sb-item, body.sb-min .sb [data-menu] { justify-content: center; padding: 9px 0 !important; }
+  body.sb-min .sb .sb-foot .sb-cycle { display: flex !important; }
+  body.sb-min .sb-sec + .sb-sec { margin-top: 6px; padding-top: 6px; }
+  body.sb-min .sb-foot { padding: 8px 10px 12px; }
+  .sb-flip svg { transition: transform .18s ease; } body.sb-min .sb-flip svg { transform: rotate(180deg); }
+  /* phones and small tablets: slide-in drawer */
+  .sb-open-btn { display: none; }
+  .sb-scrim { position: fixed; inset: 0; z-index: 49; background: rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  @media (max-width: 899px) {
+    body.sb-on, body.sb-on.sb-min { padding-left: 0; --sbw: 272px; }
+    body.sb-on .topbar { display: flex; justify-content: flex-start; flex-wrap: nowrap; }
+    body.sb-on .topbar .top-actions { display: none; }
+    body.sb-on .wrap { padding-top: 0; }
+    .sb-open-btn { display: inline-flex; }
+    .sb { transform: translateX(-102%); box-shadow: 0 0 40px rgba(0,0,0,.5); }
+    body.sb-drawer .sb { transform: none; }
+    body.sb-drawer .sb-scrim { opacity: 1; pointer-events: auto; }
+    body.sb-min .sb .tx, body.sb-min .sb .sb-h, body.sb-min .sb-head .wordmark { display: initial !important; }
+    body.sb-min .sb-themes { display: flex !important; } body.sb-min .sb .sb-foot .sb-cycle { display: none !important; }
+    body.sb-min .sb-head { padding: 16px 12px 12px 18px; justify-content: flex-start; }
+    body.sb-min .sb .sb-item, body.sb-min .sb [data-menu] { justify-content: flex-start; padding: 9px 10px !important; }
+    .sb-flip { display: none !important; }
+  }
+  html.cardmode .sb, html.cardmode .sb-scrim, html.cardmode .sb-open-btn { display: none !important; }
+  html.cardmode body.sb-on { padding-left: 0 !important; }`;
+  const CHEV = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const BARS = '<svg viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"/></svg>';
+  const CLOSE = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  // "📣 Post this raid" -> icon "📣", text "Post this raid"
+  function iconise(el, label) {
+    const t = (label ?? el.textContent).trim(), m = /^([^\p{L}\p{N}\s]+)\s*(.*)$/u.exec(t);
+    const ic = m ? m[1] : "•", tx = m ? m[2] : t;
+    el.innerHTML = `<span class="ic" aria-hidden="true">${esc(ic)}</span><span class="tx">${esc(tx)}</span>`;
+    el.title = tx; el.setAttribute("aria-label", tx);
+  }
+  const guildNow = () => {
+    const g = /[?&]guild=([^&#]*)/.exec(location.search);
+    if (g && g[1]) { ls.set(G_KEY, decodeURIComponent(g[1])); return decodeURIComponent(g[1]); }
+    return ls.get(G_KEY);
+  };
   function mountMenu(el) {
-    if (!el || menuPanel) { if (el) el.remove(); return; }
-    const st = document.createElement("style"); st.textContent = MENU_CSS; document.head.appendChild(st);
-    const wrap = document.createElement("span"); wrap.className = "site-menu-wrap";
-    const btn = document.createElement("button");
-    btn.type = "button"; btn.className = "top-link theme-toggle menu-btn"; btn.setAttribute("aria-haspopup", "true"); btn.setAttribute("aria-expanded", "false");
-    btn.innerHTML = `<svg viewBox="0 0 18 14" aria-hidden="true"><path d="M0 1h18M0 7h18M0 13h18" stroke="currentColor" stroke-width="2"/></svg><span>Menu</span>`;
-    const panel = document.createElement("div"); panel.className = "site-menu"; panel.hidden = true; panel.setAttribute("role", "menu");
-    panel.innerHTML = `<div class="sm-sec" data-sec="appearance"><div class="sm-h">Theme</div><div class="sm-themes"></div></div>
-      <div class="sm-sec" data-sec="officer"><div class="sm-h">Officers</div></div>
-      <div class="sm-sec" data-sec="upload"><div class="sm-h">Upload</div></div>`;
-    const themes = panel.querySelector(".sm-themes");
-    const paint = () => themes.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === (store.get() || "system")));
+    if (!el || menuPanel || root.classList.contains("cardmode")) { if (el) el.remove(); return; }
+    const st = document.createElement("style"); st.textContent = SB_CSS; document.head.appendChild(st);
+    el.remove();
+    const body = document.body;
+    if (ls.get(SB_KEY) === "min") body.classList.add("sb-min");
+    const sb = document.createElement("aside"); sb.className = "sb"; sb.id = "siteNav"; sb.setAttribute("role", "navigation"); sb.setAttribute("aria-label", "Site");
+    sb.innerHTML = `<div class="sb-head"><a class="wordmark" href="./"><span data-emblem></span>Guild Statistics</a>
+        <button type="button" class="sb-iconbtn sb-flip" title="Collapse the menu" aria-label="Collapse the menu" aria-controls="siteNav">${CHEV}</button>
+        <button type="button" class="sb-iconbtn sb-x" title="Close the menu" aria-label="Close the menu" hidden>${CLOSE}</button></div>
+      <div class="sb-body">
+        <div class="sb-sec" data-sec="pages"><div class="sb-h">Pages</div></div>
+        <div class="sb-sec" data-sec="officer"><div class="sb-h">Officers</div></div>
+        <div class="sb-sec" data-sec="upload"><div class="sb-h">Upload</div></div>
+      </div>
+      <div class="sb-foot"><div class="sb-h" style="padding-top:4px">Theme</div><div class="sb-themes"></div>
+        <button type="button" class="sb-item sb-cycle"></button></div>`;
+    const scrim = document.createElement("div"); scrim.className = "sb-scrim";
+    body.prepend(scrim); body.prepend(sb); body.classList.add("sb-on");
+    menuPanel = sb;
+
+    // pages
+    const here = location.pathname, pagesSec = sb.querySelector('[data-sec="pages"]');
+    PAGES.forEach(p => {
+      const a = document.createElement("a"); a.className = "sb-item"; iconise(a, `${p.ic} ${p.label}`);
+      const own = document.getElementById(p.id);   // the page's own link (it knows the guild and hides pages a guild has no data for)
+      const href = () => { if (own && own.getAttribute("href")) return own.href; const g = guildNow(); return p.file + (g ? "?guild=" + encodeURIComponent(g) : ""); };
+      a.href = href(); ["pointerdown", "focus", "click"].forEach(ev => a.addEventListener(ev, () => { a.href = href(); }));
+      if (p.match.test(here)) a.setAttribute("aria-current", "page");
+      if (own) {
+        const sync = () => { a.hidden = own.hidden && !p.match.test(here); a.href = href(); };
+        sync(); if (window.MutationObserver) new MutationObserver(sync).observe(own, { attributes: true, attributeFilter: ["hidden", "href"] });
+      }
+      pagesSec.appendChild(a);
+    });
+
+    // theme
+    const themes = sb.querySelector(".sb-themes"), cycle = sb.querySelector(".sb-cycle");
+    const paint = () => {
+      const cur = store.get() || "system";
+      themes.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === cur));
+      const m = MODES.find(x => x.id === cur) || MODES[0];
+      cycle.innerHTML = `<span class="ic">${m.ic}</span>`; cycle.title = `Theme: ${m.label} (click to change)`; cycle.setAttribute("aria-label", cycle.title);
+    };
+    const setMode = id => { store.set(id === "system" ? null : id); apply(id); paint(); announce(); };
     MODES.forEach(m => {
       const b = document.createElement("button"); b.type = "button"; b.dataset.mode = m.id; b.innerHTML = `${m.ic}<span>${m.label}</span>`;
-      b.onclick = () => { store.set(m.id === "system" ? null : m.id); apply(m.id); paint(); announce(); };
-      themes.appendChild(b);
+      b.onclick = () => setMode(m.id); themes.appendChild(b);
     });
+    cycle.onclick = () => { const i = MODES.findIndex(m => m.id === (store.get() || "system")); setMode(MODES[(i + 1) % MODES.length].id); };
     paint();
-    wrap.append(btn, panel); el.replaceWith(wrap);
-    menuPanel = panel;
-    const place = () => {   // keep the panel on screen: under the button, nudged in from either edge
-      panel.style.left = panel.style.right = ""; panel.style.position = "";
-      const r = btn.getBoundingClientRect(), w = Math.min(290, innerWidth - 24);
-      if (r.right - w < 12 || r.right > innerWidth - 4) {
-        panel.style.position = "fixed"; panel.style.top = (r.bottom + 8) + "px";
-        panel.style.left = Math.max(12, Math.min(r.right - w, innerWidth - w - 12)) + "px"; panel.style.right = "auto";
-      } else panel.style.top = "";
-    };
-    const open = v => { panel.hidden = !v; btn.setAttribute("aria-expanded", String(v)); if (v) place(); };
-    addEventListener("resize", () => { if (!panel.hidden) place(); });
-    addEventListener("scroll", () => { if (!panel.hidden && panel.style.position === "fixed") place(); }, { passive: true });
-    btn.onclick = e => { e.stopPropagation(); open(panel.hidden); };
-    document.addEventListener("click", e => { if (!panel.hidden && !wrap.contains(e.target)) open(false); });
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && !panel.hidden) { open(false); btn.focus(); } });
-    panel.addEventListener("click", e => { if (e.target.closest("[data-menu], .sm-item")) setTimeout(() => open(false), 0); });
-    // move the page's officer and upload controls into the menu
-    document.querySelectorAll("[data-menu]").forEach(n => panel.querySelector(`[data-sec="${n.dataset.menu}"]`)?.appendChild(n));
-    // always available: add a guild, and forget a saved officer login
-    if (!panel.querySelector('[data-sec="upload"] [data-menu]') && !/upload\.html$/.test(location.pathname)) menuItem("upload", "⬆ Upload a WookieeBot file", "upload.html" + (/[?&]guild=([^&#]*)/.exec(location.search) ? "?guild=" + /[?&]guild=([^&#]*)/.exec(location.search)[1] : ""));
+
+    // collapse (desktop) and drawer (phones)
+    const flip = sb.querySelector(".sb-flip"), x = sb.querySelector(".sb-x");
+    const flipLabel = () => { const t = body.classList.contains("sb-min") ? "Expand the menu" : "Collapse the menu"; flip.title = t; flip.setAttribute("aria-label", t); flip.setAttribute("aria-expanded", String(!body.classList.contains("sb-min"))); };
+    flip.onclick = () => { body.classList.toggle("sb-min"); ls.set(SB_KEY, body.classList.contains("sb-min") ? "min" : null); flipLabel(); window.dispatchEvent(new Event("resize")); };
+    flipLabel();
+    const openBtn = document.createElement("button"); openBtn.type = "button"; openBtn.className = "sb-iconbtn sb-open-btn";
+    openBtn.innerHTML = BARS; openBtn.title = "Menu"; openBtn.setAttribute("aria-label", "Open the menu"); openBtn.setAttribute("aria-controls", "siteNav");
+    const tb = document.querySelector(".topbar"); if (tb) tb.prepend(openBtn);
+    const drawer = v => { body.classList.toggle("sb-drawer", v); x.hidden = !v; openBtn.setAttribute("aria-expanded", String(v)); if (v) (sb.querySelector('[aria-current="page"]') || x).focus(); };
+    openBtn.onclick = () => drawer(true); x.onclick = () => { drawer(false); openBtn.focus(); }; scrim.onclick = () => drawer(false);
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && body.classList.contains("sb-drawer")) { drawer(false); openBtn.focus(); } });
+    sb.addEventListener("click", e => { if (e.target.closest(".sb-body .sb-item, .sb-body [data-menu]") && body.classList.contains("sb-drawer")) setTimeout(() => drawer(false), 0); });
+    matchMedia("(min-width: 900px)").addEventListener?.("change", e => { if (e.matches) drawer(false); });
+
+    // move the page's officer and upload controls in
+    document.querySelectorAll("[data-menu]").forEach(n => { const sec = sb.querySelector(`[data-sec="${n.dataset.menu}"]`); if (sec) { iconise(n); sec.appendChild(n); } });
+    if (!sb.querySelector('[data-sec="upload"] [data-menu]')) {
+      const g = guildNow(), up = menuItem("upload", "⬆ Upload a WookieeBot file", "upload.html" + (g ? "?guild=" + encodeURIComponent(g) : ""));
+      if (/upload\.html$/.test(here)) up.setAttribute("aria-current", "page");
+    }
     menuItem("upload", "＋ Add a new guild", "upload.html#newguild");
     menuItem("officer", "🔒 Forget my officer login", () => {
       try { localStorage.removeItem("raidTrackerPassword"); localStorage.removeItem("raidTrackerToken"); } catch (e) {}
@@ -125,14 +226,14 @@
   }
   function tidy() {
     if (!menuPanel) return;
-    menuPanel.querySelectorAll(".sm-sec").forEach(sec => sec.classList.toggle("empty", sec.dataset.sec !== "appearance" && !sec.querySelector("[data-menu]:not([hidden]), .sm-item:not([hidden])")));
+    menuPanel.querySelectorAll('.sb-sec:not([data-sec="pages"])').forEach(sec => sec.classList.toggle("empty", !sec.querySelector("[data-menu]:not([hidden]), .sb-item:not([hidden])")));
   }
-  /** Add an item to the site menu: section "officer" or "upload"; action is a URL or a function. */
+  /** Add an item to the side menu: section "officer" or "upload"; action is a URL or a function. */
   function menuItem(section, label, action, last) {
-    if (!menuPanel) { pending.push([section, label, action, last]); return null; }
+    if (!menuPanel) { if (!root.classList.contains("cardmode")) pending.push([section, label, action, last]); return null; }
     const sec = menuPanel.querySelector(`[data-sec="${section}"]`); if (!sec) return null;
     const it = typeof action === "string" ? Object.assign(document.createElement("a"), { href: action }) : Object.assign(document.createElement("button"), { type: "button", onclick: action });
-    it.className = "sm-item"; it.textContent = label;
+    it.className = "sb-item"; iconise(it, label);
     const tail = sec.querySelector("[data-last]");
     if (last || !tail) sec.appendChild(it); else sec.insertBefore(it, tail);
     if (last) it.dataset.last = "1";

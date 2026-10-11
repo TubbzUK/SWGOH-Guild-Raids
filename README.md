@@ -20,20 +20,24 @@ guilds/
   _template/                 ← starter config for adding more guilds (ignored by the site)
 ```
 
-## The menu
+## The side menu
 
-Every page has a **☰ Menu** button at the top right. It keeps everything that isn't for everyday
-viewing in one place:
+Every page has a menu down the left-hand side with everything in one place:
 
-- **Theme**: System, Light or Dark (remembered on that device).
+- **Pages**: Raids, Territory battles, TB contribution, Territory wars, Guild effectiveness and RotE
+  platoons. The page you're on is highlighted, and links keep the guild you're looking at.
 - **Officers**: the page's officer tools. Post this page to Discord, set a TW result, Contribution
   settings, Effectiveness weighting, the Platoon planner, and *Forget my officer login* for a shared
   computer. They all ask for the officer password.
 - **Upload**: upload a WookieeBot file (for the page you're on) and *Add a new guild*.
+- **Theme**: System, Light or Dark, at the bottom.
+
+The arrow at the top folds it down to a narrow strip of icons (hover for names) and back; each
+device remembers your choice. On a phone it's tucked away behind the ☰ button at the top left.
 
 ## Uploading from the website (easiest)
 
-Open **☰ Menu → Upload** at the top right of any page (or open `…/upload.html`). Pick the guild,
+Open **Upload** in the side menu on any page (or open `…/upload.html`). Pick the guild,
 raid results or roster, and the raid, then drop the file in. The page checks the file first
 (right type, raid date, player count, players belong to that guild, file name matches the raid),
 uploads it, and shows progress until the site has updated.
@@ -144,16 +148,16 @@ folder by hand: in the guild folder **Add file → Create new file**, name it `<
 ## Platoon planner (Rise of the Empire)
 
 The **⚑ Platoons** page (`…/platoons.html?guild=oanr`) assigns every territory battle platoon slot
-across the guild. Everyone can see the saved assignments; officers open **☰ Menu → Officers → ⚙ Platoon planner** with the officer
+across the guild. Everyone can see the saved assignments; officers open **Officers → ⚙ Platoon planner in the side menu** with the officer
 password to choose operations, change the rules, run **Assign platoons** and **Save and share**.
 
 - **Roster:** each guild's latest WookieeBot roster upload, the same one used for raid readiness.
   Upload a fresh roster before planning so relic levels are current.
 - **Operations plan:** `guilds/_platoons/rote-plan.csv`, shared by every guild. Replace it from the
-  ☰ Menu → ⚙ Platoon planner: data, or upload a new file over it on GitHub.
+  side menu → ⚙ Platoon planner: data, or upload a new file over it on GitHub.
 - **Saved assignments:** `guilds/<guild>/platoons.json`, written by **Save and share**. Members see
   the new assignments about two minutes after saving.
-- **Each guild has its own planet and operation choices.** Officers pick them in ☰ Menu → ⚙ Platoon planner: operations
+- **Each guild has its own planet and operation choices.** Officers pick them in side menu → ⚙ Platoon planner: operations
   to fill and press **Save selections** (saved to `guilds/<guild>/platoon-settings.json`). The rules
   (relic minimums, per-member limit, GL rules, tier balancing) are saved there too, per guild.
   **Save and share** also saves the choices the assignments were made with.
@@ -229,7 +233,7 @@ through their overall score, last 5 TBs; ±2 or more counts as getting better or
 bar, a ranking bar or a table row to see that member's overall score by TB against the guild median,
 each part (deployment, combat, specials, platoons) by TB, and each counted phase by TB.
 
-Officers open **☰ Menu → ⚙ Contribution settings** (officer password) to choose which phases count (e.g. untick
+Officers open **side menu → ⚙ Contribution settings** (officer password) to choose which phases count (e.g. untick
 Phase 1) and how much each part is worth. **Preview** changes only their own view; **Save for
 everyone** saves to `guilds/<guild>/tb-settings.json` and every member sees it about two minutes
 later. Anyone with the link can view the ranking; only officers can change the settings.
@@ -247,13 +251,13 @@ score per member.
 - **TW score** – in each of the last 3 territory wars, the member's banners as a % of the guild's best
   member in that TW. Not joining counts as 0 for members who were already in the guild.
 - **Effectiveness** = raids 45% + TBs 45% + TWs 10% by default. Officers can change the weights, how
-  many recent raids, TBs and TWs count, and switch territory wars on or off (☰ Menu → ⚙ Effectiveness weighting).
+  many recent raids, TBs and TWs count, and switch territory wars on or off (side menu → ⚙ Effectiveness weighting).
 
 The page shows a raids-vs-TBs chart (strong in both, stronger in one, or below the guild median in
 both), a ranking, and a table with each member's raid and TB scores, trends and attendance. Click
 a member for their raid scores and TB contribution over time. New members with only raid or only TB
 results are listed but not ranked until they have both. Officers can change the weighting and how
-many recent raids and TBs count under **☰ Menu → ⚙ Effectiveness weighting** (saved to
+many recent raids and TBs count under **side menu → ⚙ Effectiveness weighting** (saved to
 `guilds/<guild>/stats-settings.json`).
 
 ## Posting to Discord
@@ -261,7 +265,7 @@ many recent raids and TBs count under **☰ Menu → ⚙ Effectiveness weighting
 Each post is the whole page as pictures (cut between sections so they stay readable), plus a link, posted by GitHub after the site updates.
 
 - **Raids** post automatically whenever new raid results are uploaded.
-- Officers can post any time from **☰ Menu → Officers → 📣 Post … to Discord**: on the raid page (the raid shown),
+- Officers can post any time from **side menu → Officers → 📣 Post … to Discord**: on the raid page (the raid shown),
   the Territory Battles page (the TB shown), the Effectiveness page, and the platoon planner
   (**📣 Post phase N to Discord** next to "Copy phase for Discord": the phase's planets, totals and
   every member's assignments). The button asks for the officer password, then the post appears about
