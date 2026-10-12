@@ -123,7 +123,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       <a class="top-link" id="twLink" href="tw.html" hidden>✦ Territory wars</a>
       <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
       <a class="top-link" id="platoonLink" href="platoons.html">⚑ Platoons</a>
-      <button class="top-link" id="postBtn" type="button" data-menu="officer" hidden>📣 Post this raid to Discord</button>
+      <button class="top-link" id="postBtn" type="button" data-menu="officer" hidden>📣 Post raid results to Discord</button>
+      <button class="top-link" id="postReadyBtn" type="button" data-menu="officer" hidden>📣 Post raid readiness to Discord</button>
       <a class="top-link" id="uploadLink" href="upload.html" data-menu="upload">⬆ Upload raid results</a>
       <span data-theme-toggle></span>
     </div>
@@ -233,6 +234,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 <script>
 (async function () {
   const $ = s => document.querySelector(s);
+  // Discord pictures: ?card=1 shows the results (overview + players); &view=readiness shows readiness on its own
+  const CARD = document.documentElement.classList.contains("cardmode");
+  const CARDVIEW = CARD ? (/[?&]view=readiness/.test(location.search) ? "readiness" : "results") : "";
+  if (CARD) (CARDVIEW === "readiness" ? ["#tab-overview", "#tab-players"] : ["#tab-readiness"]).forEach(id => { const e = $(id); e.classList.remove("card-show"); e.classList.add("no-card"); });
+  if (CARDVIEW === "readiness") { const e = $("#tab-readiness"); e.hidden = false; e.removeAttribute("data-card-title"); }
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const fmt = n => n == null ? "–" : Math.abs(n) >= 1e9 ? (n / 1e9).toFixed(2) + "B" : Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.abs(n) >= 1e3 ? (n / 1e3).toFixed(1) + "K" : Math.round(n).toString();
@@ -273,7 +279,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 
   document.title = data.guild_name + " · Guild Statistics";
   $("#guild").textContent = data.guild_name;
-  $("#raidEyebrow").textContent = `${data.raid_name} raid`;
+  $("#raidEyebrow").textContent = CARDVIEW === "readiness" ? `${data.raid_name} raid · readiness` : `${data.raid_name} raid`;
+  $("#postReadyBtn").hidden = !rsum;
   RaidTheme.banner($("#bannerArt"), (guildIndexRaid(data) || { slug: data.raid_slug }));
   $("#updated").textContent = latest ? `Latest raid ${dfmt(latest.date, true)} · ${raids.length} raids tracked · ${current.length} members` : `No results yet · ${current.length} members`;
   $("#footer").textContent = `Updated ${new Date(data.generated_at).toLocaleString("en-GB")}` + (data.roster_file ? ` · roster: ${data.roster_file}` : "");
@@ -501,7 +508,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   };
   // Officers: post this guild's latest results panel for the raid shown to Discord
   (function hook() { if (!window.Officer) return setTimeout(hook, 50);
-    Officer.postButton($("#postBtn"), () => { const r = guild.raids.find(x => x.slug === raid); return { guild: guild.slug, kind: "raid", raid, label: `${guild.name} ${r ? r.name : ""} results` }; }); })();
+    Officer.postButton($("#postBtn"), () => { const r = guild.raids.find(x => x.slug === raid); return { guild: guild.slug, kind: "raid", raid, label: `${guild.name} ${r ? r.name : ""} results` }; });
+    Officer.postButton($("#postReadyBtn"), () => { const r = guild.raids.find(x => x.slug === raid); return { guild: guild.slug, kind: "readiness", raid, label: `${guild.name} ${r ? r.name : ""} raid readiness` }; }); })();
   async function show(first) {
     pills($("#guildSwitch"), index, guild.slug, g => esc(g.name), async s => {
       guild = index.find(g => g.slug === s);

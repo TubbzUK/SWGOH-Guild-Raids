@@ -265,7 +265,7 @@ many recent raids and TBs count under **side menu → ⚙ Effectiveness weightin
 Each post is the whole page as pictures (cut between sections so they stay readable), plus a link, posted by GitHub after the site updates.
 
 - **Raids** post automatically whenever new raid results are uploaded.
-- Officers can post any time from **side menu → Officers → 📣 Post … to Discord**: on the raid page (the raid shown),
+- Officers can post any time from **side menu → Officers → 📣 Post … to Discord**: on the raid page *Post raid results* (overview and players for the raid shown) and *Post raid readiness* (readiness on its own - handy for showing progress towards the next raid, e.g. Droid Destruction while you're still running Order 66),
   the Territory Battles page (the TB shown), the Effectiveness page, and the platoon planner
   (**📣 Post phase N to Discord** next to "Copy phase for Discord": the phase's planets, totals and
   every member's assignments). The button asks for the officer password, then the post appears about

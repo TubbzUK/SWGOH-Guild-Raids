@@ -266,6 +266,8 @@ def main():
                     print(f"{slug}: no raid results yet - nothing to post")
                     continue
                 post_guild(slug, it["raid"], hook)
+            elif kind == "readiness":
+                post_readiness(slug, it.get("raid") or (index.get(slug) or {}).get("default_raid"), hook)
             elif kind == "tb":
                 post_tb(slug, it.get("tb"), hook)
             elif kind == "tw":
@@ -367,6 +369,47 @@ def post_platoons(slug, it, hook):
                "Who places what this phase.", link, shots,
                [{"name": "Assignments", "value": "The pictures couldn't be made this time - open the planner for this phase's lists.", "inline": False}])
 
+def post_readiness(slug, raid, hook):
+    if not raid:
+        print(f"{slug}: no raid given for the readiness post - skipped")
+        return
+    data = json.loads((ROOT / "site" / "data" / slug / f"{raid}.json").read_text(encoding="utf-8"))
+    rs = data.get("readiness_summary")
+    if not rs:
+        print(f"{slug}/{raid}: no readiness yet (needs a roster export and readiness characters) - nothing to post")
+        return
+    rc = data.get("readiness_config") or {}
+    link = site_link(f"?guild={slug}&raid={raid}#readiness")
+    st = rs.get("status") or {}
+    n = rs.get("players") or sum(st.values())
+    fields = [
+        {"name": "Guild average", "value": f"**{rs['average']:.0f}%** ready", "inline": True},
+        {"name": "Ready", "value": f"{st.get('ready', 0)} / {n}", "inline": True},
+        {"name": "Close", "value": str(st.get("close", 0)), "inline": True},
+        {"name": "Still building", "value": str(st.get("building", 0)), "inline": True},
+    ]
+    chars = sorted(rs.get("characters") or [], key=lambda c: c.get("average", 0))[:5]
+    if chars:
+        fields.append({"name": "Furthest behind (average relic)",
+                       "value": clip("\n".join(f"{c.get('label') or c.get('id')} — R{c.get('average', 0):.1f} · {c.get('at_target', 0)} at R{c.get('relic', '?')}" for c in chars)),
+                       "inline": False})
+    m = re.match(r"(\d{4}-\d{2}-\d{2})", data.get("roster_file") or "")
+    roster = m.group(1) if m else ""
+    title = f"{data['guild_name']} · {data.get('raid_name') or 'raid'} readiness"
+    desc = (f"Progress towards {data.get('raid_name') or 'the raid'}" + (f" · roster of {roster}" if roster else "") +
+            (f"\n[Open readiness on the site]({link})" if link else ""))
+    embed = {"title": title, "description": desc, "color": 0x2A78D6, "fields": fields,
+             "footer": {"text": f"Ready = readiness {rc.get('ready_pct', 75):.0f}%+ · close = {rc.get('close_pct', 50):.0f}%+"}}
+    if link:
+        embed["url"] = link
+    shots = render_page("index.html", {"guild": slug, "raid": raid, "card": "1", "view": "readiness", "site": link})
+    if shots:
+        status = send_pictures(hook, embed, shots, f"{slug}-{raid}-readiness")
+    else:
+        status = send(hook, {"username": "Guild Statistics", "embeds": [embed]}, None)
+    print(f"{slug}/{raid}: readiness posted to Discord{f' with {len(shots)} picture(s)' if shots else ''} (HTTP {status})")
+
+
 def post_guild(slug, raid, hook):
     data = json.loads((ROOT / "site" / "data" / slug / f"{raid}.json").read_text(encoding="utf-8"))
     raids = data["raids"]
@@ -420,11 +463,6 @@ def post_guild(slug, raid, hook):
         fields.append({"name": "Declining – watch list", "value": clip(dec_txt), "inline": False})
     if no_score:
         fields.append({"name": f"No score ({len(no_score)})", "value": clip(", ".join(no_score)), "inline": False})
-    rs = data.get("readiness_summary")
-    if rs:
-        fields.append({"name": "Raid readiness",
-                       "value": f"{rs['average']:.0f}% guild average · {rs['status']['ready']} ready", "inline": False})
-
     embed = {
         "title": f"{data['guild_name']} · {data.get('raid_name') or 'raid'} results",
         "description": f"Raid of {latest['date']}" + (f"\n[Open the full dashboard]({site})" if site else ""),
@@ -434,7 +472,8 @@ def post_guild(slug, raid, hook):
     }
     if site:
         embed["url"] = site
-    # the whole raid page (overview, players, readiness) as pictures; the text summary if that can't be done
+    # the raid results (overview and players) as pictures; the text summary if that can't be done.
+    # Readiness is posted on its own (post_readiness), so a guild can share progress for the next raid.
     shots = render_page("index.html", {"guild": slug, "raid": raid, "card": "1", "site": site})
     if shots:
         status = send_pictures(hook, embed, shots, f"{slug}-{raid}-{latest['date']}")
