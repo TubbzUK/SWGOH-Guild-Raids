@@ -170,6 +170,22 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
 .split input[type=range] { flex: 1; }
 .mlinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .mlinks a { font-size: 13px; color: var(--accent); }
+#rankTip { position: absolute; z-index: 40; pointer-events: none; opacity: 0; transition: opacity .12s ease; width: 330px; max-width: calc(100vw - 16px); box-sizing: border-box;
+  background: var(--surface-solid); color: var(--text); border: 1px solid var(--accent); border-radius: 12px; padding: 11px 13px; box-shadow: 0 14px 40px rgba(0,0,0,.35); font: 13px var(--font-ui); }
+#rankTip .tt-head { display: flex; align-items: baseline; gap: 6px; font-weight: 700; font-size: 14px; }
+#rankTip .tt-rank { color: var(--text-2); font: 500 12px var(--font-num); }
+#rankTip .tt-eff { margin-left: auto; color: var(--accent); font: 700 15px var(--font-display); }
+#rankTip .tt-mix { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--text-2); font-size: 12px; margin: 4px 0 8px; }
+#rankTip .tt-mix i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+#rankTip .tt-minis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+#rankTip .tt-mh { font: 700 9.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); margin-bottom: 4px; }
+#rankTip .tt-cols { display: flex; gap: 6px; align-items: flex-end; height: 86px; }
+#rankTip .tt-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; min-width: 0; }
+#rankTip .tt-v { font: 600 10.5px var(--font-num); white-space: nowrap; } #rankTip .tt-v.miss { color: var(--bad-ink); }
+#rankTip .tt-bar { flex: 1; width: 100%; max-width: 26px; display: flex; align-items: flex-end; margin: 2px 0; background: var(--surface-2); border-radius: 3px; }
+#rankTip .tt-bar i { display: block; width: 100%; border-radius: 3px; }
+#rankTip .tt-d { font-size: 10px; color: var(--text-2); white-space: nowrap; max-width: 100%; overflow: hidden; }
+#rankTip .tt-none { color: var(--text-2); font-size: 12px; padding: 30px 0; }
 </style>
 </head>
 <body>
@@ -408,7 +424,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   }
 
   function render() {
-    charts.forEach(c => c.destroy()); charts = [];
+    charts.forEach(c => c.destroy()); charts = []; { const rt = document.getElementById("rankTip"); if (rt) rt.style.opacity = 0; }
     Chart.defaults.font.family = '"Exo 2", system-ui, sans-serif'; Chart.defaults.color = css("--text-2"); Chart.defaults.borderColor = css("--grid"); Chart.defaults.maintainAspectRatio = false;
     Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--surface-solid"), titleColor: css("--text"), bodyColor: css("--text-2"), borderColor: css("--accent"), borderWidth: 1, padding: 10 });
     const curOnly = $("#curOnly").checked, q = $("#search").value.trim().toLowerCase();
@@ -478,10 +494,10 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     charts.push(new Chart($("#rankChart"), {
       type: "bar",
       data: { labels: ro.map((x, i) => `${i + 1}. ${x.p.name}`), datasets: CL.map(([k, l, c]) => ({ label: l, data: ro.map(x => x.share[k] || 0), backgroundColor: css(c), barThickness: 13 })) },
-      options: { indexAxis: "y", interaction: { mode: "index", intersect: false },
+      options: { indexAxis: "y", interaction: { mode: "index", axis: "y", intersect: false },
         onClick: (e, els) => { if (els.length) { const id = ro[els[0].index].p.id; setTimeout(() => select(id, true)); } },
         onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `${ro[i[0].dataIndex].p.name} · ${P(ro[i[0].dataIndex].eff)}`, label: c => { const x = ro[c.dataIndex]; return ` ${c.dataset.label}: ${P([x.raidPct, x.tbPct, x.twPct][c.datasetIndex])} (adds ${c.raw.toFixed(1)})`; } } } },
+        plugins: { legend: { display: false }, tooltip: { enabled: false, external: c => rankTip(c, ro, CL) } },
         scales: { x: { stacked: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, font: { size: 11.5 } } } } },
     }));
     }
@@ -517,6 +533,44 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   function select(id, scroll) {
     selId = id; render();
     if (scroll) $("#memberCard").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
+  // ranking chart tooltip: the member under the pointer, their mix, and mini charts of their last 3 raids and TBs
+  const shortNum = n => n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace(/\.0+$/, "") + "M" : n >= 1e3 ? Math.round(n / 1e3) + "K" : String(Math.round(n));
+  function mini(title, items, color) {
+    if (!items.length) return `<div class="tt-mini"><div class="tt-mh">${title}</div><div class="tt-none">No results yet</div></div>`;
+    return `<div class="tt-mini"><div class="tt-mh">${title}</div><div class="tt-cols">${items.map(o => `<div class="tt-col">
+      <span class="tt-v ${o.v === 0 ? "miss" : ""}">${o.label}</span><span class="tt-bar"><i style="height:${Math.max(4, Math.min(100, o.v))}%;background:${o.v === 0 ? css("--bad") : color}"></i></span>
+      <span class="tt-d" title="${dshort(o.date)}">${new Date(o.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span></div>`).join("")}</div></div>`;
+  }
+  function rankTip(ctx, ro, CL) {
+    let el = document.getElementById("rankTip");
+    if (!el) { el = document.createElement("div"); el.id = "rankTip"; el.setAttribute("role", "tooltip"); document.body.appendChild(el); }
+    const t = ctx.tooltip;
+    if (!t || t.opacity === 0 || !t.dataPoints || !t.dataPoints.length) { el.style.opacity = 0; return; }
+    const i = t.dataPoints[0].dataIndex, x = ro[i];
+    if (!x) { el.style.opacity = 0; return; }
+    if (el.dataset.i !== String(i) || el.dataset.id !== x.p.id) {
+      el.dataset.i = i; el.dataset.id = x.p.id;
+      const rr = raids.map((r, k) => ({ r, v: x.rs[k] })).filter(o => o.v != null).slice(-3).map(o => {
+        const pl = x.p.raid[o.r.slug], sc = pl ? pl.scores[o.r.i] : null;
+        return { v: o.v, date: o.r.date, label: sc ? shortNum(sc) : "missed" };
+      });
+      const tt = tbs.map((tb, k) => ({ tb, v: x.ts[k] })).filter(o => o.v != null).slice(-3).map(o => ({ v: o.v, date: o.tb.date, label: o.v === 0 ? "missed" : P(o.v) }));
+      const pct = { raids: x.raidPct, tbs: x.tbPct, tws: x.twPct };
+      el.innerHTML = `<div class="tt-head"><span class="tt-rank">#${i + 1}</span> ${esc(x.p.name)}<span class="tt-eff">${P(x.eff)}</span></div>
+        <div class="tt-mix">${CL.map(([k, l, c]) => `<span><i style="background:${css(c)}"></i>${l} ${P(pct[k])}</span>`).join("")}</div>
+        <div class="tt-minis">${mini("Last 3 raids", rr, css("--series-1"))}${mini("Last 3 TBs", tt, css("--series-2"))}</div>`;
+    }
+    // place it beside the bar, kept on screen
+    const r = ctx.chart.canvas.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+    let left = r.left + t.caretX + 16, top = r.top + t.caretY - h / 2;
+    if (left + w > innerWidth - 8) left = r.left + t.caretX - w - 16;
+    if (left < 8) {   // no room beside the bar (phones): show it just below the bar, or above if it won't fit
+      left = Math.max(8, Math.min(innerWidth - w - 8, r.left + t.caretX - w / 2));
+      const y = r.top + t.caretY;
+      top = y + 14 + h <= innerHeight - 8 ? y + 14 : y - 14 - h;
+    } else top = Math.max(8, Math.min(innerHeight - h - 8, top));
+    el.style.left = left + scrollX + "px"; el.style.top = top + scrollY + "px"; el.style.opacity = 1;
   }
   function renderMember(rows) {
     mCharts.forEach(c => c.destroy()); mCharts = [];
