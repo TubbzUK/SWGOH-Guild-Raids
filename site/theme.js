@@ -54,6 +54,7 @@
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
   const PAGES = [
     { id: "raidLink", file: "./", match: /(^|\/)(index\.html)?$/, ic: "⚔", label: "Raids" },
+    { id: "playerLink", file: "player.html", match: /player\.html$/, ic: "◉", label: "Player status" },
     { id: "tbLink", file: "tb.html", match: /tb\.html$/, ic: "◈", label: "Territory battles" },
     { id: "rankLink", file: "ranking.html", match: /ranking\.html$/, ic: "★", label: "TB contribution" },
     { id: "twLink", file: "tw.html", match: /tw\.html$/, ic: "✦", label: "Territory wars" },

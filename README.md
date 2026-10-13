@@ -35,6 +35,21 @@ Every page has a menu down the left-hand side with everything in one place:
 The arrow at the top folds it down to a narrow strip of icons (hover for names) and back; each
 device remembers your choice. On a phone it's tucked away behind the ☰ button at the top left.
 
+## Player status
+
+`player.html` (Player status in the side menu) is for members. Pick your name - the site remembers it on
+that device - for your overall score and a score for each area:
+
+- **Raids**: your score as a % of the guild's best in each of the last raids, plus your readiness for
+  each raid.
+- **Territory battles**: your TB contribution (deployment, combat and special missions, platoons).
+- **Territory wars**: your banners as a % of the guild's best.
+
+Each shows your rank, the guild median and whether you're rising, steady or falling. Tap one for its
+history: charts against the guild median, phase by phase for TBs, and a table of every event. The
+scoring and weights are the same as the Guild effectiveness page. A link straight to someone's page:
+`player.html?guild=oanr&player=<name>`.
+
 ## Uploading from the website (easiest)
 
 Open **Upload** in the side menu on any page (or open `…/upload.html`). Pick the guild,

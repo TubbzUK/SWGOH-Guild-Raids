@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Player status · Guild Statistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js" defer></script>
+<script src="tbscore.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* One member's progress: pick a name, see a score for raids, territory battles and territory wars,
+   then open any of them for that member's history and trend. Colours and fonts come from theme.css. */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
+.card { padding: 16px 18px; min-width: 0; }
+h2 { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 4px; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.up { color: var(--good-ink); } .down { color: var(--bad-ink); }
+select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font: 600 15px var(--font-ui); min-width: 0; }
+.chooser { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 14px; }
+.chooser label { font: 700 11px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-2); }
+.chooser select { flex: 1 1 260px; max-width: 420px; }
+.stepbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px; width: 42px; height: 42px; font-size: 18px; cursor: pointer; flex: none; }
+.stepbtn:hover { border-color: var(--accent); color: var(--accent); }
+.chooser .pick { display: flex; gap: 6px; flex: 1 1 320px; max-width: 520px; }
+.chooser .pick select { flex: 1; max-width: none; }
+.welcome { text-align: center; padding: 42px 18px; }
+.welcome h2 { font-size: 18px; margin-bottom: 8px; }
+.welcome p { color: var(--text-2); margin: 0 auto; max-width: 52ch; }
+
+/* overall + three areas */
+.top { display: grid; grid-template-columns: minmax(220px, 1fr) 3fr; gap: 12px; margin-bottom: 12px; }
+.areas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 1000px) { .top { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .areas { grid-template-columns: 1fr; } }
+.overall .big { font: 800 46px var(--font-display); line-height: 1.05; margin: 8px 0 4px; color: var(--accent); }
+.overall .note, .area .note { font-size: 12.5px; color: var(--text-2); }
+.label { color: var(--text-2); font: 700 10.5px var(--font-display); text-transform: uppercase; letter-spacing: .16em; display: flex; align-items: center; gap: 8px; }
+.mix { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); margin: 12px 0 8px; }
+.mix i { display: block; height: 100%; }
+.mixkey { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--text-2); }
+.mixkey span { display: inline-flex; align-items: center; gap: 5px; } .mixkey b { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+button.area { text-align: left; font: inherit; color: var(--text); cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 2px;
+  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+button.area:hover { border-color: var(--accent); transform: translateY(-1px); }
+button.area[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--glow); }
+button.area[aria-pressed="true"]::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 14px; height: 14px; transform: translateX(-50%) rotate(45deg);
+  background: var(--surface-solid); border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent); }
+@media (max-width: 720px) { button.area[aria-pressed="true"]::after { display: none; } }
+.area .row1 { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.area .pct { font: 700 34px var(--font-display); line-height: 1; }
+.area .pct small { display: block; font: 500 12px var(--font-ui); color: var(--text-2); margin-top: 4px; letter-spacing: 0; }
+.area .open { margin-top: 8px; font-size: 12.5px; color: var(--accent); font-weight: 600; }
+.area .ic { font-size: 14px; color: var(--accent); }
+.meter { height: 6px; background: var(--surface-2); border-radius: 3px; position: relative; margin: 10px 0 6px; }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+.meter u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text-2); border-radius: 1px; text-decoration: none; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font: 600 12px var(--font-ui); white-space: nowrap; }
+.b-good { background: var(--good-bg); color: var(--good-ink); }
+.b-warn { background: var(--warn-bg); color: var(--warn-ink); }
+.b-bad { background: var(--bad-bg); color: var(--bad-ink); }
+.b-none { background: var(--none-bg); color: var(--text-2); }
+
+/* detail */
+.detail { margin-top: 14px; }
+.dhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.dhead h2 { font-size: 16px; margin: 0; }
+.dhead a { font-size: 13px; font-weight: 600; }
+.verdict { margin: 0 0 14px; font-size: 14px; max-width: 80ch; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stats div { background: var(--surface-2); border-radius: 10px; padding: 9px 12px; min-width: 0; }
+.stats b { display: block; font: 700 18px var(--font-display); letter-spacing: .02em; }
+.stats span { font-size: 12px; color: var(--text-2); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.grid2 > * { min-width: 0; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+.chart { position: relative; height: 260px; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12.5px; color: var(--text-2); margin: 0 0 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .sq { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.legend .ln { width: 16px; height: 0; border-top: 2px solid; display: inline-block; }
+.legend .ln.dash { border-top-style: dashed; }
+.phrow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.phrow button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font: 600 13px var(--font-ui); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.phrow button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 10px; text-align: left; white-space: nowrap; }
+th { font: 700 10.5px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); background: var(--surface-2); }
+th.r, td.r { text-align: right; }
+tbody tr { border-top: 1px solid var(--border); }
+td.miss { color: var(--bad-ink); }
+.ready { display: grid; gap: 10px; margin-bottom: 12px; }
+.ready .rrow { display: grid; grid-template-columns: minmax(130px, 200px) 1fr auto; gap: 12px; align-items: center; }
+.ready .rbar { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.ready .rbar i { display: block; height: 100%; border-radius: 5px; }
+.ready .rname { font-weight: 600; }
+.ready .rinfo { font-size: 12.5px; color: var(--text-2); white-space: nowrap; }
+@media (max-width: 600px) { .ready .rrow { grid-template-columns: 1fr auto; } .ready .rbar { grid-column: 1 / -1; grid-row: 2; } .overall .big { font-size: 38px; } }
+.empty { color: var(--text-2); padding: 22px; text-align: center; }
+.warnings { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+.warnings summary { cursor: pointer; font-weight: 600; }
+.former { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+:root { --c-plat: #8b5cf6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c-plat: #c4a1ff; } }
+:root[data-theme="dark"] { --c-plat: #c4a1ff; }
+@media (max-width: 600px) { .ready .rinfo { white-space: normal; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="wordmark" href="./"><span data-emblem></span>Guild Statistics</a>
+    <div class="top-actions">
+      <a class="top-link" id="raidLink" href="./">⚔ Raids</a>
+      <a class="top-link" id="tbLink" href="tb.html">◈ Territory battles</a>
+      <a class="top-link" id="twLink" href="tw.html">✦ Territory wars</a>
+      <a class="top-link" id="effLink" href="effectiveness.html">◎ Effectiveness</a>
+      <span data-theme-toggle></span>
+    </div>
+  </div>
+  <header class="banner">
+    <div class="art" id="bannerArt"></div>
+    <div>
+      <div class="eyebrow" id="eyebrow">Player status</div>
+      <h1 id="title">Player status</h1>
+      <div class="sub" id="updated"></div>
+    </div>
+    <div class="banner-switch">
+      <div class="pills" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+    </div>
+  </header>
+  <div id="warnings"></div>
+
+  <div class="card chooser">
+    <label for="who">Your name</label>
+    <div class="pick">
+      <button type="button" class="stepbtn" id="prev" aria-label="Previous member" title="Previous member">‹</button>
+      <select id="who"><option value="">Choose your name…</option></select>
+      <button type="button" class="stepbtn" id="next" aria-label="Next member" title="Next member">›</button>
+    </div>
+  </div>
+
+  <div class="card welcome" id="welcome">
+    <h2>See how you're doing</h2>
+    <p>Pick your name above for your score in raids, territory battles and territory wars, compared with the rest of the guild. Tap any of them for your history and trend.</p>
+  </div>
+
+  <div id="status" hidden>
+    <div class="top">
+      <div class="card overall" id="overall"></div>
+      <div class="areas" id="areas"></div>
+    </div>
+    <section class="detail card" id="detail" aria-live="polite"></section>
+  </div>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = s => String(s ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const dfmt = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const dshort = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" });
+  const getJSON = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const { median } = TBScore;
+  const P = v => v == null ? "–" : Math.round(v) + "%";
+  const fmt = n => n == null ? "–" : Math.abs(n) >= 1e9 ? (n / 1e9).toFixed(2) + "B" : Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.abs(n) >= 1e3 ? (n / 1e3).toFixed(1) + "K" : Math.round(n).toString();
+  const int = n => n == null ? "–" : Math.round(n).toLocaleString("en-GB");
+  const mean = a => { const v = a.filter(x => x != null); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
+  const slopeOf = ys => {
+    const pts = ys.map((y, i) => [i, y]).filter(([, y]) => y != null);
+    if (pts.length < 2) return null;
+    const n = pts.length, xm = pts.reduce((a, p) => a + p[0], 0) / n, ym = pts.reduce((a, p) => a + p[1], 0) / n;
+    const den = pts.reduce((a, p) => a + (p[0] - xm) ** 2, 0) || 1;
+    return pts.reduce((a, p) => a + (p[0] - xm) * (p[1] - ym), 0) / den;
+  };
+  const trendBadge = (v, per) => v == null ? `<span class="badge b-none">● New</span>`
+    : v >= 2 ? `<span class="badge b-good" title="Up about ${v.toFixed(1)} points per ${per}">▲ Rising</span>`
+    : v <= -2 ? `<span class="badge b-bad" title="Down about ${Math.abs(v).toFixed(1)} points per ${per}">▼ Falling</span>`
+    : `<span class="badge b-none" title="Within 2 points per ${per}">■ Steady</span>`;
+  const band = v => v == null ? "var(--muted)" : v >= 75 ? css("--good") : v >= 50 ? css("--warn") : css("--bad");
+
+  // ---------- data ----------
+  const index = await getJSON("guilds.json");
+  (function art() { if (!window.RaidTheme) return setTimeout(art, 30); RaidTheme.banner($("#bannerArt"), { slug: "player" }); })();
+  const guilds = (index || []).filter(g => (g.tb && g.tb.count) || (g.tw && g.tw.count) || (g.raids || []).some(r => r.raids));
+  let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  if (!guilds.length) { $("#updated").textContent = "No results uploaded yet."; return; }
+  const guild = guilds.find(g => g.slug === params.guild) || guilds[0];
+  const enc = encodeURIComponent, G = enc(guild.slug);
+  const allRaidDefs = guild.raids || [];
+  const [tbData, twData, tbSettings, saved0, ...allRaidData] = await Promise.all([
+    guild.tb && guild.tb.count ? getJSON(`data/${G}/tb.json`) : null, guild.tw && guild.tw.count ? getJSON(`data/${G}/tw.json`) : null,
+    getJSON(`data/${G}/tb-settings.json`), getJSON(`data/${G}/stats-settings.json`),
+    ...allRaidDefs.map(r => getJSON(`data/${G}/${enc(r.slug)}.json`))]);
+  const raidDefs = allRaidDefs.filter((r, k) => allRaidData[k] && allRaidData[k].raids.length);
+  const raidData = raidDefs.map(r => allRaidData[allRaidDefs.indexOf(r)]);
+  document.title = guild.name + " · Player status";
+  $("#eyebrow").textContent = `${guild.name} · Player status`;
+  $("#raidLink").href = "./?guild=" + G; $("#tbLink").href = "tb.html?guild=" + G; $("#effLink").href = "effectiveness.html?guild=" + G;
+  $("#twLink").href = "tw.html?guild=" + G; $("#twLink").hidden = !twData; $("#tbLink").hidden = !tbData;
+  const gp = $("#guildSwitch"); gp.hidden = guilds.length < 2;
+  gp.innerHTML = guilds.map(g => `<button type="button" aria-pressed="${g.slug === guild.slug}" data-id="${esc(g.slug)}">${esc(g.name)}</button>`).join("");
+  gp.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.id !== guild.slug) location.search = "?guild=" + enc(b.dataset.id) + (selId ? "&player=" + enc(selId) : ""); });
+
+  const tbs = tbData?.tbs || [];
+  const nPh = tbs.length ? Math.max(...tbs.map(t => t.phases)) : 6;
+  const TBS = TBScore.clean(tbSettings, nPh);
+  const tbCache = tbs.map((_, i) => TBScore.scoreTB(tbData, TBS, i));
+  const tws = twData?.tws || [];
+  const twRef = tws.map((_, i) => Math.max(1, ...(twData?.players || []).map(p => p.total[i] || 0)));
+  const raids = raidData.flatMap((d, k) => d.raids.map((r, i) => ({ ...r, raid: raidDefs[k].name, slug: raidDefs[k].slug, i, d })))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.raid.localeCompare(b.raid));
+  raids.forEach(r => { r.ref = Math.max(1, ...r.d.players.map(p => p.scores[r.i] || 0)); });
+
+  // members, matched across raid, TB and TW files by name
+  const people = new Map();
+  const person = (name, current) => {
+    const k = norm(name);
+    if (!people.has(k)) people.set(k, { id: k, name, current: false, raid: {}, ready: {} });
+    const p = people.get(k); if (current) { p.current = true; p.name = name; }
+    return p;
+  };
+  allRaidData.forEach((d, k) => d && d.players.forEach(pl => {
+    const p = person(pl.name, pl.current);
+    if (d.raids.length) p.raid[allRaidDefs[k].slug] = pl;
+    if (pl.readiness && pl.current) p.ready[allRaidDefs[k].slug] = pl.readiness;
+  }));
+  (tbData?.players || []).forEach(pl => { const p = person(pl.name, pl.current); p.tbId = pl.id; p.tb = pl; });
+  (twData?.players || []).forEach(pl => { const p = person(pl.name, pl.current); p.tw = pl; });
+
+  // the same settings and scoring as the Guild effectiveness page
+  const DEF = { weights: { raids: 45, tbs: 45, tws: 10 }, raids_last: 5, tbs_last: 3, tws_last: 3, include_tw: true };
+  const S = (s => {
+    const old = s && s.weights && s.weights.tws == null;
+    const w = old && +s.weights.raids === 50 && +s.weights.tbs === 50 ? DEF.weights : { ...DEF.weights, ...(s?.weights || {}) };
+    const n = (v, d) => Math.max(0, +(v ?? d) || 0);
+    return {
+      weights: { raids: n(w.raids, DEF.weights.raids), tbs: n(w.tbs, DEF.weights.tbs), tws: n(w.tws, DEF.weights.tws) },
+      raids_last: Math.max(1, Math.round(+(s?.raids_last ?? DEF.raids_last) || DEF.raids_last)),
+      tbs_last: Math.max(1, Math.round(+(s?.tbs_last ?? DEF.tbs_last) || DEF.tbs_last)),
+      tws_last: Math.max(1, Math.round(+(s?.tws_last ?? DEF.tws_last) || DEF.tws_last)),
+      include_tw: s?.include_tw == null ? DEF.include_tw : !!s.include_tw,
+    };
+  })(saved0);
+  const useTw = S.include_tw && tws.length > 0;
+  const recentRaidsN = Math.min(S.raids_last, raids.length);
+  const recentTbs = tbs.map((t, i) => i).slice(-S.tbs_last), recentTws = tws.map((t, i) => i).slice(-S.tws_last);
+  const rows = [];
+  people.forEach(p => {
+    const rs = raids.map(r => { const pl = p.raid[r.slug]; const v = pl ? pl.scores[r.i] : null; return v == null ? null : Math.min(100, Math.max(0, v) / r.ref * 100); });
+    const first = rs.findIndex(v => v != null);
+    const rsF = rs.map((v, i) => first >= 0 && i >= first ? (v ?? 0) : null);
+    const rRecent = recentRaidsN ? rsF.slice(-recentRaidsN) : [];
+    const ts = tbs.map((_, i) => p.tbId ? tbCache[i].out.get(p.tbId)?.overall ?? null : null);
+    const tfirst = ts.findIndex(v => v != null);
+    const tsF = ts.map((v, i) => tfirst >= 0 && i >= tfirst ? (v ?? 0) : null);
+    const tRecent = recentTbs.map(i => tsF[i]);
+    const firstDates = [first >= 0 ? raids[first].date : null, tfirst >= 0 ? tbs[tfirst].date : null,
+      p.tw ? tws[p.tw.total.findIndex(v => v != null)]?.date : null].filter(Boolean).sort();
+    const seen = firstDates[0] || null;
+    const wsF = tws.map((t, i) => { const v = p.tw ? p.tw.total[i] : null; if (v != null) return Math.min(100, Math.max(0, v) / twRef[i] * 100); return seen && t.date >= seen && p.current ? 0 : null; });
+    const wRecent = recentTws.map(i => wsF[i]);
+    const raidPct = mean(rRecent), tbPct = mean(tRecent), twAll = mean(wRecent), twPct = useTw ? twAll : null;
+    const w = S.weights, parts = [["raids", raidPct], ["tbs", tbPct], ["tws", twPct]].filter(([, v]) => v != null);
+    const wsum = parts.reduce((a, [k]) => a + w[k], 0);
+    const eff = parts.length ? (wsum ? parts.reduce((a, [k, v]) => a + w[k] * v, 0) / wsum : mean(parts.map(x => x[1]))) : null;
+    const share = Object.fromEntries(parts.map(([k, v]) => [k, wsum ? w[k] * v / wsum : 0]));
+    rows.push({ p, rs: rsF, ts: tsF, ws: wsF, raidPct, tbPct, twPct: twAll, eff, share, ranked: raidPct != null && tbPct != null,
+      raidTrend: slopeOf(rRecent), tbTrend: slopeOf(tRecent), twTrend: slopeOf(wRecent),
+      raidsPlayed: rRecent.filter(v => v > 0).length, raidsCounted: rRecent.filter(v => v != null).length,
+      tbsPlayed: recentTbs.filter(i => ts[i] != null).length, tbsCounted: tRecent.filter(v => v != null).length,
+      twsJoined: recentTws.filter(i => p.tw && p.tw.total[i] != null).length, twsCounted: wRecent.filter(v => v != null).length });
+  });
+  const cur = rows.filter(r => r.p.current);
+  const rankIn = (key, x) => { const list = cur.filter(r => r[key] != null).sort((a, b) => b[key] - a[key]); const i = list.indexOf(x); return i < 0 ? null : [i + 1, list.length]; };
+  const medOf = key => median(cur.map(r => r[key]));
+  const effRank = x => { const list = cur.filter(r => r.ranked).sort((a, b) => b.eff - a.eff); const i = list.indexOf(x); return i < 0 ? null : [i + 1, list.length]; };
+  const latestDate = [raids.at(-1)?.date, tbs.at(-1)?.date, tws.at(-1)?.date].filter(Boolean).sort().at(-1);
+  $("#updated").textContent = latestDate ? `Results up to ${dfmt(latestDate)} · ${cur.length} members` : `${cur.length} members`;
+  $("#foot").textContent = `Scores: raids = your score as a % of the guild's best in each of the last ${S.raids_last} raids; TBs = TB contribution (deployment, combat and special missions, platoons) over the last ${S.tbs_last} TBs; TWs = banners as a % of the guild's best over the last ${S.tws_last} TWs. Missing an event after you joined counts as 0.`;
+
+  // ---------- name picker ----------
+  const byName = (a, b) => a.p.name.localeCompare(b.p.name, "en", { sensitivity: "base" });
+  const curList = cur.slice().sort(byName), former = rows.filter(r => !r.p.current).sort(byName);
+  $("#who").innerHTML = `<option value="">Choose your name…</option>` + curList.map(r => `<option value="${esc(r.p.id)}">${esc(r.p.name)}</option>`).join("")
+    + (former.length ? `<optgroup label="Former members">${former.map(r => `<option value="${esc(r.p.id)}">${esc(r.p.name)}</option>`).join("")}</optgroup>` : "");
+  const order = [...curList, ...former];
+  const KEY = "gsPlayer:" + guild.slug;
+  let selId = params.player ? norm(params.player) : store.get(KEY);
+  if (selId && !rows.some(r => r.p.id === selId)) selId = null;
+  let area = ["raids", "tbs", "tws"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "raids";
+  let raidType = null, tbPick = null;
+  $("#who").onchange = e => { selId = e.target.value || null; raidType = tbPick = null; if (selId) store.set(KEY, selId); show(); };
+  const step = d => { const i = order.findIndex(r => r.p.id === selId); const n = order[(i + d + order.length) % order.length] || order[0]; selId = n.p.id; raidType = tbPick = null; store.set(KEY, selId); show(); };
+  $("#prev").onclick = () => step(-1); $("#next").onclick = () => step(1);
+
+  let charts = [];
+  function chartTheme() {
+    Chart.defaults.font.family = '"Exo 2", system-ui, sans-serif'; Chart.defaults.color = css("--text-2"); Chart.defaults.borderColor = css("--grid"); Chart.defaults.maintainAspectRatio = false;
+    Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor: css("--surface-solid"), titleColor: css("--text"), bodyColor: css("--text-2"), borderColor: css("--accent"), borderWidth: 1, padding: 10 });
+  }
+  const spark = (vals, color) => {
+    const v = vals.slice(-10), pts = v.map((y, i) => [i, y]).filter(([, y]) => y != null);
+    if (pts.length < 2) return "";
+    const W = 110, H = 30, X = i => 3 + i * (W - 6) / Math.max(1, v.length - 1), Y = y => H - 3 - y / 100 * (H - 6);
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(([i, y]) => X(i).toFixed(1) + "," + Y(y).toFixed(1)).join(" ")}"/><circle cx="${X(pts.at(-1)[0]).toFixed(1)}" cy="${Y(pts.at(-1)[1]).toFixed(1)}" r="3" fill="${color}"/></svg>`;
+  };
+
+  function show() {
+    charts.forEach(c => c.destroy()); charts = [];
+    chartTheme();
+    const x = rows.find(r => r.p.id === selId);
+    $("#who").value = x ? x.p.id : "";
+    $("#welcome").hidden = !!x; $("#status").hidden = !x;
+    try { history.replaceState(null, "", `?guild=${G}${x ? "&player=" + enc(x.p.id) : ""}${x ? "#" + area : ""}`); } catch (e) {}
+    if (!x) { $("#title").textContent = "Player status"; return; }
+    $("#title").innerHTML = esc(x.p.name) + (x.p.current ? "" : ' <span class="former" style="color:#cfd8ff">left the guild</span>');
+
+    // overall
+    const er = effRank(x), em = median(cur.filter(r => r.ranked).map(r => r.eff));
+    const AREAS = [
+      { k: "raids", label: "Raids", ic: "⚔", color: css("--series-1"), pct: x.raidPct, med: medOf("raidPct"), rank: rankIn("raidPct", x), trend: x.raidTrend, per: "raid", hist: x.rs,
+        note: x.raidPct == null ? "No raid results yet" : `Scored in ${x.raidsPlayed} of the last ${x.raidsCounted} raids` },
+      { k: "tbs", label: "Territory battles", ic: "◈", color: css("--series-2"), pct: x.tbPct, med: medOf("tbPct"), rank: rankIn("tbPct", x), trend: x.tbTrend, per: "TB", hist: x.ts,
+        note: x.tbPct == null ? "No TB results yet" : `Took part in ${x.tbsPlayed} of the last ${x.tbsCounted} TBs` },
+      { k: "tws", label: "Territory wars", ic: "✦", color: css("--c-plat"), pct: x.twPct, med: medOf("twPct"), rank: rankIn("twPct", x), trend: x.twTrend, per: "TW", hist: x.ws,
+        note: x.twPct == null ? (tws.length ? "No TW results yet" : "No territory wars uploaded yet") : `Joined ${x.twsJoined} of the last ${x.twsCounted} TWs` },
+    ];
+    const wts = Object.entries(S.weights).filter(([k]) => k !== "tws" || useTw), wsum = wts.reduce((a, [, v]) => a + v, 0) || 1;
+    $("#overall").innerHTML = `<div class="label">Overall</div>
+      <div class="big num">${P(x.eff)}</div>
+      <div class="note">${er ? `#${er[0]} of ${er[1]} in ${esc(guild.name)}` : x.eff == null ? "No results yet" : "Ranked once you have raid and TB results"}${em != null ? ` · guild median ${P(em)}` : ""}</div>
+      <div class="mix" title="How each area adds up to your overall score">${AREAS.filter(a => x.share[a.k]).map(a => `<i style="width:${x.share[a.k]}%;background:${a.color}"></i>`).join("")}</div>
+      <div class="mixkey">${AREAS.filter(a => a.k !== "tws" || useTw).map(a => `<span><b style="background:${a.color}"></b>${a.label} ${Math.round(S.weights[a.k] / wsum * 100)}%</span>`).join("")}</div>
+      <div class="note" style="margin-top:8px">The same score as the <a href="effectiveness.html?guild=${G}&player=${enc(x.p.id)}">Guild effectiveness</a> page.</div>`;
+
+    // the three areas
+    $("#areas").innerHTML = AREAS.map(a => `<button type="button" class="card area" data-k="${a.k}" aria-pressed="${a.k === area}" aria-controls="detail">
+      <span class="label"><span class="ic">${a.ic}</span>${a.label}</span>
+      <span class="row1"><span class="pct num" style="color:${a.pct == null ? "var(--muted)" : "inherit"}">${P(a.pct)}<small>${a.k === "tbs" ? "TB contribution" : "of the guild's best"}</small></span>${spark(a.hist, a.color)}</span>
+      <span class="meter" title="Your score, with the guild median marked"><i style="width:${Math.max(0, Math.min(100, a.pct || 0))}%;background:${band(a.pct)}"></i>${a.med != null ? `<u style="left:calc(${Math.min(100, a.med)}% - 1px)"></u>` : ""}</span>
+      <span class="note">${a.rank ? `#${a.rank[0]} of ${a.rank[1]} · ` : ""}guild median ${P(a.med)}</span>
+      <span class="note" style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:4px"><span>${a.note}</span>${a.pct == null ? "" : trendBadge(a.trend, a.per)}</span>
+      <span class="open">${a.k === area ? "Showing history ↓" : "Show history →"}</span></button>`).join("");
+    document.querySelectorAll("button.area").forEach(b => b.onclick = () => {
+      area = b.dataset.k; show();
+      if (innerWidth < 1000) $("#detail").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    ({ raids: raidDetail, tbs: tbDetail, tws: twDetail })[area](x, AREAS.find(a => a.k === area));
+  }
+
+  const bar = (ctx, cfg) => { const c = new Chart(ctx, cfg); charts.push(c); return c; };
+  const yPct = { beginAtZero: true, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } };
+  const head = (a, link, linkText) => `<div class="dhead"><h2>${a.ic} ${a.label} · history</h2>${link ? `<a href="${link}">${linkText} →</a>` : ""}</div>`;
+  const verdict = (a, x, word) => {
+    if (a.pct == null) return "";
+    const vs = a.med == null ? "" : a.pct >= a.med + 5 ? `above the guild median (${P(a.med)})` : a.pct <= a.med - 5 ? `below the guild median (${P(a.med)})` : `around the guild median (${P(a.med)})`;
+    const tr = a.trend == null ? "Not enough results yet to show a trend." : a.trend >= 2 ? `Your ${word} are going up.` : a.trend <= -2 ? `Your ${word} have dropped recently.` : `Your ${word} are steady.`;
+    return `<p class="verdict">You're at <b>${P(a.pct)}</b>${vs ? ", " + vs : ""}. ${tr}</p>`;
+  };
+
+  // ---------- raids ----------
+  function raidDetail(x, a) {
+    const types = raidDefs.filter(r => x.p.raid[r.slug]);
+    if (!raidType || !types.some(r => r.slug === raidType)) raidType = (types.slice().sort((p, q) => (raidData[raidDefs.indexOf(q)].raids.at(-1).date).localeCompare(raidData[raidDefs.indexOf(p)].raids.at(-1).date))[0] || {}).slug;
+    const readyRows = allRaidDefs.map((r, k) => ({ r, k, rd: x.p.ready[r.slug] })).filter(o => o.rd);
+    let html = head(a, `./?guild=${G}${raidType ? "&raid=" + enc(raidType) : ""}#players`, "Raid results") + verdict(a, x, "raid scores");
+    if (readyRows.length) {
+      html += `<h2 style="font-size:12px;margin:4px 0 8px">Raid readiness</h2><div class="ready">${readyRows.map(({ r, k, rd }) => {
+        const conf = allRaidData[k].readiness_config, chars = (conf?.teams || []).flatMap(t => t.characters);
+        const at = chars.filter(c => (rd.relics?.[c.id] ?? -1) >= c.relic).length, rel = chars.filter(c => (rd.relics?.[c.id] ?? 0) >= 1).length;
+        const tgt = [...new Set(chars.map(c => c.relic))];
+        const st = { ready: ["b-good", "✓ Ready"], close: ["b-warn", "Close"], building: ["b-bad", "Building"] }[rd.status] || ["b-none", rd.status];
+        return `<div class="rrow"><span class="rname">${esc(r.name)}</span><span class="rbar"><i style="width:${Math.min(100, rd.score)}%;background:${css(rd.status === "ready" ? "--good" : rd.status === "close" ? "--warn" : "--bad")}"></i></span>
+          <span class="rinfo"><b class="num">${P(rd.score)}</b> <span class="badge ${st[0]}">${st[1]}</span> · ${rel}/${chars.length} relicked · ${at} at ${tgt.length === 1 ? "R" + tgt[0] : "target"} · <a href="./?guild=${G}&raid=${enc(r.slug)}#readiness">details</a></span></div>`;
+      }).join("")}</div>`;
+    }
+    if (!types.length) { $("#detail").innerHTML = html + `<div class="empty">No raid scores for you yet.</div>`; return; }
+    const d = raidData[raidDefs.findIndex(r => r.slug === raidType)], pl = x.p.raid[raidType];
+    const firstI = pl.scores.findIndex(v => v != null), idx = d.raids.map((r, i) => i).filter(i => i >= firstI).slice(-24);
+    const rankAt = i => { const s = pl.scores[i]; if (!(s > 0)) return null; return 1 + d.players.filter(q => (q.scores[i] || 0) > s).length; };
+    const last = d.raids.length - 1;
+    html += (types.length > 1 ? `<div class="phrow" id="raidTypes">${types.map(r => `<button type="button" data-s="${esc(r.slug)}" aria-pressed="${r.slug === raidType}">${esc(r.name)}</button>`).join("")}</div>` : "")
+      + `<div class="stats">
+        <div><b class="num">${fmt(pl.scores[last])}</b><span>Latest · ${dshort(d.raids[last].date)}</span></div>
+        <div><b class="num">${fmt(pl.best)}</b><span>Best score</span></div>
+        <div><b class="num">${fmt(pl.avg_recent)}</b><span>Average, last ${pl.recent_window || 5}</span></div>
+        <div><b class="num">${rankAt(last) ? "#" + rankAt(last) : "–"}</b><span>Rank in the latest raid</span></div>
+        <div><b class="num ${pl.trend_pct > 0 ? "up" : pl.trend_pct < 0 ? "down" : ""}">${pl.trend_pct == null ? "–" : (pl.trend_pct > 0 ? "+" : "") + pl.trend_pct.toFixed(1) + "%"}</b><span>Trend per raid</span></div>
+        <div><b class="num">${pl.played}/${pl.listed}</b><span>Raids scored in</span></div></div>
+      <div class="grid2">
+        <div><h2>${esc(d.raid_name)} score per raid</h2><div class="legend"><span><i class="sq" style="background:${a.color}"></i>Your score</span><span><i class="ln" style="border-color:${css("--text-2")}"></i>Guild median</span>${d.target_score ? `<span><i class="ln dash" style="border-color:${css("--warn")}"></i>Target ${fmt(d.target_score)}</span>` : ""}<span><i class="sq" style="background:${css("--bad")}"></i>No score</span></div><div class="chart"><canvas id="c1"></canvas></div></div>
+        <div><h2>% of the guild's best</h2><p class="hint" style="margin-bottom:10px">100% = the top score in the guild that raid</p><div class="chart"><canvas id="c2"></canvas></div></div>
+      </div>
+      <div class="tablewrap"><table><thead><tr><th>Raid</th><th class="r">Your score</th><th class="r">Guild median</th><th class="r">vs median</th><th class="r">% of best</th><th class="r">Rank</th></tr></thead><tbody>${idx.slice().reverse().map(i => {
+        const s = pl.scores[i], r = d.raids[i], best = Math.max(1, ...d.players.map(q => q.scores[i] || 0)), vs = s > 0 && r.median ? (s - r.median) / r.median * 100 : null;
+        return `<tr><td>${dfmt(r.date)}</td><td class="r num ${s > 0 ? "" : "miss"}">${s == null ? "–" : s > 0 ? int(s) : "No score"}</td><td class="r num">${int(r.median)}</td><td class="r num ${vs > 0 ? "up" : vs < 0 ? "down" : ""}">${vs == null ? "–" : (vs > 0 ? "+" : "") + vs.toFixed(0) + "%"}</td><td class="r num">${s == null ? "–" : P((s || 0) / best * 100)}</td><td class="r num">${rankAt(i) ? "#" + rankAt(i) : "–"}</td></tr>`;
+      }).join("")}</tbody></table></div>`;
+    $("#detail").innerHTML = html;
+    document.querySelectorAll("#raidTypes button").forEach(b => b.onclick = () => { raidType = b.dataset.s; show(); });
+    const labels = idx.map(i => dshort(d.raids[i].date));
+    bar($("#c1"), { type: "bar", data: { labels, datasets: [
+      { type: "line", label: "Guild median", data: idx.map(i => d.raids[i].median), borderColor: css("--text-2"), borderWidth: 2, pointRadius: 0, tension: .25, order: 0 },
+      ...(d.target_score ? [{ type: "line", label: "Target", data: idx.map(() => d.target_score), borderColor: css("--warn"), borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, order: 0 }] : []),
+      { label: "Your score", data: idx.map(i => pl.scores[i] > 0 ? pl.scores[i] : pl.scores[i] == null ? null : 0), backgroundColor: idx.map(i => pl.scores[i] > 0 ? a.color : css("--bad")), minBarLength: 3, borderRadius: 3, maxBarThickness: 28, order: 1 }] },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.raw == null ? "–" : c.raw === 0 ? "no score" : int(c.raw)}` } } },
+        scales: { y: { beginAtZero: true, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => fmt(v) } }, x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true } } } } });
+    const pct = idx.map(i => { const s = pl.scores[i]; if (s == null) return null; return Math.min(100, Math.max(0, s) / Math.max(1, ...d.players.map(q => q.scores[i] || 0)) * 100); });
+    bar($("#c2"), { type: "line", data: { labels, datasets: [{ data: pct, borderColor: a.color, backgroundColor: a.color + "33", fill: true, tension: .3, pointRadius: 3, spanGaps: true }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${P(c.raw)} of the guild's best` } } }, scales: { y: yPct, x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true } } } } });
+  }
+
+  // ---------- territory battles ----------
+  function tbDetail(x, a) {
+    const t = x.p.tb;
+    let html = head(a, x.p.tbId ? `tb.html?guild=${G}&player=${enc(x.p.tbId)}#player` : "", "Full TB player summary") + verdict(a, x, "TB contributions");
+    if (!t || !tbs.length) { $("#detail").innerHTML = html + `<div class="empty">No territory battle results for you yet.</div>`; return; }
+    const played = tbs.map((tb, i) => i).filter(i => t.detail[String(i)]);
+    const firstI = played.length ? played[0] : 0, idx = tbs.map((tb, i) => i).filter(i => i >= firstI);
+    if (tbPick == null || !played.includes(tbPick)) tbPick = played.at(-1) ?? null;
+    const L = tbs.length - 1, sc = i => tbCache[i].out.get(x.p.tbId);
+    const rankAt = i => { const me = sc(i); if (!me) return null; return 1 + [...tbCache[i].out.values()].filter(v => v.overall > me.overall).length; };
+    const medAt = i => median([...tbCache[i].out.values()].map(v => v.overall));
+    html += `<div class="stats">
+        <div><b class="num">${P(sc(L)?.overall)}</b><span>Latest contribution · ${dshort(tbs[L].date)}</span></div>
+        <div><b class="num">${rankAt(L) ? "#" + rankAt(L) : "–"}</b><span>Rank in the latest TB</span></div>
+        <div><b class="num">${fmt(t.tp[L])}</b><span>Territory points</span></div>
+        <div><b class="num">${t.waves[L] == null ? "–" : int(t.waves[L])}</b><span>Combat waves</span></div>
+        <div><b class="num">${t.platoons[L] == null ? "–" : int(t.platoons[L])}</b><span>Platoon units</span></div>
+        <div><b class="num">${played.length}/${idx.length}</b><span>TBs taken part in</span></div></div>
+      <div class="grid2">
+        <div><h2>Contribution per TB</h2><div class="legend"><span><i class="sq" style="background:${a.color}"></i>You</span><span><i class="ln" style="border-color:${css("--text-2")}"></i>Guild median</span><span><i class="sq" style="background:${css("--bad")}"></i>Missed</span></div><div class="chart"><canvas id="c1"></canvas></div></div>
+        <div><h2>By phase</h2>${played.length > 1 ? `<div class="phrow" id="tbPick">${played.slice(-6).map(i => `<button type="button" data-i="${i}" aria-pressed="${i === tbPick}">${dshort(tbs[i].date)}</button>`).join("")}</div>` : `<p class="hint">${tbPick != null ? dfmt(tbs[tbPick].date) : ""}</p>`}
+          <div class="legend"><span><i class="sq" style="background:${a.color}"></i>You</span><span><i class="sq" style="background:${css("--r3") || css("--grid")}"></i>Guild median</span></div><div class="chart"><canvas id="c2"></canvas></div></div>
+      </div>
+      <div class="tablewrap"><table><thead><tr><th>TB</th><th class="r">Contribution</th><th class="r">Rank</th><th class="r">Territory points</th><th class="r">Waves</th><th class="r">Platoons</th><th class="r">Phases deployed</th></tr></thead><tbody>${idx.slice().reverse().map(i => {
+        const me = sc(i);
+        return me ? `<tr><td>${dfmt(tbs[i].date)}</td><td class="r num">${P(me.overall)}</td><td class="r num">#${rankAt(i)}</td><td class="r num">${fmt(t.tp[i])}</td><td class="r num">${int(t.waves[i])}</td><td class="r num">${int(t.platoons[i])}</td><td class="r num">${t.full_deploys[i] ?? "–"} / ${tbs[i].phases}</td></tr>`
+          : `<tr><td>${dfmt(tbs[i].date)}</td><td class="r miss" colspan="6">Didn't take part</td></tr>`;
+      }).join("")}</tbody></table></div>`;
+    $("#detail").innerHTML = html;
+    document.querySelectorAll("#tbPick button").forEach(b => b.onclick = () => { tbPick = +b.dataset.i; show(); });
+    bar($("#c1"), { type: "bar", data: { labels: idx.map(i => dshort(tbs[i].date)), datasets: [
+      { type: "line", label: "Guild median", data: idx.map(medAt), borderColor: css("--text-2"), borderWidth: 2, pointRadius: 0, tension: .25, order: 0 },
+      { label: "You", data: idx.map(i => sc(i) ? sc(i).overall : 0), backgroundColor: idx.map(i => sc(i) ? a.color : css("--bad")), minBarLength: 3, borderRadius: 3, maxBarThickness: 34, order: 1 }] },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.datasetIndex === 1 && !sc(idx[c.dataIndex]) ? " Didn't take part" : ` ${c.dataset.label}: ${P(c.raw)}` } } }, scales: { y: yPct, x: { grid: { display: false } } } } });
+    if (tbPick != null) {
+      const tb = tbs[tbPick], me = sc(tbPick), phs = Array.from({ length: tb.phases }, (_, k) => k + 1);
+      const gmed = phs.map(n => median([...tbCache[tbPick].out.values()].map(v => v.ph[n]?.score)));
+      bar($("#c2"), { type: "bar", data: { labels: phs.map(n => "P" + n + (TBS.phases.includes(n) ? "" : " ·")), datasets: [
+        { label: "You", data: phs.map(n => me?.ph[n]?.score ?? 0), backgroundColor: a.color, borderRadius: 3, maxBarThickness: 26, minBarLength: 2 },
+        { label: "Guild median", data: gmed, backgroundColor: css("--r3") || css("--grid"), borderRadius: 3, maxBarThickness: 26 }] },
+        options: { plugins: { legend: { display: false }, tooltip: { callbacks: {
+          title: i => `Phase ${phs[i[0].dataIndex]}${TBS.phases.includes(phs[i[0].dataIndex]) ? "" : " (not counted)"}`,
+          label: c => { if (c.datasetIndex) return ` Guild median: ${P(c.raw)}`; const p = me?.ph[phs[c.dataIndex]]; return p ? [` You: ${P(p.score)}`, ` Deployed ${P(p.dep)} · waves ${int(p.waves)}${p.spec != null ? " · special " + P(p.spec) : ""}`] : " Didn't take part"; } } } },
+          scales: { y: yPct, x: { grid: { display: false } } } } });
+    }
+  }
+
+  // ---------- territory wars ----------
+  function twDetail(x, a) {
+    const t = x.p.tw;
+    let html = head(a, tws.length ? `tw.html?guild=${G}#members` : "", "Territory war page") + verdict(a, x, "TW banners")
+      + (tws.length && !useTw ? `<p class="hint">Officers have territory wars switched off in the overall score, so this doesn't count towards your overall % right now.</p>` : "");
+    if (!tws.length) { $("#detail").innerHTML = html + `<div class="empty">No territory wars uploaded yet.</div>`; return; }
+    const seenI = x.ws.findIndex(v => v != null), idx = tws.map((tw, i) => i).filter(i => seenI >= 0 && i >= seenI);
+    if (!idx.length) { $("#detail").innerHTML = html + `<div class="empty">No territory war results for you yet.</div>`; return; }
+    const L = tws.length - 1, val = (k, i) => t ? t[k][i] : null;
+    const res = r => r === "win" ? `<span class="badge b-good">Won</span>` : r === "loss" ? `<span class="badge b-bad">Lost</span>` : r === "draw" ? `<span class="badge b-none">Draw</span>` : "–";
+    html += `<div class="stats">
+        <div><b class="num">${val("total", L) == null ? "–" : int(val("total", L))}</b><span>Banners · ${dshort(tws[L].date)}</span></div>
+        <div><b class="num">${val("defense", L) == null ? "–" : int(val("defense", L))}</b><span>Defence banners</span></div>
+        <div><b class="num">${val("offense", L) == null ? "–" : int(val("offense", L))}</b><span>Offence banners</span></div>
+        <div><b class="num">${val("rank", L) ? "#" + val("rank", L) : "–"}</b><span>Rank in the latest TW</span></div>
+        <div><b class="num">${t?.avg == null ? "–" : int(t.avg)}</b><span>Average banners</span></div>
+        <div><b class="num">${idx.filter(i => val("total", i) != null).length}/${idx.length}</b><span>TWs joined</span></div></div>
+      <div class="grid2">
+        <div><h2>Banners per TW</h2><div class="legend"><span><i class="sq" style="background:${css("--series-1")}"></i>Defence</span><span><i class="sq" style="background:${css("--series-2")}"></i>Offence</span><span><i class="ln" style="border-color:${css("--text-2")}"></i>Guild median</span></div><div class="chart"><canvas id="c1"></canvas></div></div>
+        <div><h2>% of the guild's best</h2><p class="hint" style="margin-bottom:10px">100% = the most banners anyone in the guild got that TW; not joining counts 0</p><div class="chart"><canvas id="c2"></canvas></div></div>
+      </div>
+      <div class="tablewrap"><table><thead><tr><th>TW</th><th>Opponent</th><th>Result</th><th class="r">Defence</th><th class="r">Offence</th><th class="r">Banners</th><th class="r">Guild median</th><th class="r">Rank</th></tr></thead><tbody>${idx.slice().reverse().map(i => {
+        const tw = tws[i], tot = val("total", i);
+        return `<tr><td>${dfmt(tw.date)}</td><td>${esc(tw.opponent || "–")}</td><td>${res(tw.result)}</td>${tot == null ? `<td class="r miss" colspan="3">Didn't join</td>` : `<td class="r num">${int(val("defense", i))}</td><td class="r num">${int(val("offense", i))}</td><td class="r num"><b>${int(tot)}</b></td>`}<td class="r num">${int(tw.median_total)}</td><td class="r num">${val("rank", i) ? "#" + val("rank", i) : "–"}</td></tr>`;
+      }).join("")}</tbody></table></div>`;
+    $("#detail").innerHTML = html;
+    const labels = idx.map(i => dshort(tws[i].date));
+    bar($("#c1"), { type: "bar", data: { labels, datasets: [
+      { type: "line", label: "Guild median", data: idx.map(i => tws[i].median_total), borderColor: css("--text-2"), borderWidth: 2, pointRadius: 0, tension: .25, order: 0 },
+      { label: "Defence", data: idx.map(i => val("defense", i)), backgroundColor: css("--series-1"), stack: "b", borderRadius: 3, maxBarThickness: 34, order: 1 },
+      { label: "Offence", data: idx.map(i => val("offense", i)), backgroundColor: css("--series-2"), stack: "b", borderRadius: 3, maxBarThickness: 34, order: 1 }] },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: i => { const tw = tws[idx[i[0].dataIndex]]; return `${dfmt(tw.date)}${tw.opponent ? " · vs " + tw.opponent : ""}`; },
+        label: c => val("total", idx[c.dataIndex]) == null && c.datasetIndex ? " Didn't join" : ` ${c.dataset.label}: ${int(c.raw)}` },
+        filter: c => !(c.datasetIndex === 2 && val("total", idx[c.dataIndex]) == null) } },
+        scales: { y: { stacked: true, beginAtZero: true, grid: { color: css("--grid") }, border: { display: false } }, x: { stacked: true, grid: { display: false } } } } });
+    bar($("#c2"), { type: "bar", data: { labels, datasets: [{ data: idx.map(i => x.ws[i]), backgroundColor: idx.map(i => x.ws[i] ? a.color : css("--bad")), minBarLength: 3, borderRadius: 3, maxBarThickness: 34 }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => x.ws[idx[c.dataIndex]] === 0 && val("total", idx[c.dataIndex]) == null ? " Didn't join (counts 0)" : ` ${P(c.raw)} of the guild's best` } } }, scales: { y: yPct, x: { grid: { display: false } } } } });
+  }
+
+  show();
+  window.addEventListener("themechange", show);
+  addEventListener("hashchange", () => { const h = location.hash.slice(1); if (["raids", "tbs", "tws"].includes(h) && h !== area) { area = h; show(); } });
+})();
+</script>
+</body>
+</html>

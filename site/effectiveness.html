@@ -607,7 +607,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     if (showTw && wt.length) mCharts.push(new Chart($("#mTw"), { type: "bar", data: { labels: wt.map(o => dshort(o.t.date)), datasets: [{ data: wt.map(o => o.v), backgroundColor: wt.map(o => o.v === 0 ? css("--bad") : css("--c-plat")), borderRadius: 3, maxBarThickness: 26, minBarLength: 3 }] },
       options: opts(c => { const o = wt[c.dataIndex]; const b = x.p.tw ? x.p.tw.total[o.i] : null; return [` ${P(o.v)}`, ` ${b == null ? "Didn't join" : b + " banners"}${o.t.opponent ? " · vs " + o.t.opponent : ""}`]; }) }));
     const rp = Object.values(x.p.raid)[0];
-    $("#mLinks").innerHTML = [rp ? `<a href="./?guild=${G}&raid=${enc(Object.keys(x.p.raid)[0])}#players">Raid results →</a>` : "", x.p.tbId ? `<a href="tb.html?guild=${G}&player=${enc(x.p.tbId)}#player">TB player summary →</a>` : "", x.p.tbId ? `<a href="ranking.html?guild=${G}&player=${enc(x.p.tbId)}">TB contribution →</a>` : ""].filter(Boolean).join("");
+    $("#mLinks").innerHTML = [`<a href="player.html?guild=${G}&player=${enc(x.p.id)}">Player status →</a>`, rp ? `<a href="./?guild=${G}&raid=${enc(Object.keys(x.p.raid)[0])}#players">Raid results →</a>` : "", x.p.tbId ? `<a href="tb.html?guild=${G}&player=${enc(x.p.tbId)}#player">TB player summary →</a>` : "", x.p.tbId ? `<a href="ranking.html?guild=${G}&player=${enc(x.p.tbId)}">TB contribution →</a>` : ""].filter(Boolean).join("");
     function order(r) { const o = rows.filter(z => z.ranked).sort((a, b) => b.eff - a.eff); return o.indexOf(r) + 1; }
   }
   $("#search").oninput = render; $("#curOnly").onchange = render;
