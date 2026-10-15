@@ -105,7 +105,7 @@ def known_ships() -> set[str]:
     # swgoh.gg's unit list (scripts/units.json), when the build has fetched it
     try:
         uj = json.loads((Path(__file__).resolve().parent / "units.json").read_text(encoding="utf-8"))
-        ships |= {k.upper() for k, v in uj.items() if v.get("ship")}
+        ships |= {k.upper() for k, v in uj.items() if isinstance(v, dict) and v.get("ship")}
     except (OSError, ValueError):
         pass
     # learn from any WookieeBot roster in the repo

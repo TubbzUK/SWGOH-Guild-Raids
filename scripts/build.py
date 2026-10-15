@@ -65,7 +65,8 @@ UNIT_INFO: dict[str, dict] = {}      # BaseId -> {name, img, ship, side} from sw
 def load_units() -> dict[str, dict]:
     f = Path(__file__).resolve().parent / "units.json"
     try:
-        return {k.upper(): v for k, v in json.loads(f.read_text(encoding="utf-8")).items()} if f.exists() else {}
+        return {k.upper(): v for k, v in json.loads(f.read_text(encoding="utf-8")).items()
+                if not k.startswith("_") and isinstance(v, dict)} if f.exists() else {}
     except (OSError, ValueError):
         warn("scripts/units.json couldn't be read - no unit pictures this time")
         return {}
@@ -720,8 +721,11 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
     target = float(target) if target else None
     rconf = load_readiness_config(rdef["cfg"])
     for cid in unknown_characters(roster, rconf):
-        warn(f"{rdef['name']} readiness character '{cid}' isn't in anyone's roster - new unit, "
-             f"or check the ID in raids/{rdef['slug']}.yml")
+        if UNIT_INFO and str(cid).upper() not in UNIT_INFO:
+            warn(f"{rdef['name']} readiness character '{cid}' isn't a unit the game knows - check the ID in raids/{rdef['slug']}.yml")
+        else:
+            warn(f"{rdef['name']} readiness character '{cid}' isn't in anyone's roster yet - new unit nobody has unlocked, "
+                 f"or check the ID in raids/{rdef['slug']}.yml")
 
     raids_out = []
     for i, r in enumerate(raids):

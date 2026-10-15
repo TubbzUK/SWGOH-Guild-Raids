@@ -81,10 +81,11 @@ to scripts/ships.txt.
 ## Unit names and pictures
 
 Character and ship portraits (on the raid readiness tab and in each member's roster on Player status)
-and unit names come from swgoh.gg's public unit lists. The site update fetches the list into
+and unit names come from the game itself (through Comlink); the site update saves the list in
 `scripts/units.json` when it pulls from the game (and on the first run); the pictures themselves are
-shown straight from swgoh.gg's image server, nothing is copied. If swgoh.gg can't be reached the last
-list is kept, and without one the site shows initials instead of pictures. The game artwork belongs to
+shown straight from swgoh.gg's image server, nothing is copied. The list is refreshed weekly, or when a
+roster has a unit it doesn't know; if that fails the last list is kept, and without one the site shows
+initials instead of pictures. The game artwork belongs to
 EA and Lucasfilm.
 
 ## Uploading from the website (easiest)
