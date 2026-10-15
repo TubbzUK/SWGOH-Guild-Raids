@@ -4,12 +4,18 @@ on:
   push:
     branches: [main]
     paths: ["guilds/**", "raids/**", "scripts/**", "site/**", ".github/workflows/**"]
+  schedule:
+    - cron: "23 */4 * * *"      # every 4 hours: pull rosters, raid scores and TW results from the game
   workflow_dispatch:
     inputs:
       post_to_discord:
         description: "Post each guild's latest raid summary to Discord"
         type: boolean
         default: false
+      sync_from_game:
+        description: "Pull rosters, raid scores and TW results from the game first"
+        type: boolean
+        default: true
 
 permissions:
   contents: write     # to file uploads by date
@@ -38,34 +44,70 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: File uploads by raid date
-        id: organize
+      - name: What changed
+        id: changes
         run: |
           NEW=""
           if [ "${{ github.event_name }}" = "push" ]; then
             NEW=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- guilds 2>/dev/null || true)
           fi
-          python scripts/organize.py --new "$NEW"
-          if [ -n "$(git status --porcelain guilds)" ]; then
+          { echo "new<<EOF"; echo "$NEW"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+          # pull from the game on the schedule, when run by hand, or when an officer pressed "Pull from the game now"
+          if [ "${{ github.event_name }}" = "schedule" ] || echo "$NEW" | grep -q "/sync-now"; then
+            echo "sync=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.sync_from_game }}" = "true" ]; then
+            echo "sync=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pull from the game (Comlink)
+        id: sync
+        if: steps.changes.outputs.sync == 'true'
+        continue-on-error: true
+        run: |
+          if grep -qs "^ally_code:" guilds/*/config.yml; then
+            docker run -d --name comlink -p 3000:3000 -e APP_NAME=guild-statistics ghcr.io/swgoh-utils/swgoh-comlink:latest
+          fi
+          python scripts/sync_game.py
+
+      - name: Unit names and pictures (swgoh.gg)
+        if: steps.changes.outputs.sync == 'true' || hashFiles('scripts/units.json') == ''
+        continue-on-error: true
+        run: python scripts/fetch_units.py
+
+      - name: File uploads by raid date
+        id: organize
+        env:
+          NEW: ${{ steps.changes.outputs.new }}
+          PULLED: ${{ steps.sync.outputs.new }}
+        run: |
+          python scripts/organize.py --new "$NEW
+          $PULLED"
+          if [ -n "$(git status --porcelain guilds scripts/units.json)" ]; then
             git config user.name "raid-tracker-bot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -A guilds
-            git commit -m "File uploaded raid/roster files by date"
+            [ -f scripts/units.json ] && git add scripts/units.json
+            git commit -m "File uploads and game data by date"
             git pull --rebase --autostash
             git push
           fi
 
       - name: Build data.json
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         run: python scripts/build.py
 
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         with:
           path: site
       - id: deployment
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         uses: actions/deploy-pages@v4
 
       - name: Post to Discord
+        if: github.event_name != 'schedule' || steps.sync.outputs.changed == 'true'
         env:
           SECRETS_JSON: ${{ toJSON(secrets) }}
           SITE_URL: ${{ steps.deployment.outputs.page_url }}
