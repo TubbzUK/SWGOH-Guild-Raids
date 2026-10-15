@@ -137,9 +137,13 @@ a { color: var(--accent); }
     <div class="step" id="tbStep" hidden>
       <span class="n">3</span>
       <div>
-        <label class="title" for="tbDate">When did the territory battle end?</label>
-        <input type="date" id="tbDate">
-        <div class="sub" style="margin-top:6px">Uploading another file with the same date replaces it (handy for corrections).</div>
+        <span class="title">Which territory battle is this?</span>
+        <div class="choices" id="tbWhich"></div>
+        <div id="tbNewBox" style="margin-top:10px">
+          <label class="title" for="tbDate" style="font-size:11px">Date for the new territory battle</label>
+          <input type="date" id="tbDate">
+        </div>
+        <div class="sub" style="margin-top:6px" id="tbWhichNote">Uploading part-way through a TB? Pick the TB in progress so each phase's export replaces the last one instead of adding another TB. Officers can also merge uploads later from the TB page (Officers → Manage TB uploads).</div>
       </div>
     </div>
 
@@ -447,7 +451,7 @@ a { color: var(--accent); }
     $("#tokenN").textContent = raidKind || tbKind || twKind ? "5" : "4";
     const blocked = !!$("#check .bad");
     const login = mode === "password" ? $("#password").value : $("#token").value.trim();
-    $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && (!tbKind || /^\d{4}-\d{2}-\d{2}$/.test($("#tbDate").value)) && !blocked && repo);
+    $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && (!tbKind || tbWhich() || /^\d{4}-\d{2}-\d{2}$/.test($("#tbDate").value)) && !blocked && repo);
   }
   const pick = f => { file = f || null; $("#dropText").innerHTML = file ? `<b>${esc(file.name)}</b> · ${(file.size / 1024).toFixed(0)} KB · <u>change</u>` : `<b>Choose a file</b> or drag it here`; runChecks(); };
   $("#file").onchange = e => pick(e.target.files[0]);
@@ -457,7 +461,21 @@ a { color: var(--accent); }
   ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e => pick(e.dataTransfer.files[0]));
   document.querySelectorAll("input[name=kind]").forEach(r => r.onchange = () => { update(); runChecks(); });
-  $("#guild").onchange = () => { backLink(); runChecks(); };
+  $("#guild").onchange = () => { backLink(); runChecks(); loadTbs(); };
+  // territory battles already uploaded for this guild: offer to update the one in progress
+  let tbList = [];
+  async function loadTbs() {
+    const g = $("#guild").value; tbList = [];
+    if (g) { try { const r = await fetch(`data/${encodeURIComponent(g)}/tb.json`, { cache: "no-store" }); if (r.ok) tbList = ((await r.json()).tbs || []).slice().reverse(); } catch (e) {} }
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const recent = tbList.slice(0, 2), fresh = recent[0] && (today - new Date(recent[0].date + "T00:00:00")) / 864e5 <= 7;
+    $("#tbWhich").innerHTML = recent.map((t, i) => `<label><input type="radio" name="tbwhich" value="${esc(t.file)}" ${i === 0 && fresh ? "checked" : ""}> <span>Update the TB of ${fmtDate(t.date)}<small>${t.phases} phase${t.phases === 1 ? "" : "s"} so far · replaces that upload</small></span></label>`).join("")
+      + `<label><input type="radio" name="tbwhich" value="" ${fresh ? "" : "checked"}> <span>A new territory battle<small>Adds it as a separate TB</small></span></label>`;
+    $("#tbWhich").querySelectorAll("input").forEach(r => r.onchange = () => { $("#tbNewBox").hidden = !!tbWhich(); update(); });
+    $("#tbNewBox").hidden = !!tbWhich(); update();
+  }
+  const tbWhich = () => document.querySelector('input[name="tbwhich"]:checked')?.value || "";
+  loadTbs();
   $("#raid").onchange = () => { backLink(); runChecks(); };
   $("#token").oninput = update; $("#password").oninput = update; $("#tbDate").oninput = update;
   update();
@@ -497,11 +515,12 @@ a { color: var(--accent); }
     const isRaid = kind() === "raid", rName = $("#raid").selectedOptions[0]?.text;
     const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
     const safeName = file.name.replace(/[\\/:*?"<>|#%]+/g, "_");
-    const isTb = kind() === "tb", tbDate = $("#tbDate").value;
+    const isTb = kind() === "tb", tbOld = isTb ? tbWhich() : "", tbOldT = tbList.find(t => t.file === tbOld);
+    const tbDate = tbOldT ? tbOldT.date : $("#tbDate").value;
     const isTw = kind() === "tw", twDate = (info && info.type === "tw" && info.date) || null;
     const ext = (/\.(csv|tsv|txt|xlsx|xls)$/i.exec(file.name) || [".csv"])[0].toLowerCase();
     const path = isRaid ? `guilds/${g}/${$("#raid").value}/upload-${stamp} ${safeName}`
-      : isTb ? `guilds/${g}/tb/${tbDate} RotE${ext}`
+      : isTb ? (tbOldT ? `guilds/${g}/tb/${tbOld.replace(/\.[^.]+$/, "")}${ext}` : `guilds/${g}/tb/${tbDate} RotE${ext}`)
       : isTw ? (twDate ? `guilds/${g}/tw/${twDate} TW${ext}` : `guilds/${g}/tw/upload-${stamp} ${safeName}`)
       : `guilds/${g}/roster/upload-${stamp} ${safeName}`;
     const what = isRaid ? `${gName} ${rName} results` : isTb ? `${gName} territory battle (${fmtDate(tbDate)})` : isTw ? `${gName} territory war${twDate ? ` (${fmtDate(twDate)})` : ""}` : `${gName} roster`;
@@ -530,7 +549,13 @@ a { color: var(--accent); }
         method: "PUT", body: JSON.stringify({ message: `Upload ${what} from the website`, content, branch, ...(sha0 ? { sha: sha0 } : {}) }),
       });
       if (!res.ok) { list[0] = ["fail", await explain(res)]; progress(list); $("#go").disabled = false; return; }
-      const sha = (await res.json()).commit.sha;
+      let sha = (await res.json()).commit.sha;
+      // updating a TB with a different file type (.xlsx over .csv): remove the old upload so it isn't counted twice
+      if (tbOldT && !path.endsWith("/" + tbOld)) {
+        const op = `/repos/${repo}/contents/${["guilds", g, "tb", tbOld].map(encodeURIComponent).join("/")}`;
+        const ex = await gh(`${op}?ref=${encodeURIComponent(branch)}`, token);
+        if (ex.ok) { const dr = await gh(op, token, { method: "DELETE", body: JSON.stringify({ message: `Replace ${tbOld} with the newer upload`, sha: (await ex.json()).sha, branch }) }); if (dr.ok) sha = (await dr.json()).commit.sha; }
+      }
       list[0] = ["done", `Uploaded ${esc(what)}`];
       list[1] = ["run", "Updating the site (usually about 2 minutes)…"];
       progress(list);

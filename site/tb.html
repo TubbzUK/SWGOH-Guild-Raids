@@ -601,6 +601,48 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   window.addEventListener("themechange", render);
   (function hook() { if (!window.Officer) return setTimeout(hook, 50);
     Officer.postButton($("#postBtn"), () => ({ guild: guild.slug, kind: "tb", tb: tbs[sel].id, label: `${guild.name} territory battle of ${dfmt(tbs[sel].date)}` })); })();
+  // Officers: tidy up TB uploads - merge phase-by-phase uploads of one TB, change a date, or remove one
+  function manageTbs() {
+    const rows = tbs.map((t, i) => ({ t, i })).reverse();
+    const near = (a, b) => Math.abs(new Date(a + "T00:00:00") - new Date(b + "T00:00:00")) / 864e5 <= 7;
+    const html = `<p style="margin:0 0 10px">Each upload with a different date shows as its own TB. Tick the uploads that belong to one territory battle and merge them: the upload with the most phases is kept (each export has every phase so far) and the others are removed.</p>
+      <div style="max-height:44vh;overflow:auto;border:1px solid var(--border);border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="background:var(--surface-2)"><th style="padding:6px 8px"></th><th style="text-align:left;padding:6px 8px">Date</th><th style="text-align:right;padding:6px 8px">Phases</th><th style="text-align:right;padding:6px 8px">Members</th><th style="text-align:right;padding:6px 8px">Territory points</th><th style="text-align:left;padding:6px 8px">File</th></tr></thead><tbody>
+      ${rows.map(({ t, i }) => `<tr style="border-top:1px solid var(--border)"><td style="padding:6px 8px"><input type="checkbox" class="mgTick" value="${i}" aria-label="${esc(dfmt(t.date))}" ${i === latestI || (latestI > 0 && i === latestI - 1 && near(t.date, tbs[latestI].date)) ? "checked" : ""}></td>
+        <td style="padding:6px 8px;white-space:nowrap">${dfmt(t.date)}</td><td style="padding:6px 8px;text-align:right">${t.phases}</td><td style="padding:6px 8px;text-align:right">${t.members ?? "–"}</td><td style="padding:6px 8px;text-align:right">${fmt(t.tp)}</td><td style="padding:6px 8px;color:var(--muted);font-size:12px">${esc(t.file)}</td></tr>`).join("")}
+      </tbody></table></div>
+      <div style="display:grid;gap:6px;margin-top:12px">
+        <label style="margin:0"><input type="radio" name="mgAct" value="merge" checked> Merge the ticked uploads into one TB, dated <input type="date" id="mgDate" style="margin-left:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px 6px"></label>
+        <label style="margin:0"><input type="radio" name="mgAct" value="rename"> Change the date of the ticked TB to the date above</label>
+        <label style="margin:0"><input type="radio" name="mgAct" value="delete"> Remove the ticked uploads</label>
+      </div><p style="margin:10px 0 0;font-size:12.5px">Changes show on the site in about 2 minutes. Removed files stay in the repository's history on GitHub.</p>`;
+    const picked = () => [...document.querySelectorAll(".mgTick:checked")].map(x => tbs[+x.value]);
+    const sync = () => { const p = picked(); if (p.length) $("#mgDate").value = p.map(t => t.date).sort().at(-1); };
+    Officer.form({ title: "Manage TB uploads", wide: true, html, button: "Save changes",
+      ready: () => { sync(); document.querySelectorAll(".mgTick").forEach(x => x.onchange = sync); },
+      run: async ({ putFile }) => {
+        const p = picked(), act = document.querySelector('input[name="mgAct"]:checked').value, date = $("#mgDate").value;
+        let req;
+        if (act === "merge") {
+          if (p.length < 2) throw new Error("tick at least two uploads to merge");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("choose a date for the merged TB");
+          const keep = p.slice().sort((a, b) => a.phases - b.phases || (a.tp || 0) - (b.tp || 0) || a.date.localeCompare(b.date)).at(-1);
+          req = { action: "merge", files: p.map(t => t.file), keep: keep.file, date };
+        } else if (act === "rename") {
+          if (p.length !== 1) throw new Error("tick exactly one TB to change its date");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("choose the new date");
+          req = { action: "rename", file: p[0].file, date };
+        } else {
+          if (!p.length) throw new Error("tick the uploads to remove");
+          if (!confirm(`Remove ${p.length} TB upload${p.length > 1 ? "s" : ""} (${p.map(t => dfmt(t.date)).join(", ")})?`)) throw new Error("cancelled");
+          req = { action: "delete", files: p.map(t => t.file) };
+        }
+        const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
+        await putFile(`guilds/${guild.slug}/tb/changes-${stamp}.json`, JSON.stringify({ ...req, requested_at: new Date().toISOString() }, null, 1), `TB uploads: ${act} (${guild.name})`);
+      },
+      done: "✔ Saved. The TB page updates in about 2 minutes (refresh then)." });
+  }
+  (function mh() { if (!window.RaidTheme || !window.Officer) return setTimeout(mh, 50); RaidTheme.menuItem("officer", "✎ Manage TB uploads", manageTbs); })();
   render();
   (function cr() { if (!window.RaidTheme) return setTimeout(cr, 30); RaidTheme.cardReady(); })();
 })();

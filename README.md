@@ -258,6 +258,17 @@ Phase 1) and how much each part is worth. **Preview** changes only their own vie
 everyone** saves to `guilds/<guild>/tb-settings.json` and every member sees it about two minutes
 later. Anyone with the link can view the ranking; only officers can change the settings.
 
+### Uploading a TB phase by phase
+
+On the upload page, a TB upload asks **Which territory battle is this?** Pick *Update the TB of …*
+(pre-selected when the last TB is less than a week old) and the new export replaces that TB's file,
+so the same TB just fills in as the phases go. Pick *A new territory battle* to start the next one.
+
+Uploads that ended up as separate TBs can be tidied on the TB page: **Officers → ✎ Manage TB uploads**.
+Tick the uploads of one TB and *merge* them (the one with the most phases is kept, the rest removed,
+under the date you choose), *change the date* of a TB, or *remove* an upload. The site updates about
+two minutes later; removed files stay in the repository history.
+
 ## Guild effectiveness (raids + territory battles)
 
 **◎ Effectiveness** (`…/effectiveness.html?guild=oanr`) combines raid and TB performance into one

@@ -49,6 +49,61 @@ def is_roster(path: Path) -> bool:
     return bool(build.find_col(df, build.UNIT_KEYS) and build.find_col(df, build.RELIC_KEYS))
 
 
+def apply_tb_changes(gdir: Path, log: list[str]) -> None:
+    """Officer requests from the TB page (guilds/<guild>/tb/changes-<time>.json):
+      {"action": "merge", "files": [...], "keep": "<file>", "date": "YYYY-MM-DD"}  one TB uploaded phase by
+          phase: keep the newest upload (it has every phase so far), file it under the date, remove the rest
+      {"action": "rename", "file": "<file>", "date": "YYYY-MM-DD"}                    change a TB's date
+      {"action": "delete", "files": [...]}                                          remove uploads
+    Only plain file names inside that guild's tb/ folder are touched."""
+    tb_dir = gdir / "tb"
+    if not tb_dir.exists():
+        return
+    for req in sorted(tb_dir.glob("changes-*.json")):
+        try:
+            r = json.loads(req.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            print(f"Couldn't read {req.name}: {e}")
+            req.unlink()
+            continue
+        req.unlink()
+        ok = lambda n: isinstance(n, str) and "/" not in n and "\\" not in n and not n.startswith(".") and (tb_dir / n).is_file()  # noqa: E731
+        act, date = r.get("action"), str(r.get("date") or "")
+        if date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+            log.append(f"{gdir.name}/tb: ignored a request with a bad date ({date})")
+            continue
+        def file_as(path: Path, d: str) -> Path:
+            _, label = build.name_date(path)
+            target = tb_dir / f"{d} {label or 'RotE'}{path.suffix.lower()}"
+            if target != path:
+                if target.exists():
+                    target.unlink()
+                path.replace(target)
+            return target
+        if act == "merge":
+            files = [n for n in r.get("files") or [] if ok(n)]
+            keep = r.get("keep") if ok(r.get("keep")) else (files[-1] if files else None)
+            if not keep:
+                log.append(f"{gdir.name}/tb: merge request with no matching files - nothing done")
+                continue
+            for n in files:
+                if n != keep:
+                    (tb_dir / n).unlink()
+            d = date or (build.name_date(tb_dir / keep)[0] or dt.date.today()).isoformat()
+            t = file_as(tb_dir / keep, d)
+            log.append(f"{gdir.name}/tb: merged {len(files)} uploads into {t.name}")
+        elif act == "rename" and ok(r.get("file")) and date:
+            t = file_as(tb_dir / r["file"], date)
+            log.append(f"{gdir.name}/tb: {r['file']} -> {t.name}")
+        elif act == "delete":
+            for n in r.get("files") or []:
+                if ok(n):
+                    (tb_dir / n).unlink()
+                    log.append(f"{gdir.name}/tb: removed {n}")
+        else:
+            log.append(f"{gdir.name}/tb: ignored an unknown request ({act})")
+
+
 def organize_guild(gdir: Path, defs: list[dict], log: list[str]) -> dict[str, str]:
     """Returns {uploaded path: final path} for every raid file it moved or renamed (repo-relative)."""
     build.use_guild(gdir)
@@ -155,6 +210,7 @@ def main() -> int:
     log: list[str] = []
     post: set[str] = set()
     for gdir in build.guild_dirs():
+        apply_tb_changes(gdir, log)
         moves = organize_guild(gdir, defs, log)
         for a in added:
             final = moves.get(a, a)

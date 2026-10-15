@@ -17,7 +17,8 @@
   .off-dlg { border: 1px solid var(--border); border-radius: 14px; background: var(--surface-solid); color: var(--text); padding: 18px 20px; width: min(440px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.45); font: 15px/1.5 var(--font-ui); }
   .off-dlg::backdrop { background: rgba(3, 5, 11, .6); }
   .off-dlg h2 { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
-  .off-dlg p { font-size: 13.5px; color: var(--text-2); margin: 0 0 12px; }
+  .off-dlg p, .off-dlg .off-text { font-size: 13.5px; color: var(--text-2); margin: 0 0 12px; }
+  .off-dlg.wide { width: min(680px, calc(100vw - 32px)); }
   .off-dlg input[type=password] { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font: 14px var(--font-ui); }
   .off-dlg label { display: flex; gap: 6px; align-items: center; color: var(--text-2); font-size: 13px; margin-top: 10px; }
   .off-dlg .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
@@ -32,7 +33,7 @@
     if ($("#offDlg")) return;
     const st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
     const d = document.createElement("dialog"); d.id = "offDlg"; d.className = "off-dlg";
-    d.innerHTML = `<form method="dialog" id="offForm"><h2 id="offTitle">Post to Discord</h2><p id="offText"></p>
+    d.innerHTML = `<form method="dialog" id="offForm"><h2 id="offTitle">Post to Discord</h2><div id="offText" class="off-text"></div>
       <div id="offPw"><input type="password" id="offPass" autocomplete="current-password" spellcheck="false" aria-label="Officer password" placeholder="Officer password">
       <label><input type="checkbox" id="offRemember" checked> Remember on this device</label></div>
       <div id="offMsg"></div>
@@ -97,7 +98,7 @@
     const d = $("#offDlg");
     if (!TOKEN) TOKEN = await remembered();
     const s = await loadSite();
-    $("#offTitle").textContent = "Post to Discord"; $("#offGo").textContent = "Post";
+    d.classList.remove("wide"); $("#offTitle").textContent = "Post to Discord"; $("#offGo").textContent = "Post";
     $("#offText").innerHTML = `Post <b>${esc(req.label)}</b> to the guild's ${req.kind === "platoons" ? "platoons" : req.kind === "effectiveness" ? "officers'" : "Discord"} channel? It appears about 3 minutes from now, once the site has updated.`
       + (TOKEN ? "" : `<br><br>${s.key ? "Enter the officer password (the same one as the upload page)." : "No officer password is set up yet: enter a GitHub access token."}`);
     $("#offPw").hidden = !!TOKEN; $("#offPass").value = ""; msg(); $("#offGo").disabled = false;
@@ -138,14 +139,16 @@
   }
 
   /** A general officer form: title, body HTML, a button label, and run() which saves (after the password). */
-  async function form({ title, html, button, run, done }) {
+  async function form({ title, html, button, run, done, wide, ready }) {
     mount();
     const d = $("#offDlg");
+    d.classList.toggle("wide", !!wide);
     if (!TOKEN) TOKEN = await remembered();
     const s = await loadSite();
     $("#offTitle").textContent = title;
     $("#offText").innerHTML = html + (TOKEN ? "" : `<br><br>${s.key ? "Enter the officer password (the same one as the upload page)." : "No officer password is set up yet: enter a GitHub access token."}`);
     $("#offPw").hidden = !!TOKEN; $("#offPass").value = ""; msg(); $("#offGo").disabled = false; $("#offGo").textContent = button || "Save";
+    if (ready) ready();
     $("#offForm").onsubmit = async e => {
       e.preventDefault();
       $("#offGo").disabled = true;
