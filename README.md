@@ -45,7 +45,7 @@ that device - for your overall score and a score for each area:
 - **Territory battles**: your TB contribution (deployment, combat and special missions, platoons).
 - **Territory wars**: your banners as a % of the guild's best.
 
-Below that is the member's **full roster**: GP, counts (GLs, R9+, R7+, G13, 7★ ships) and every character and ship with stars, relic or gear level and power, with search, sorting and a light/dark filter. It comes from the latest roster (uploaded or pulled from the game); unit names come from the platoon plan and scripts/unit-names.csv.
+Below that is the member's **full roster**: GP, counts (GLs, R9+, R7+, G13, 7★ ships) and every character and ship with stars, relic or gear level and power, with search, sorting and a light/dark filter. **Zetas** and **Omicrons** buttons switch the roster to the member's upgraded abilities: one card per unit listing each zeta, and each omicron with its game mode (TW, TB, GAC, Raid, Conquest...), with a game-mode filter for omicrons. Ability names need the guild connected to the game; an uploaded WookieeBot roster gives the counts only. It comes from the latest roster (uploaded or pulled from the game); unit names come from the platoon plan and scripts/unit-names.csv.
 
 Each shows your rank, the guild median and whether you're rising, steady or falling. Tap one for its
 history: charts against the guild median, phase by phase for TBs, and a table of every event. The

@@ -25,8 +25,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = Path(__file__).resolve().parent / "units.json"
+SKILLS_OUT = Path(__file__).resolve().parent / "skills.json"   # abilities that can take a zeta or an omicron
 COMLINK = os.getenv("COMLINK_URL", "http://localhost:3000").rstrip("/")
-UNITS_ITEM = "137438953472"          # the game data 'units' collection
+UNITS_ITEM = str(137438953472 + 4 + 2097152)   # game data collections: units + skills + abilities
+OMICRON_MODES = {4: "Raid", 7: "TB", 8: "TW", 9: "GAC", 11: "Conquest", 12: "Galactic Challenge", 14: "GAC 3v3", 15: "GAC 5v5"}
+KINDS = {"basicskill": "Basic", "specialskill": "Special", "uniqueskill": "Unique", "leaderskill": "Leader",
+         "hardwareskill": "Hardware", "contractskill": "Contract"}
 SIDES = {"1": "N", "2": "L", "3": "D"}
 
 
@@ -60,8 +64,8 @@ def roster_ids() -> set[str]:
 
 
 def needed(force: bool) -> str | None:
-    if force or not OUT.exists():
-        return "no unit list yet" if not OUT.exists() else "forced"
+    if force or not OUT.exists() or not SKILLS_OUT.exists():
+        return "forced" if force else "no unit list yet"
     try:
         cur = json.loads(OUT.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -96,7 +100,7 @@ def main() -> int:
     text = next((v for k, v in (loc or {}).items() if isinstance(v, str) and "|" in v), "")
     names = {}
     for line in text.splitlines():
-        if line.startswith("UNIT_") and "|" in line:
+        if "|" in line and not line.startswith("#"):
             k, v = line.split("|", 1)
             names[k] = v.strip()
     units: dict[str, dict] = {}
@@ -120,6 +124,38 @@ def main() -> int:
     if len(units) < 100:
         print(f"::warning::The game returned only {len(units)} units - keeping the saved list")
         return 0
+    # abilities with a zeta or omicron tier, and which unit each belongs to
+    abil = {a.get("id"): a for a in data.get("ability") or []}
+    owner = {}
+    for u in data.get("units") or []:
+        bid = str(u.get("baseId") or "").upper()
+        if bid not in units:
+            continue
+        refs = list(u.get("skillReference") or []) + [r for c in u.get("crew") or [] for r in c.get("skillReference") or []]
+        for r in refs:
+            owner.setdefault(r.get("skillId"), bid)
+    skills = {}
+    for sk in data.get("skill") or []:
+        sid, tiers = sk.get("id"), sk.get("tier") or []
+        if sid not in owner:
+            continue
+        z = next((i for i, t in enumerate(tiers) if t.get("isZetaTier")), None)
+        o = next((i for i, t in enumerate(tiers) if t.get("isOmicronTier")), None)
+        if z is None and o is None:
+            continue
+        a = abil.get(sk.get("abilityReference")) or {}
+        nm = names.get(a.get("nameKey") or "", "") or names.get(sk.get("nameKey") or "", "") or sid
+        e = {"unit": owner[sid], "name": nm, "kind": KINDS.get(sid.split("_", 1)[0].lower(), "")}
+        if z is not None:
+            e["zeta"] = z
+        if o is not None:
+            e["omicron"] = o
+            mode = sk.get("omicronMode")
+            e["mode"] = OMICRON_MODES.get(int(mode), str(mode)) if str(mode).isdigit() else str(mode or "")
+        skills[sid] = e
+    if skills:
+        SKILLS_OUT.write_text(json.dumps(dict(sorted(skills.items())), indent=0, ensure_ascii=False), encoding="utf-8")
+        print(f"Zeta/omicron abilities saved: {len(skills)} ({sum('omicron' in v for v in skills.values())} with omicrons)")
     out = {"_fetched": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), **dict(sorted(units.items()))}
     OUT.write_text(json.dumps(out, indent=0, ensure_ascii=False), encoding="utf-8")
     print(f"Unit list saved: {len(units)} units, {sum('img' in v for v in units.values())} with pictures")

@@ -132,6 +132,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 .unit .lvl.r5 { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); } .unit .lvl.r1 { background: var(--warn-bg); color: var(--warn-ink); }
 .unit .st { color: #f5c542; letter-spacing: -1px; font-size: 11px; white-space: nowrap; } .unit .st i { color: var(--muted); font-style: normal; }
 .rmore { margin-top: 10px; text-align: center; }
+.unit .zo { display: inline-flex; gap: 4px; align-items: center; }
+.zb, .ob, .ab i { font: 700 10.5px var(--font-display); font-style: normal; padding: 1px 6px; border-radius: 999px; }
+.zb, .ab.z i { background: #7c3aed; color: #fff; } .ob, .ab.o i { background: #0ea5e9; color: #fff; }
+#rType .zbtn[aria-pressed="true"] { background: #7c3aed; border-color: #7c3aed; color: #fff; } #rType .obtn[aria-pressed="true"] { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
+.abhint { grid-column: 1 / -1; font-size: 12.5px; color: var(--text-2); }
+.unit.abu { align-items: flex-start; grid-column: span 2; }
+.abs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.ab { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px 3px 4px; font-size: 12.5px; }
+.ab small { color: var(--muted); font-size: 11px; }
+.ab b { font: 700 10.5px var(--font-ui); background: var(--surface-2); color: var(--text); border-radius: 5px; padding: 1px 5px; }
+@media (max-width: 600px) { .unit.abu { grid-column: 1 / -1; } }
 @media (max-width: 600px) { .units { grid-template-columns: 1fr 1fr; gap: 6px; } .unit { padding: 8px 8px 7px 11px; gap: 7px; } .pf { width: 36px; height: 36px; font-size: 12px; } .unit .un { font-size: 12.5px; } .unit .st { font-size: 9.5px; } }
 .rmore button { border: 1px solid var(--border); background: var(--surface); color: var(--accent); border-radius: 8px; padding: 7px 16px; font: 600 13px var(--font-ui); cursor: pointer; }
 :root { --c-plat: #8b5cf6; }
@@ -540,14 +551,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 
   // ---------- full roster (characters and ships) ----------
   const GLS = new Set(["SUPREMELEADERKYLOREN", "GLREY", "GRANDMASTERLUKE", "SITHPALPATINE", "JEDIMASTERKENOBI", "LORDVADER", "JABBATHEHUTT", "GLLEIA", "GLAHSOKATANO", "GLHONDO"]);
-  let RD = null, rdLoading = null, rType = "chars", rSort = "power", rQ = "", rSide = "", rAll = false;
-  const loadRosters = () => rdLoading || (rdLoading = getJSON(`data/${G}/rosters.json`).then(d => { RD = d || { units: [], players: [] }; return RD; }));
+  let RD = null, SK = {}, rdLoading = null, rType = "chars", rSort = "power", rQ = "", rSide = "", rAll = false, rMode = "";
+  const loadRosters = () => rdLoading || (rdLoading = Promise.all([getJSON(`data/${G}/rosters.json`), getJSON("data/skills.json")])
+    .then(([d, sk]) => { RD = d || { units: [], players: [] }; SK = sk || {}; return RD; }));
   async function renderRoster(x) {
     const box = $("#roster"), id = x.p.id;
     if (!RD) { box.innerHTML = `<div class="rhead"><h2>Roster</h2></div><div class="empty">Loading…</div>`; await loadRosters(); if (selId !== id) return; }
     const pr = RD.players.find(p => norm(p.name) === id);
     if (!pr) { box.innerHTML = `<div class="rhead"><h2>Roster</h2></div><div class="empty">${RD.players.length ? "This member isn't in the latest roster." : "No roster yet: upload a WookieeBot roster export, or connect the guild to the game."}</div>`; return; }
-    const U = pr.u.map(([i, stars, gear, relic, power, level]) => ({ ...RD.units[i], stars, gear, relic, power, level }));
+    const U = pr.u.map(([i, stars, gear, relic, power, level, zc, oc, zs, os]) => ({ ...RD.units[i], stars, gear, relic, power, level, zc: zc || 0, oc: oc || 0, zs: zs || [], os: os || [] }));
+    const nZ = U.reduce((a, u) => a + u.zc, 0), nO = U.reduce((a, u) => a + u.oc, 0), showAb = RD.zetas || nZ || nO;
+    if (!showAb && (rType === "zetas" || rType === "omis")) rType = "chars";
     const chars = U.filter(u => !u.ship), ships = U.filter(u => u.ship), hasPow = U.some(u => u.power);
     if (!hasPow && rSort === "power") rSort = "relic";   // rosters pulled from the game have no per-unit power
     const cnt = f => chars.filter(f).length;
@@ -556,17 +570,19 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       <div class="rchips">
         <span><b>${fmt(pr.gp)}</b>GP</span><span><b>${chars.length}</b>characters</span><span><b>${ships.length}</b>ships</span>
         <span><b>${gls.length}</b>Galactic Legend${gls.length === 1 ? "" : "s"}</span><span><b>${cnt(u => u.relic >= 9)}</b>at R9+</span>
-        <span><b>${cnt(u => u.relic >= 7)}</b>at R7+</span><span><b>${cnt(u => u.gear >= 13)}</b>at G13</span><span><b>${ships.filter(u => u.stars >= 7).length}</b>7★ ships</span>
+        <span><b>${cnt(u => u.relic >= 7)}</b>at R7+</span><span><b>${cnt(u => u.gear >= 13)}</b>at G13</span><span><b>${ships.filter(u => u.stars >= 7).length}</b>7★ ships</span>${showAb ? `<span><b>${nZ}</b>zetas</span><span><b>${nO}</b>omicrons</span>` : ""}
       </div>
       <div class="rtools">
-        <div class="phrow" id="rType"><button type="button" data-v="chars" aria-pressed="${rType === "chars"}">Characters (${chars.length})</button><button type="button" data-v="ships" aria-pressed="${rType === "ships"}">Ships (${ships.length})</button></div>
+        <div class="phrow" id="rType"><button type="button" data-v="chars" aria-pressed="${rType === "chars"}">Characters (${chars.length})</button><button type="button" data-v="ships" aria-pressed="${rType === "ships"}">Ships (${ships.length})</button>${showAb ? `<button type="button" data-v="zetas" aria-pressed="${rType === "zetas"}" class="zbtn">Zetas (${nZ})</button><button type="button" data-v="omis" aria-pressed="${rType === "omis"}" class="obtn">Omicrons (${nO})</button>` : ""}</div>
         <input type="search" id="rQ" placeholder="Search units" value="${esc(rQ)}" aria-label="Search units">
+        ${rType === "omis" ? `<select id="rMode" aria-label="Game mode"><option value="">Every game mode</option>${[...new Set(U.flatMap(u => u.os.map(id => (SK[id] || {}).mode)).filter(Boolean))].sort().map(m => `<option ${m === rMode ? "selected" : ""}>${esc(m)}</option>`).join("")}</select>` : ""}
         <select id="rSort" aria-label="Sort by">${[["power", "Power"], ["relic", rType === "ships" ? "Stars" : "Relic / gear"], ["stars", "Stars"], ["name", "Name"]].filter(o => !(rType === "ships" && o[0] === "stars") && (hasPow || o[0] !== "power")).map(([v, l]) => `<option value="${v}" ${v === rSort ? "selected" : ""}>${l}</option>`).join("")}</select>
         ${rType === "chars" && chars.some(u => u.side) ? `<select id="rSide" aria-label="Side"><option value="">Light and dark</option><option value="L" ${rSide === "L" ? "selected" : ""}>Light side</option><option value="D" ${rSide === "D" ? "selected" : ""}>Dark side</option></select>` : ""}
       </div><div class="units" id="units"></div><div class="rmore" id="rMore"></div>`;
     const draw = () => {
       const q = rQ.trim().toLowerCase();
       const lvlRank = u => u.ship ? (u.stars || 0) : (u.relic || 0) * 100 + (u.gear || 0) * 2 + (u.stars || 0) / 10;
+      if (rType === "zetas" || rType === "omis") return drawAbilities(q, lvlRank);
       const list = (rType === "ships" ? ships : chars).filter(u => (!q || u.name.toLowerCase().includes(q) || u.id.toLowerCase().includes(q)) && (rType === "ships" || !rSide || u.side === rSide))
         .sort((a, b) => rSort === "name" ? a.name.localeCompare(b.name) : rSort === "stars" ? (b.stars || 0) - (a.stars || 0) || lvlRank(b) - lvlRank(a)
           : rSort === "relic" ? lvlRank(b) - lvlRank(a) || (b.power || 0) - (a.power || 0) : (b.power || 0) - (a.power || 0) || lvlRank(b) - lvlRank(a));
@@ -579,12 +595,35 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
         return u.img ? `<img class="${cls}" src="${esc(u.img.startsWith("http") ? u.img : "https://game-assets.swgoh.gg/" + u.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="${esc(ini(u.name))}">` : `<span class="${cls}">${esc(ini(u.name))}</span>`; };
       $("#units").innerHTML = shown.map(u => `<div class="unit ${u.side || ""} ${GLS.has(u.id) ? "gl" : ""}" title="${esc(u.name)}${u.level && u.level < 85 ? " · level " + u.level : ""}">${pf(u)}<div class="ub">
         <span class="un">${esc(u.name)}</span><span class="um">${stars(u.stars)}${lvl(u)}</span>
-        <span class="um"><span>${u.power ? "Power " + int(u.power) : u.level ? "Level " + u.level : ""}</span>${GLS.has(u.id) ? '<span style="color:#f5c542;font-weight:700">GL</span>' : ""}</span></div></div>`).join("") || `<div class="empty" style="grid-column:1/-1">Nothing matches.</div>`;
+        <span class="um"><span>${u.power ? "Power " + int(u.power) : u.level ? "Level " + u.level : ""}</span><span class="zo">${u.zc ? `<i class="zb" title="${u.zc} zeta${u.zc > 1 ? "s" : ""}">Z${u.zc > 1 ? u.zc : ""}</i>` : ""}${u.oc ? `<i class="ob" title="${u.oc} omicron${u.oc > 1 ? "s" : ""}">O${u.oc > 1 ? u.oc : ""}</i>` : ""}${GLS.has(u.id) ? '<span style="color:#f5c542;font-weight:700">GL</span>' : ""}</span></span></div></div>`).join("") || `<div class="empty" style="grid-column:1/-1">Nothing matches.</div>`;
       $("#units").querySelectorAll("img.pf").forEach(im => im.onerror = () => { const s = document.createElement("span"); s.className = im.className; s.textContent = im.dataset.ini; im.replaceWith(s); });
       $("#rMore").innerHTML = shown.length < list.length ? `<button type="button" id="rAllBtn">Show all ${list.length}</button>` : "";
       if ($("#rAllBtn")) $("#rAllBtn").onclick = () => { rAll = true; draw(); };
     };
+    // zeta / omicron view: one card per unit, listing the abilities upgraded
+    function drawAbilities(q, lvlRank) {
+      const om = rType === "omis", key = om ? "os" : "zs", cntKey = om ? "oc" : "zc";
+      const nameOf = id => (SK[id] || {}).name || id.replace(/^[a-z]+skill_/i, "").replace(/_/g, " ");
+      const list = U.filter(u => u[cntKey] > 0)
+        .filter(u => !q || u.name.toLowerCase().includes(q) || u[key].some(id => nameOf(id).toLowerCase().includes(q)))
+        .filter(u => !om || !rMode || u.os.some(id => (SK[id] || {}).mode === rMode))
+        .sort((a, b) => rSort === "name" ? a.name.localeCompare(b.name) : b[cntKey] - a[cntKey] || (rSort === "power" ? (b.power || 0) - (a.power || 0) : lvlRank(b) - lvlRank(a)) || a.name.localeCompare(b.name));
+      const ini = s => String(s).split(/[\s()'-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+      const pic = u => u.img ? `<img class="pf ${u.ship ? "ship" : ""}" src="${esc(u.img.startsWith("http") ? u.img : "https://game-assets.swgoh.gg/" + u.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="${esc(ini(u.name))}">` : `<span class="pf ${u.ship ? "ship" : ""}">${esc(ini(u.name))}</span>`;
+      const chips = u => u[key].length
+        ? u[key].filter(id => !om || !rMode || (SK[id] || {}).mode === rMode).map(id => { const d = SK[id] || {};
+            return `<span class="ab ${om ? "o" : "z"}"><i>${om ? "O" : "Z"}</i>${esc(nameOf(id))}${d.kind ? `<small>${esc(d.kind)}</small>` : ""}${om && d.mode ? `<b>${esc(d.mode)}</b>` : ""}</span>`; }).join("")
+        : `<span class="ab ${om ? "o" : "z"}"><i>${om ? "O" : "Z"}</i>${u[cntKey]} ${om ? "omicron" : "zeta"}${u[cntKey] > 1 ? "s" : ""}</span>`;
+      const total = list.reduce((a, u) => a + (om && rMode ? u.os.filter(id => (SK[id] || {}).mode === rMode).length : u[cntKey]), 0);
+      $("#units").innerHTML = list.length ? `<div class="abhint">${total} ${om ? "omicron" : "zeta"}${total === 1 ? "" : "s"} on ${list.length} unit${list.length === 1 ? "" : "s"}${!RD.abilities ? " · ability names appear once the guild's roster is pulled from the game" : ""}</div>` + (rAll || list.length <= 30 ? list : list.slice(0, 30)).map(u => `<div class="unit abu ${u.side || ""}">${pic(u)}<div class="ub"><span class="un" style="min-height:0">${esc(u.name)}</span>
+          <div class="abs">${chips(u)}</div></div></div>`).join("")
+        : `<div class="empty" style="grid-column:1/-1">${q || rMode ? "Nothing matches." : `No ${om ? "omicrons" : "zetas"} yet.`}</div>`;
+      $("#units").querySelectorAll("img.pf").forEach(im => im.onerror = () => { const s = document.createElement("span"); s.className = im.className; s.textContent = im.dataset.ini; im.replaceWith(s); });
+      $("#rMore").innerHTML = !rAll && list.length > 30 ? `<button type="button" id="rAllBtn">Show all ${list.length}</button>` : "";
+      if ($("#rAllBtn")) $("#rAllBtn").onclick = () => { rAll = true; draw(); };
+    }
     draw();
+    if ($("#rMode")) $("#rMode").onchange = e => { rMode = e.target.value; draw(); };
     document.querySelectorAll("#rType button").forEach(b => b.onclick = () => { rType = b.dataset.v; rAll = false; if (rType === "ships" && rSort === "stars") rSort = "relic"; renderRoster(x); });
     $("#rQ").oninput = e => { rQ = e.target.value; draw(); };
     $("#rSort").onchange = e => { rSort = e.target.value; draw(); };

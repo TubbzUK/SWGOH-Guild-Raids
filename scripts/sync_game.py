@@ -37,7 +37,33 @@ import build as B  # noqa: E402
 
 COMLINK = os.getenv("COMLINK_URL", "http://localhost:3000").rstrip("/")
 SHIPS_FILE = Path(__file__).resolve().parent / "ships.txt"
-ROSTER_COLS = ["AllyCode", "Name", "BaseId", "CombatType", "Stars", "Level", "GearLevel", "GP", "RelicLevel"]
+ROSTER_COLS = ["AllyCode", "Name", "BaseId", "CombatType", "Stars", "Level", "GearLevel", "GP", "RelicLevel",
+               "ZetaCount", "OmiCount", "Zetas", "Omicrons"]
+SKILLS_FILE = Path(__file__).resolve().parent / "skills.json"
+
+
+def load_skills() -> dict:
+    """Abilities with a zeta or omicron tier (scripts/skills.json, from fetch_units.py)."""
+    try:
+        return json.loads(SKILLS_FILE.read_text(encoding="utf-8")) if SKILLS_FILE.exists() else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def upgrades(unit: dict, skills: dict) -> tuple[list[str], list[str]]:
+    """The unit's abilities that have their zeta / omicron applied. A roster skill's 'tier' is the index
+    of the highest upgrade bought (ability level = tier + 2), so an upgrade at index i is applied when tier >= i."""
+    z, o = [], []
+    for sk in unit.get("skill") or []:
+        d = skills.get(sk.get("id"))
+        t = num(sk.get("tier"))
+        if not d or t is None:
+            continue
+        if "zeta" in d and t >= d["zeta"]:
+            z.append(sk["id"])
+        if "omicron" in d and t >= d["omicron"]:
+            o.append(sk["id"])
+    return z, o
 
 
 def call(endpoint: str, payload: dict, tries: int = 3) -> dict:
@@ -178,9 +204,17 @@ class Guild:
         rdir = self.gdir / "roster"
         today = dt.datetime.now(dt.timezone.utc).date().isoformat()
         existing = B.data_files(rdir)
-        if any(p.name.startswith(today) for p in existing):
-            print(f"  roster: already have today's")
-            return
+        skills = load_skills()
+        todays = [p for p in existing if p.name.startswith(today)]
+        if todays:
+            try:
+                head = todays[0].read_text(encoding="utf-8-sig").split("\n", 1)[0]
+            except OSError:
+                head = ""
+            if not (skills and "Zetas" not in head and "ZetaCount" not in head):
+                print("  roster: already have today's")
+                return
+            print("  roster: today's has no zetas/omicrons yet - pulling it again")
         rows = []
         for m in members:
             p = self.player(m.get("playerId"))
@@ -199,6 +233,11 @@ class Guild:
                 rows.append([ally, name, base, "Ship" if ship else "Character", int(num(u.get("currentRarity")) or 0),
                              int(num(u.get("currentLevel")) or 0), int(num(u.get("currentTier")) or 0),
                              int(gp), rl])
+                if skills:
+                    z, o = upgrades(u, skills)
+                    rows[-1] += [len(z), len(o), ";".join(z), ";".join(o)]
+                else:
+                    rows[-1] += ["", "", "", ""]
                 first = False
         if not rows:
             print("::warning::  roster: no units came back - kept the old roster")

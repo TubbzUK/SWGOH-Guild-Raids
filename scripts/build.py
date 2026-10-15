@@ -669,6 +669,8 @@ def full_roster(path: Path, names: dict[str, str]) -> dict | None:
     get = lambda *ks: next((cols[k] for k in ks if k in cols), None)  # noqa: E731
     relic_c, stars_c, gear_c = get("reliclevel", "relic"), get("stars", "rarity"), get("gearlevel", "gear")
     type_c, power_c, gp_c, side_c, lvl_c = get("combattype"), get("power"), get("gp", "galacticpower"), get("alignment"), get("level")
+    zc_c, oc_c, zs_c, os_c = get("zetacount"), get("omicount", "omicroncount"), get("zetas"), get("omicrons")
+    split = lambda v: [x for x in cell(v).split(";") if x]  # noqa: E731
     ival = lambda v: (int(n) if (n := to_number(v)) is not None else None)  # noqa: E731
     units, uidx, players = [], {}, {}
     max_rel = -1
@@ -694,6 +696,11 @@ def full_roster(path: Path, names: dict[str, str]) -> dict | None:
         p["power"] += power or 0
         row = [uidx[base], ival(r[stars_c]) if stars_c else None, ival(r[gear_c]) if gear_c else None, relic, power,
                ival(r[lvl_c]) if lvl_c else None]
+        zs, os_ = (split(r[zs_c]) if zs_c else []), (split(r[os_c]) if os_c else [])
+        zc, oc = (ival(r[zc_c]) if zc_c else None), (ival(r[oc_c]) if oc_c else None)
+        zc, oc = max(zc or 0, len(zs)), max(oc or 0, len(os_))
+        if zc or oc or zs or os_:
+            row += [zc, oc, zs, os_]
         old = p["u"].get(base)
         if old is None or (row[3] or -1, row[2] or -1, row[1] or -1) > (old[3] or -1, old[2] or -1, old[1] or -1):
             p["u"][base] = row
@@ -707,7 +714,9 @@ def full_roster(path: Path, names: dict[str, str]) -> dict | None:
                     row[3] = max(0, row[3] - 2)
         out.append({"name": p["name"], "gp": p["gp"] or p["power"], "u": rows})
     out.sort(key=lambda p: p["name"].lower())
-    return {"units": units, "players": out, "file": path.name}
+    has_names = bool(zs_c or os_c)
+    return {"units": units, "players": out, "file": path.name, "abilities": has_names,
+            "zetas": bool(zc_c or zs_c)}
 
 
 # ---------------------------------------------------------------- main
@@ -959,6 +968,10 @@ def main() -> int:
     UNIT_INFO = load_units()
     PLAN_KEYS = plan_unit_keys()
     UNIT_NAMES = unit_names()
+    sk = Path(__file__).resolve().parent / "skills.json"      # zeta/omicron ability names for Player status
+    if sk.exists():
+        (SITE_DIR / "data").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(sk, SITE_DIR / "data" / "skills.json")
     if PLATOON_PLAN.exists():
         (SITE_DIR / "data" / "platoons").mkdir(parents=True, exist_ok=True)
         shutil.copy2(PLATOON_PLAN, SITE_DIR / "data" / "platoons" / "rote-plan.csv")
