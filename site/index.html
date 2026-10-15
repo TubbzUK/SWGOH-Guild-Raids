@@ -104,6 +104,18 @@ td.name { font-weight: 600; }
 .wk { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
 .wk span { display: flex; align-items: center; font: 600 13.5px var(--font-ui); line-height: 1.2; letter-spacing: 0; overflow: hidden; }
 @media (max-width: 600px) { .chars { grid-template-columns: 1fr; } }
+.whobar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.whobar label { font: 700 11px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-2); }
+.whobar select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; font: 600 14px var(--font-ui); min-width: 0; flex: 0 1 260px; }
+.whobar .stepbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 9px; width: 36px; height: 36px; font-size: 17px; cursor: pointer; flex: none; }
+.whobar .stepbtn:hover { border-color: var(--accent); color: var(--accent); }
+#rWhoInfo { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 13px; color: var(--text-2); }
+#rWhoInfo b { color: var(--text); font: 700 15px var(--font-display); }
+.ch.me .cv b { font-size: 19px; }
+.ch .tag { display: inline-block; font: 600 11px var(--font-ui); padding: 1px 7px; border-radius: 999px; }
+.ch .tag.ok { background: var(--good-bg); color: var(--good-ink); } .ch .tag.no { background: var(--bad-bg); color: var(--bad-ink); } .ch .tag.mid { background: var(--warn-bg); color: var(--warn-ink); }
+.chars.swap .ch { animation: chIn .25s ease; } @keyframes chIn { from { opacity: .35; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .chars.swap .ch { animation: none; } }
 .heat td.name, .heat thead tr:last-child th:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface-solid); }
 .heat thead tr:last-child th:first-child { z-index: 2; }
 .heat .team { text-align: center; border-left: 2px solid var(--border); }
@@ -238,7 +250,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <div class="kpis" id="rKpis"></div>
     <div id="rBody">
     <div class="card" style="margin-bottom:12px">
-      <div class="chead"><div><h2>Raid characters</h2><p class="hint" id="charHint" style="margin:0"></p></div>
+      <div class="whobar no-card">
+        <label for="rWho">Show</label>
+        <button type="button" class="stepbtn" id="rWhoPrev" aria-label="Previous member">‹</button>
+        <select id="rWho"></select>
+        <button type="button" class="stepbtn" id="rWhoNext" aria-label="Next member">›</button>
+        <span id="rWhoInfo"></span>
+      </div>
+      <div class="chead"><div><h2 id="charTitle">Raid characters</h2><p class="hint" id="charHint" style="margin:0"></p></div>
         <div class="seg no-card" id="charOrder" role="group" aria-label="Order"><button type="button" data-o="weak" aria-pressed="true">Weakest first</button><button type="button" data-o="list" aria-pressed="false">List order</button></div></div>
       <div class="chars" id="charGrid"></div>
     </div>
@@ -445,9 +464,46 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       ["Weakest characters", `<span class="wk">${weakest.map(c => `<span>${pf(c, "sm")}${esc(c.label)}</span>`).join("")}</span>`, `Lowest average relic (units someone has relicked)`],
     ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
 
-    $("#charHint").textContent = `Average relic across ${rsum.players} current members, against each character's target. Not unlocked counts as 0.`;
-    const drawChars = () => {
+    // pick a member (dropdown, arrows or a row of the table below) to see their own relic on each card
+    const rPeople = current.filter(p => p.readiness).sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+    if (window.__rWho && !rPeople.some(p => p.name === window.__rWho)) window.__rWho = "";
+    $("#rWho").innerHTML = `<option value="">Whole guild (averages)</option>` + rPeople.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");
+    $("#rWho").value = window.__rWho || "";
+    const setWho = (name, scroll) => {
+      window.__rWho = name || ""; $("#rWho").value = window.__rWho;
+      drawChars(true);
+      document.querySelectorAll("#rTable tbody tr[data-name]").forEach(tr => tr.classList.toggle("sel", tr.dataset.name === window.__rWho));
+      if (scroll) document.querySelector(".whobar").scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    $("#rWho").onchange = e => setWho(e.target.value);
+    const stepWho = d => { const i = rPeople.findIndex(p => p.name === window.__rWho); const n = i < 0 ? (d > 0 ? 0 : rPeople.length - 1) : (i + d + rPeople.length) % rPeople.length; setWho(rPeople[n].name); };
+    $("#rWhoPrev").onclick = () => stepWho(-1); $("#rWhoNext").onclick = () => stepWho(1);
+    const drawChars = swap => {
       const order = ($("#charOrder [aria-pressed=true]") || {}).dataset?.o || "weak";
+      const me = window.__rWho ? rPeople.find(p => p.name === window.__rWho) : null;
+      $("#charGrid").classList.toggle("swap", !!swap);
+      if (me) {
+        const r = me.readiness, st = { ready: ["b-good", "✓ Ready"], close: ["b-warn", "● Close"], building: ["b-bad", "○ Building"] }[r.status];
+        const at = rsum.characters.filter(c => (r.relics[c.id] ?? -1) >= c.relic).length;
+        $("#rWhoInfo").innerHTML = `<b>${r.score.toFixed(0)}%</b> <span class="badge ${st[0]}">${st[1]}</span><span>${r.relicked}/${r.characters} relicked</span><span>${at} at target</span>`;
+        $("#charTitle").textContent = `${me.name}'s raid characters`;
+        $("#charHint").textContent = `Their relic on each character, against its target. The small figure is the guild average.`;
+        const have = c => r.relics[c.id];
+        const list = order === "weak" ? rsum.characters.slice().sort((a, b) => ((have(a) ?? -1) / a.relic) - ((have(b) ?? -1) / b.relic) || a.label.localeCompare(b.label)) : rsum.characters;
+        $("#charGrid").innerHTML = list.map(c => {
+          const h = have(c), pct = h == null ? 0 : Math.max(0, Math.min(100, h / (c.relic || rconf.max_relic) * 100));
+          const col = h == null ? css("--muted") : h >= c.relic ? css("--good") : pct >= 60 ? css("--warn") : css("--bad");
+          const tag = h == null ? `<span class="tag no">Not unlocked</span>` : h >= c.relic ? `<span class="tag ok">✓ At target</span>` : h <= 0 ? `<span class="tag no">Not relicked yet</span>` : `<span class="tag mid">${c.relic - h} relic level${c.relic - h === 1 ? "" : "s"} to go</span>`;
+          return `<div class="ch me" title="${esc(c.label)}${multiTeam ? " · " + esc(c.team) : ""}">${pf(c, "lg", col)}<div class="cb"><div class="cn">${esc(c.label)}</div>
+            <div class="cv"><span><b>${h == null ? "–" : h <= 0 ? "G" : "R" + h}</b> of R${c.relic}</span><span>guild R${c.average.toFixed(1)}</span></div>
+            <span class="bar"><i style="width:${pct}%;background:${col}"></i></span>
+            <div class="cs">${tag}</div></div></div>`;
+        }).join("");
+        return;
+      }
+      $("#rWhoInfo").innerHTML = `<span>Pick a member, or click a row in the table below, to see their own progress.</span>`;
+      $("#charTitle").textContent = "Raid characters";
+      $("#charHint").textContent = `Average relic across ${rsum.players} current members, against each character's target. Not unlocked counts as 0.`;
       const list = order === "weak" ? rsum.characters.slice().sort((a, b) => a.average / a.relic - b.average / b.relic || a.label.localeCompare(b.label)) : rsum.characters;
       $("#charGrid").innerHTML = list.map(c => {
         const pct = Math.min(100, c.average / (c.relic || rconf.max_relic) * 100);
@@ -513,11 +569,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}"><span class="vt">${esc(c.label)}</span>${pf(c)}</th>`).join("")}</tr>`;
       const body = rows.map(p => {
         const r = p.readiness, st = ST[r.status];
-        return `<tr><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;
+        return `<tr class="click ${p.name === window.__rWho ? "sel" : ""}" data-name="${esc(p.name)}" tabindex="0" title="Show ${esc(p.name)} on the character cards"><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;
       }).join("");
       const missing = current.filter(p => !p.readiness).map(p => esc(p.name));
       $("#rTable").innerHTML = `<thead>${head1}${head2}</thead><tbody>${body}${missing.length ? `<tr><td colspan="${chars.length + 3}" class="sub" style="white-space:normal">Not in the roster export yet: ${missing.join(", ")}</td></tr>` : ""}</tbody>`;
       syncTopScroll();
+      $("#rTable").querySelectorAll("tbody tr[data-name]").forEach(tr => { const go = () => setWho(tr.dataset.name === window.__rWho ? "" : tr.dataset.name, true); tr.onclick = go; tr.onkeydown = e => { if (e.key === "Enter") go(); }; });
       $("#rTable").querySelectorAll("th[data-sort]").forEach(th => th.onclick = () => { const k = th.dataset.sort; rSort = { key: k, dir: rSort.key === k ? -rSort.dir : (k === "name" ? 1 : -1) }; renderReady(); });
     }
     $("#rSearch").oninput = renderReady;

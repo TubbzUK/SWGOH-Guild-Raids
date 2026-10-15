@@ -78,6 +78,11 @@ If the Action log warns about a raid ID that doesn't match, add it to that raid'
 `game_ids: ["the_id_from_the_warning"]`. New ships are learned from WookieeBot rosters or can be added
 to scripts/ships.txt.
 
+On the raid page's **Readiness** tab, pick a member at the top (or click their row in the table, or
+step through with ‹ ›) and the character cards switch from guild averages to that member's own relic
+on each character: what they have, the target, how many relic levels to go, and the guild average for
+comparison. Pick *Whole guild* to go back.
+
 ## Unit names and pictures
 
 Character and ship portraits (on the raid readiness tab and in each member's roster on Player status)
