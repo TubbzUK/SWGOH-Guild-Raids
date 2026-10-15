@@ -59,17 +59,18 @@ jobs:
             echo "sync=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Start Comlink (reads the game's public data)
+        if: steps.changes.outputs.sync == 'true' || hashFiles('scripts/units.json') == ''
+        continue-on-error: true
+        run: docker run -d --name comlink -p 3000:3000 -e APP_NAME=guild-statistics ghcr.io/swgoh-utils/swgoh-comlink:latest
+
       - name: Pull from the game (Comlink)
         id: sync
         if: steps.changes.outputs.sync == 'true'
         continue-on-error: true
-        run: |
-          if grep -qs "^ally_code:" guilds/*/config.yml; then
-            docker run -d --name comlink -p 3000:3000 -e APP_NAME=guild-statistics ghcr.io/swgoh-utils/swgoh-comlink:latest
-          fi
-          python scripts/sync_game.py
+        run: python scripts/sync_game.py
 
-      - name: Unit names and pictures (swgoh.gg)
+      - name: Unit names and pictures (from the game)
         if: steps.changes.outputs.sync == 'true' || hashFiles('scripts/units.json') == ''
         continue-on-error: true
         run: python scripts/fetch_units.py
