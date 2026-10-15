@@ -106,6 +106,34 @@ td.miss { color: var(--bad-ink); }
 .warnings summary { cursor: pointer; font-weight: 600; }
 .former { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
 footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+/* full roster */
+.rosterbox { margin-top: 14px; }
+.rhead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.rhead h2 { font-size: 16px; margin: 0; }
+.rchips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.rchips span { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; color: var(--text-2); }
+.rchips b { color: var(--text); font: 700 14px var(--font-display); margin-right: 4px; }
+.rtools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.rtools input[type=search] { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); flex: 1 1 200px; max-width: 280px; min-width: 0; }
+.rtools select { padding: 8px 10px; font-size: 13.5px; }
+.rtools .phrow { margin: 0; }
+.units { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.unit { position: relative; background: var(--surface-2); border-radius: 10px; padding: 9px 10px 8px 13px; min-width: 0; display: flex; gap: 10px; align-items: center; }
+.unit .ub { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pf { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex: none; background: var(--surface); border: 2.5px solid var(--border); display: inline-flex; align-items: center; justify-content: center; font: 700 14px var(--font-display); color: var(--text-2); }
+.pf.ship { border-radius: 10px; }
+.pf.r9 { border-color: #f5c542; } .pf.r7 { border-color: var(--good); } .pf.r5 { border-color: var(--accent); } .pf.r1 { border-color: var(--warn); } .pf.gl { box-shadow: 0 0 0 2px #f5c542, 0 0 10px rgba(245,197,66,.5); }
+.unit::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--muted); }
+.unit.L::before { background: #4c9bf0; } .unit.D::before { background: #e5484d; } .unit.gl { box-shadow: inset 0 0 0 1px #f5c542; }
+.unit .un { font-weight: 600; font-size: 13px; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 2.5em; }
+.unit .um { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--text-2); }
+.unit .lvl { font: 700 11.5px var(--font-num); padding: 1px 7px; border-radius: 999px; background: var(--none-bg); color: var(--text-2); white-space: nowrap; }
+.unit .lvl.r9 { background: #f5c542; color: #2a1d00; } .unit .lvl.r7 { background: var(--good-bg); color: var(--good-ink); }
+.unit .lvl.r5 { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); } .unit .lvl.r1 { background: var(--warn-bg); color: var(--warn-ink); }
+.unit .st { color: #f5c542; letter-spacing: -1px; font-size: 11px; white-space: nowrap; } .unit .st i { color: var(--muted); font-style: normal; }
+.rmore { margin-top: 10px; text-align: center; }
+@media (max-width: 600px) { .units { grid-template-columns: 1fr 1fr; gap: 6px; } .unit { padding: 8px 8px 7px 11px; gap: 7px; } .pf { width: 36px; height: 36px; font-size: 12px; } .unit .un { font-size: 12.5px; } .unit .st { font-size: 9.5px; } }
+.rmore button { border: 1px solid var(--border); background: var(--surface); color: var(--accent); border-radius: 8px; padding: 7px 16px; font: 600 13px var(--font-ui); cursor: pointer; }
 :root { --c-plat: #8b5cf6; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c-plat: #c4a1ff; } }
 :root[data-theme="dark"] { --c-plat: #c4a1ff; }
@@ -157,6 +185,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       <div class="areas" id="areas"></div>
     </div>
     <section class="detail card" id="detail" aria-live="polite"></section>
+    <section class="card rosterbox" id="roster"></section>
   </div>
   <footer id="foot"></footer>
 </div>
@@ -357,6 +386,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       if (innerWidth < 1000) $("#detail").scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
+    renderRoster(x);
     ({ raids: raidDetail, tbs: tbDetail, tws: twDetail })[area](x, AREAS.find(a => a.k === area));
   }
 
@@ -506,6 +536,59 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
         scales: { y: { stacked: true, beginAtZero: true, grid: { color: css("--grid") }, border: { display: false } }, x: { stacked: true, grid: { display: false } } } } });
     bar($("#c2"), { type: "bar", data: { labels, datasets: [{ data: idx.map(i => x.ws[i]), backgroundColor: idx.map(i => x.ws[i] ? a.color : css("--bad")), minBarLength: 3, borderRadius: 3, maxBarThickness: 34 }] },
       options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => x.ws[idx[c.dataIndex]] === 0 && val("total", idx[c.dataIndex]) == null ? " Didn't join (counts 0)" : ` ${P(c.raw)} of the guild's best` } } }, scales: { y: yPct, x: { grid: { display: false } } } } });
+  }
+
+  // ---------- full roster (characters and ships) ----------
+  const GLS = new Set(["SUPREMELEADERKYLOREN", "GLREY", "GRANDMASTERLUKE", "SITHPALPATINE", "JEDIMASTERKENOBI", "LORDVADER", "JABBATHEHUTT", "GLLEIA", "GLAHSOKATANO", "GLHONDO"]);
+  let RD = null, rdLoading = null, rType = "chars", rSort = "power", rQ = "", rSide = "", rAll = false;
+  const loadRosters = () => rdLoading || (rdLoading = getJSON(`data/${G}/rosters.json`).then(d => { RD = d || { units: [], players: [] }; return RD; }));
+  async function renderRoster(x) {
+    const box = $("#roster"), id = x.p.id;
+    if (!RD) { box.innerHTML = `<div class="rhead"><h2>Roster</h2></div><div class="empty">Loading…</div>`; await loadRosters(); if (selId !== id) return; }
+    const pr = RD.players.find(p => norm(p.name) === id);
+    if (!pr) { box.innerHTML = `<div class="rhead"><h2>Roster</h2></div><div class="empty">${RD.players.length ? "This member isn't in the latest roster." : "No roster yet: upload a WookieeBot roster export, or connect the guild to the game."}</div>`; return; }
+    const U = pr.u.map(([i, stars, gear, relic, power, level]) => ({ ...RD.units[i], stars, gear, relic, power, level }));
+    const chars = U.filter(u => !u.ship), ships = U.filter(u => u.ship), hasPow = U.some(u => u.power);
+    if (!hasPow && rSort === "power") rSort = "relic";   // rosters pulled from the game have no per-unit power
+    const cnt = f => chars.filter(f).length;
+    const gls = chars.filter(u => GLS.has(u.id));
+    box.innerHTML = `<div class="rhead"><h2>◆ Roster</h2><span class="hint" style="margin:0">${RD.updated ? "As of " + dfmt(RD.updated) : ""}</span></div>
+      <div class="rchips">
+        <span><b>${fmt(pr.gp)}</b>GP</span><span><b>${chars.length}</b>characters</span><span><b>${ships.length}</b>ships</span>
+        <span><b>${gls.length}</b>Galactic Legend${gls.length === 1 ? "" : "s"}</span><span><b>${cnt(u => u.relic >= 9)}</b>at R9+</span>
+        <span><b>${cnt(u => u.relic >= 7)}</b>at R7+</span><span><b>${cnt(u => u.gear >= 13)}</b>at G13</span><span><b>${ships.filter(u => u.stars >= 7).length}</b>7★ ships</span>
+      </div>
+      <div class="rtools">
+        <div class="phrow" id="rType"><button type="button" data-v="chars" aria-pressed="${rType === "chars"}">Characters (${chars.length})</button><button type="button" data-v="ships" aria-pressed="${rType === "ships"}">Ships (${ships.length})</button></div>
+        <input type="search" id="rQ" placeholder="Search units" value="${esc(rQ)}" aria-label="Search units">
+        <select id="rSort" aria-label="Sort by">${[["power", "Power"], ["relic", rType === "ships" ? "Stars" : "Relic / gear"], ["stars", "Stars"], ["name", "Name"]].filter(o => !(rType === "ships" && o[0] === "stars") && (hasPow || o[0] !== "power")).map(([v, l]) => `<option value="${v}" ${v === rSort ? "selected" : ""}>${l}</option>`).join("")}</select>
+        ${rType === "chars" && chars.some(u => u.side) ? `<select id="rSide" aria-label="Side"><option value="">Light and dark</option><option value="L" ${rSide === "L" ? "selected" : ""}>Light side</option><option value="D" ${rSide === "D" ? "selected" : ""}>Dark side</option></select>` : ""}
+      </div><div class="units" id="units"></div><div class="rmore" id="rMore"></div>`;
+    const draw = () => {
+      const q = rQ.trim().toLowerCase();
+      const lvlRank = u => u.ship ? (u.stars || 0) : (u.relic || 0) * 100 + (u.gear || 0) * 2 + (u.stars || 0) / 10;
+      const list = (rType === "ships" ? ships : chars).filter(u => (!q || u.name.toLowerCase().includes(q) || u.id.toLowerCase().includes(q)) && (rType === "ships" || !rSide || u.side === rSide))
+        .sort((a, b) => rSort === "name" ? a.name.localeCompare(b.name) : rSort === "stars" ? (b.stars || 0) - (a.stars || 0) || lvlRank(b) - lvlRank(a)
+          : rSort === "relic" ? lvlRank(b) - lvlRank(a) || (b.power || 0) - (a.power || 0) : (b.power || 0) - (a.power || 0) || lvlRank(b) - lvlRank(a));
+      const first = innerWidth < 600 ? 24 : 60, shown = rAll || list.length <= first ? list : list.slice(0, first);
+      const lvl = u => u.ship ? "" : u.gear >= 13 ? `<span class="lvl ${u.relic >= 9 ? "r9" : u.relic >= 7 ? "r7" : u.relic >= 5 ? "r5" : u.relic >= 1 ? "r1" : ""}">R${u.relic ?? 0}</span>` : `<span class="lvl">G${u.gear ?? "?"}</span>`;
+      const stars = n => n == null ? "" : `<span class="st" title="${n} stars">${"★".repeat(n)}<i>${"★".repeat(Math.max(0, 7 - n))}</i></span>`;
+      const tier = u => u.ship || u.gear < 13 ? "" : u.relic >= 9 ? "r9" : u.relic >= 7 ? "r7" : u.relic >= 5 ? "r5" : u.relic >= 1 ? "r1" : "";
+      const ini = s => String(s).split(/[\s()'-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+      const pf = u => { const cls = `pf ${u.ship ? "ship" : ""} ${tier(u)} ${GLS.has(u.id) ? "gl" : ""}`;
+        return u.img ? `<img class="${cls}" src="${esc(u.img.startsWith("http") ? u.img : "https://game-assets.swgoh.gg/" + u.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="${esc(ini(u.name))}">` : `<span class="${cls}">${esc(ini(u.name))}</span>`; };
+      $("#units").innerHTML = shown.map(u => `<div class="unit ${u.side || ""} ${GLS.has(u.id) ? "gl" : ""}" title="${esc(u.name)}${u.level && u.level < 85 ? " · level " + u.level : ""}">${pf(u)}<div class="ub">
+        <span class="un">${esc(u.name)}</span><span class="um">${stars(u.stars)}${lvl(u)}</span>
+        <span class="um"><span>${u.power ? "Power " + int(u.power) : u.level ? "Level " + u.level : ""}</span>${GLS.has(u.id) ? '<span style="color:#f5c542;font-weight:700">GL</span>' : ""}</span></div></div>`).join("") || `<div class="empty" style="grid-column:1/-1">Nothing matches.</div>`;
+      $("#units").querySelectorAll("img.pf").forEach(im => im.onerror = () => { const s = document.createElement("span"); s.className = im.className; s.textContent = im.dataset.ini; im.replaceWith(s); });
+      $("#rMore").innerHTML = shown.length < list.length ? `<button type="button" id="rAllBtn">Show all ${list.length}</button>` : "";
+      if ($("#rAllBtn")) $("#rAllBtn").onclick = () => { rAll = true; draw(); };
+    };
+    draw();
+    document.querySelectorAll("#rType button").forEach(b => b.onclick = () => { rType = b.dataset.v; rAll = false; if (rType === "ships" && rSort === "stars") rSort = "relic"; renderRoster(x); });
+    $("#rQ").oninput = e => { rQ = e.target.value; draw(); };
+    $("#rSort").onchange = e => { rSort = e.target.value; draw(); };
+    if ($("#rSide")) $("#rSide").onchange = e => { rSide = e.target.value; draw(); };
   }
 
   show();

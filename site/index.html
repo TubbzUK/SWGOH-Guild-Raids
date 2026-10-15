@@ -79,7 +79,31 @@ td.name { font-weight: 600; }
 .b-none { background: var(--none-bg); color: var(--text-2); }
 .spark { vertical-align: middle; margin-left: 8px; }
 .heat td.c { text-align: center; padding: 5px 3px; }
-.heat th.c { text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); height: 170px; padding: 8px 4px; font: 500 11px var(--font-ui); letter-spacing: .02em; text-transform: none; vertical-align: bottom; }
+.heat th.c { text-align: center; height: 190px; padding: 6px 3px; font: 500 11px var(--font-ui); letter-spacing: .02em; text-transform: none; vertical-align: bottom; }
+.heat th.c .vt { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; max-height: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.heat th.c .pf { display: block; margin: 6px auto 0; }
+/* unit portraits (from swgoh.gg) */
+.pf { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: var(--surface-2); border: 2px solid var(--border); flex: none; }
+.pf.lg { width: 54px; height: 54px; border-width: 3px; }
+.pf.sm { width: 22px; height: 22px; border-width: 1.5px; vertical-align: middle; margin-right: 6px; }
+.pf.ph { display: inline-flex; align-items: center; justify-content: center; font: 700 12px var(--font-display); color: var(--text-2); }
+.pf.lg.ph { font-size: 17px; }
+.chead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--text-2); font: 600 12.5px var(--font-ui); padding: 6px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.ch { display: flex; gap: 12px; align-items: center; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.ch .cb { flex: 1; min-width: 0; }
+.ch .cn { font-weight: 600; font-size: 13.5px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch .cv { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin: 4px 0 5px; font-size: 12px; color: var(--text-2); }
+.ch .cv b { font: 700 16px var(--font-display); color: var(--text); }
+.ch .bar { display: block; width: 100%; height: 6px; margin: 0; background: var(--surface); border-radius: 3px; overflow: hidden; }
+.ch .bar i { display: block; height: 100%; border-radius: 3px; }
+.ch .cs { font-size: 11.5px; color: var(--text-2); margin-top: 5px; }
+.wk { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.wk span { display: flex; align-items: center; font: 600 13.5px var(--font-ui); line-height: 1.2; letter-spacing: 0; overflow: hidden; }
+@media (max-width: 600px) { .chars { grid-template-columns: 1fr; } }
 .heat td.name, .heat thead tr:last-child th:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface-solid); }
 .heat thead tr:last-child th:first-child { z-index: 2; }
 .heat .team { text-align: center; border-left: 2px solid var(--border); }
@@ -214,9 +238,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <div class="kpis" id="rKpis"></div>
     <div id="rBody">
     <div class="card" style="margin-bottom:12px">
-      <h2>Average relic across the guild, per character</h2>
-      <p class="hint" id="charHint"></p>
-      <div class="chart" id="charWrap"><canvas id="charChart" aria-label="Average relic per character"></canvas></div>
+      <div class="chead"><div><h2>Raid characters</h2><p class="hint" id="charHint" style="margin:0"></p></div>
+        <div class="seg no-card" id="charOrder" role="group" aria-label="Order"><button type="button" data-o="weak" aria-pressed="true">Weakest first</button><button type="button" data-o="list" aria-pressed="false">List order</button></div></div>
+      <div class="chars" id="charGrid"></div>
     </div>
     <div class="toolbar">
       <input type="search" id="rSearch" placeholder="Search players&hellip;" aria-label="Search players">
@@ -397,6 +421,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   if (reopen) { selected = reopen.id; renderPlayers(); showPlayer(reopen, true); }
 
   // ---------------- readiness
+  // a unit's portrait from swgoh.gg (or its initials when there's no picture); ring = how close the guild is
+  const IMG = "https://game-assets.swgoh.gg/";
+  const initials = s => String(s).split(/[\s()'-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const pf = (c, size = "", ring = "") => {
+    const img = c.img || (rconf && rconf.teams.flatMap(t => t.characters).find(x => x.id === c.id) || {}).img;
+    const st = ring ? ` style="border-color:${ring}"` : "";
+    return img ? `<img class="pf ${size}" src="${esc(img.startsWith("http") ? img : IMG + img)}" alt="" loading="lazy" referrerpolicy="no-referrer"${st} onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'pf ${size} ph',textContent:${esc(JSON.stringify(initials(c.label || c.id)))}}))">`
+      : `<span class="pf ${size} ph"${st}>${esc(initials(c.label || c.id))}</span>`;
+  };
   $("#rBody").hidden = !rsum;
   if (!rsum) {
     $("#rKpis").innerHTML = `<div class="card empty">Upload the WookieeBot guild roster export into this guild's folder, and list the characters in its config.yml, to see readiness.</div>`;
@@ -409,17 +442,24 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       ["Ready", `${rsum.status.ready}`, `${rconf.ready_pct}%+`],
       ["Close", `${rsum.status.close}`, `${rconf.close_pct}–${rconf.ready_pct - 1}%`],
       ["Building", `${rsum.status.building}`, `Under ${rconf.close_pct}%`],
-      ["Weakest characters", `<span style="font:700 14px Inter,sans-serif;line-height:1.35;display:block;overflow-wrap:anywhere">${weakest.map(c => esc(c.label)).join("<br>")}</span>`, `Lowest average relic (units someone has relicked)`],
+      ["Weakest characters", `<span class="wk">${weakest.map(c => `<span>${pf(c, "sm")}${esc(c.label)}</span>`).join("")}</span>`, `Lowest average relic (units someone has relicked)`],
     ].map(([l, v, n]) => `<div class="card kpi"><div class="label">${l}</div><div class="value num">${v}</div><div class="note">${n}</div></div>`).join("");
 
-    $("#charHint").textContent = `Current members, out of a target of R${rconf.max_relic}. Not unlocked counts as 0.`;
-    $("#charWrap").style.height = Math.max(220, rsum.characters.length * 22 + 40) + "px";
-    new Chart($("#charChart"), {
-      type: "bar",
-      data: { labels: rsum.characters.map(c => c.label), datasets: [{ label: "Average relic", data: rsum.characters.map(c => c.average), backgroundColor: css("--series-1"), borderRadius: 3, barPercentage: 0.8 }] },
-      options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const x = rsum.characters[c.dataIndex]; return [` Average R${x.average}`, ` ${x.relicked} of ${rsum.players} relicked`, ` ${x.at_target} at R${x.relic}`]; } } } },
-        scales: { x: { ...axisY(v => "R" + v), max: rconf.max_relic }, y: { grid: { display: false }, border: { display: false }, ticks: { autoSkip: false, font: { size: 11 } } } } }
-    });
+    $("#charHint").textContent = `Average relic across ${rsum.players} current members, against each character's target. Not unlocked counts as 0.`;
+    const drawChars = () => {
+      const order = ($("#charOrder [aria-pressed=true]") || {}).dataset?.o || "weak";
+      const list = order === "weak" ? rsum.characters.slice().sort((a, b) => a.average / a.relic - b.average / b.relic || a.label.localeCompare(b.label)) : rsum.characters;
+      $("#charGrid").innerHTML = list.map(c => {
+        const pct = Math.min(100, c.average / (c.relic || rconf.max_relic) * 100);
+        const col = pct >= 75 ? css("--good") : pct >= 45 ? css("--warn") : css("--bad");
+        return `<div class="ch" title="${esc(c.label)}${multiTeam ? " · " + esc(c.team) : ""}">${pf(c, "lg", col)}<div class="cb"><div class="cn">${esc(c.label)}</div>
+          <div class="cv"><span><b>R${c.average.toFixed(1)}</b> average</span><span>target R${c.relic}</span></div>
+          <span class="bar"><i style="width:${pct}%;background:${col}"></i></span>
+          <div class="cs">${c.relicked} of ${rsum.players} relicked · ${c.at_target} at R${c.relic}</div></div></div>`;
+      }).join("");
+    };
+    document.querySelectorAll("#charOrder button").forEach(b => b.onclick = () => { document.querySelectorAll("#charOrder button").forEach(x => x.setAttribute("aria-pressed", x === b)); drawChars(); });
+    drawChars();
 
     // ---- relic colour schemes: 11 steps, G (index 0) up to the target relic (index 10) ----
     const SCHEMES = [
@@ -470,7 +510,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       const rows = current.filter(p => p.readiness && p.name.toLowerCase().includes(q))
         .sort((a, b) => rSort.key === "name" ? a.name.localeCompare(b.name) * rSort.dir : ((a.readiness.score - b.readiness.score) * rSort.dir || a.name.localeCompare(b.name)));
       const head1 = multiTeam ? `<tr><th colspan="3"></th>${rconf.teams.map(t => `<th class="team" colspan="${t.characters.length}">${esc(t.name)}</th>`).join("")}</tr>` : "";
-      const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}">${esc(c.label)}</th>`).join("")}</tr>`;
+      const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}"><span class="vt">${esc(c.label)}</span>${pf(c)}</th>`).join("")}</tr>`;
       const body = rows.map(p => {
         const r = p.readiness, st = ST[r.status];
         return `<tr><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;

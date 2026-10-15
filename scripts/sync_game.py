@@ -37,7 +37,7 @@ import build as B  # noqa: E402
 
 COMLINK = os.getenv("COMLINK_URL", "http://localhost:3000").rstrip("/")
 SHIPS_FILE = Path(__file__).resolve().parent / "ships.txt"
-ROSTER_COLS = ["AllyCode", "Name", "BaseId", "CombatType", "Stars", "Level", "GearLevel", "Power", "RelicLevel"]
+ROSTER_COLS = ["AllyCode", "Name", "BaseId", "CombatType", "Stars", "Level", "GearLevel", "GP", "RelicLevel"]
 
 
 def call(endpoint: str, payload: dict, tries: int = 3) -> dict:
@@ -102,6 +102,12 @@ def known_ships() -> set[str]:
     ships = set()
     if SHIPS_FILE.exists():
         ships |= {l.strip().upper() for l in SHIPS_FILE.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")}
+    # swgoh.gg's unit list (scripts/units.json), when the build has fetched it
+    try:
+        uj = json.loads((Path(__file__).resolve().parent / "units.json").read_text(encoding="utf-8"))
+        ships |= {k.upper() for k, v in uj.items() if v.get("ship")}
+    except (OSError, ValueError):
+        pass
     # learn from any WookieeBot roster in the repo
     for f in B.GUILDS_DIR.glob("*/roster/*.csv"):
         try:
@@ -192,7 +198,7 @@ class Guild:
                 rl = max(0, int(num(relic) or 0) - 2) if not ship and relic is not None else 0
                 rows.append([ally, name, base, "Ship" if ship else "Character", int(num(u.get("currentRarity")) or 0),
                              int(num(u.get("currentLevel")) or 0), int(num(u.get("currentTier")) or 0),
-                             int(gp) if first else "", rl])
+                             int(gp), rl])
                 first = False
         if not rows:
             print("::warning::  roster: no units came back - kept the old roster")

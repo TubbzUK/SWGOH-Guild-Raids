@@ -466,6 +466,12 @@
     try { await document.fonts.ready; } catch (e) {}
     window.dispatchEvent(new Event("resize"));
     await new Promise(r => setTimeout(r, 700));
+    // wait (up to 8 s) for pictures such as unit portraits, so the posted image isn't full of gaps
+    const imgs = [...document.images].filter(i => !i.complete);
+    if (imgs.length) {
+      imgs.forEach(i => { i.loading = "eager"; });
+      await Promise.race([Promise.all(imgs.map(i => new Promise(r => { if (i.complete) r(); else { i.addEventListener("load", r, { once: true }); i.addEventListener("error", r, { once: true }); } }))), new Promise(r => setTimeout(r, 8000))]);
+    }
     document.body.dataset.cardw = w;
     document.body.dataset.ready = "1";
   }

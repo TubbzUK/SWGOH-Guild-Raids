@@ -45,6 +45,8 @@ that device - for your overall score and a score for each area:
 - **Territory battles**: your TB contribution (deployment, combat and special missions, platoons).
 - **Territory wars**: your banners as a % of the guild's best.
 
+Below that is the member's **full roster**: GP, counts (GLs, R9+, R7+, G13, 7★ ships) and every character and ship with stars, relic or gear level and power, with search, sorting and a light/dark filter. It comes from the latest roster (uploaded or pulled from the game); unit names come from the platoon plan and scripts/unit-names.csv.
+
 Each shows your rank, the guild median and whether you're rising, steady or falling. Tap one for its
 history: charts against the guild median, phase by phase for TBs, and a table of every event. The
 scoring and weights are the same as the Guild effectiveness page. A link straight to someone's page:
@@ -75,6 +77,15 @@ away instead of waiting. To pull by hand on GitHub: Actions → Update raid site
 If the Action log warns about a raid ID that doesn't match, add it to that raid's file in raids/, e.g.
 `game_ids: ["the_id_from_the_warning"]`. New ships are learned from WookieeBot rosters or can be added
 to scripts/ships.txt.
+
+## Unit names and pictures
+
+Character and ship portraits (on the raid readiness tab and in each member's roster on Player status)
+and unit names come from swgoh.gg's public unit lists. The site update fetches the list into
+`scripts/units.json` when it pulls from the game (and on the first run); the pictures themselves are
+shown straight from swgoh.gg's image server, nothing is copied. If swgoh.gg can't be reached the last
+list is kept, and without one the site shows initials instead of pictures. The game artwork belongs to
+EA and Lucasfilm.
 
 ## Uploading from the website (easiest)
 
