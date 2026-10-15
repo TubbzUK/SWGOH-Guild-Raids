@@ -1,0 +1,3687 @@
+{
+"basicskill_CAPTAINDROGAN": {
+"unit": "CAPTAINDROGAN",
+"name": "Coordinated Shot",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_DARTHBANE": {
+"unit": "DARTHBANE",
+"name": "Soul Sever",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_DARTHMALGUS": {
+"unit": "DARTHMALGUS",
+"name": "Unfettered Rage",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_GENERALSKYWALKER": {
+"unit": "GENERALSKYWALKER",
+"name": "Furious Slash",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_GLAHSOKATANO": {
+"unit": "GLAHSOKATANO",
+"name": "Aegis Charge",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_GLHONDO": {
+"unit": "GLHONDO",
+"name": "Pistol Panache",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_GLLEIA": {
+"unit": "GLLEIA",
+"name": "Righteous Retribution",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_GLREY": {
+"unit": "GLREY",
+"name": "Relentless Advance",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_GRANDINQUISITOR": {
+"unit": "GRANDINQUISITOR",
+"name": "Pain Can Break Anyone",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_GRANDMASTERLUKE": {
+"unit": "GRANDMASTERLUKE",
+"name": "Indomitable Blast",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_GREATMOTHERS": {
+"unit": "GREATMOTHERS",
+"name": "Energy Threads",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_JABBATHEHUTT": {
+"unit": "JABBATHEHUTT",
+"name": "Illicit Business",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_JEDIMASTERKENOBI": {
+"unit": "JEDIMASTERKENOBI",
+"name": "Ardent Bladework",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_JOCASTANU": {
+"unit": "JOCASTANU",
+"name": "By the Book",
+"kind": "Basic",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"basicskill_LORDVADER": {
+"unit": "LORDVADER",
+"name": "Vindictive Storm",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_LUTHENRAEL": {
+"unit": "LUTHENRAEL",
+"name": "Tools of My Enemy",
+"kind": "Basic",
+"omicron": 6,
+"mode": "GAC"
+},
+"basicskill_OMEGAS3": {
+"unit": "OMEGAS3",
+"name": "Energy Crossbow",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_SITHPALPATINE": {
+"unit": "SITHPALPATINE",
+"name": "Deception",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_SM33": {
+"unit": "SM33",
+"name": "Rattling Uppercut",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_STARKILLER": {
+"unit": "STARKILLER",
+"name": "Imbued Lightsaber Strike",
+"kind": "Basic",
+"zeta": 6
+},
+"basicskill_SUPREMELEADERKYLOREN": {
+"unit": "SUPREMELEADERKYLOREN",
+"name": "Brutal Assault",
+"kind": "Basic",
+"zeta": 1
+},
+"basicskill_TRENCH": {
+"unit": "TRENCH",
+"name": "Unfinished Business",
+"kind": "Basic",
+"omicron": 6,
+"mode": "TW"
+},
+"basicskill_TUSKENCHIEFTAIN": {
+"unit": "TUSKENCHIEFTAIN",
+"name": "Ceremonial Dance",
+"kind": "Basic",
+"zeta": 6
+},
+"leaderskill_50RT": {
+"unit": "50RT",
+"name": "Spare Parts",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "Conquest"
+},
+"leaderskill_ADMIRALACKBAR": {
+"unit": "ADMIRALACKBAR",
+"name": "Rebel Coordination",
+"kind": "Leader",
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_ADMIRALRADDUS": {
+"unit": "ADMIRALRADDUS",
+"name": "Rebel Assault",
+"kind": "Leader",
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_ASAJVENTRESS": {
+"unit": "ASAJVENTRESS",
+"name": "Nightsister Swiftness",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_AURRA_SING": {
+"unit": "AURRA_SING",
+"name": "Game Plan",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_BADBATCHHUNTER": {
+"unit": "BADBATCHHUNTER",
+"name": "A Different Path",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_BASTILASHAN": {
+"unit": "BASTILASHAN",
+"name": "Initiative",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_BAYLANSKOLL": {
+"unit": "BAYLANSKOLL",
+"name": "It's All Inevitable",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_BOBAFETTSCION": {
+"unit": "BOBAFETTSCION",
+"name": "Dangerous Reputation",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_BOSSK": {
+"unit": "BOSSK",
+"name": "On The Hunt",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_BOSSNASS": {
+"unit": "BOSSNASS",
+"name": "Boss of Otoh Gunga",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_CAPTAINENOCH": {
+"unit": "CAPTAINENOCH",
+"name": "Arbiter of Decay",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_CARSONTEVA": {
+"unit": "CARSONTEVA",
+"name": "Captain of the Adelphi Rangers",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TB"
+},
+"leaderskill_CASSIANUNDERCOVER": {
+"unit": "CASSIANUNDERCOVER",
+"name": "I Have Friends Everywhere",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_CC2224": {
+"unit": "CC2224",
+"name": "Ghost Company Commander",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_CEREJUNDA": {
+"unit": "CEREJUNDA",
+"name": "Rekindle",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_CHIEFCHIRPA": {
+"unit": "CHIEFCHIRPA",
+"name": "Simple Tactics",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"leaderskill_CHIEFNEBIT": {
+"unit": "CHIEFNEBIT",
+"name": "Raiding Parties",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_COBBVANTH": {
+"unit": "COBBVANTH",
+"name": "They Look to Me to Protect Them",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_COMMANDERLUKESKYWALKER": {
+"unit": "COMMANDERLUKESKYWALKER",
+"name": "Rebel Maneuvers",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_DARTHBANE": {
+"unit": "DARTHBANE",
+"name": "Only The Strong Survive",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_DARTHJARJAR": {
+"unit": "DARTHJARJAR",
+"name": "Da Force Shall Freein Mesa",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_DARTHMALGUS": {
+"unit": "DARTHMALGUS",
+"name": "Legacy of Power",
+"kind": "Leader",
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_DARTHNIHILUS": {
+"unit": "DARTHNIHILUS",
+"name": "Strength of the Void",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_DARTHREVAN": {
+"unit": "DARTHREVAN",
+"name": "Lord of the Sith",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_DARTHTRAYA": {
+"unit": "DARTHTRAYA",
+"name": "Compassion is Weakness",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_DASHRENDAR": {
+"unit": "DASHRENDAR",
+"name": "Prepared for Anything",
+"kind": "Leader",
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_DIRECTORKRENNIC": {
+"unit": "DIRECTORKRENNIC",
+"name": "Director of Advanced Weapons Research",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_DOCTORAPHRA": {
+"unit": "DOCTORAPHRA",
+"name": "Suspended Doctorate",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 5v5"
+},
+"leaderskill_EIGHTHBROTHER": {
+"unit": "EIGHTHBROTHER",
+"name": "More Than Enough",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_EMBO": {
+"unit": "EMBO",
+"name": "The Quiet Assassin",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_EMBOANDKEIBU": {
+"unit": "EMBOANDKEIBU",
+"name": "Business Is Business",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_EMPERORPALPATINE": {
+"unit": "EMPERORPALPATINE",
+"name": "Emperor of the Galactic Empire",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_FIFTHBROTHER": {
+"unit": "FIFTHBROTHER",
+"name": "I Sense Those We Seek",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_FINN": {
+"unit": "FINN",
+"name": "Balanced Tactics",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "TB"
+},
+"leaderskill_GARSAXON": {
+"unit": "GARSAXON",
+"name": "Mandalorian Retaliation",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_GENERALSKYWALKER": {
+"unit": "GENERALSKYWALKER",
+"name": "General of the 501st",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_GEONOSIANBROODALPHA": {
+"unit": "GEONOSIANBROODALPHA",
+"name": "Geonosian Swarm",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_GLAHSOKATANO": {
+"unit": "GLAHSOKATANO",
+"name": "Commander of the Wayward",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_GLHONDO": {
+"unit": "GLHONDO",
+"name": "Pirate King (Self-Proclaimed)",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_GLLEIA": {
+"unit": "GLLEIA",
+"name": "I Know",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_GLREY": {
+"unit": "GLREY",
+"name": "Wisdom of the Sacred Texts",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_GRANDADMIRALTHRAWN": {
+"unit": "GRANDADMIRALTHRAWN",
+"name": "Legendary Strategist",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_GRANDINQUISITOR": {
+"unit": "GRANDINQUISITOR",
+"name": "Master Inquisitorius",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_GRANDMASTERLUKE": {
+"unit": "GRANDMASTERLUKE",
+"name": "Legend of the Jedi",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_GRANDMASTERYODA": {
+"unit": "GRANDMASTERYODA",
+"name": "Grand Master's Guidance",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_GRANDMOFFTARKIN": {
+"unit": "GRANDMOFFTARKIN",
+"name": "Tighten the Grip",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC 3v3"
+},
+"leaderskill_GREATMOTHERS": {
+"unit": "GREATMOTHERS",
+"name": "Threads of Destiny",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_GRIEVOUS": {
+"unit": "GRIEVOUS",
+"name": "Daunting Presence",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_HERASYNDULLAS3": {
+"unit": "HERASYNDULLAS3",
+"name": "Rise Together",
+"kind": "Leader",
+"omicron": 7,
+"mode": "TW"
+},
+"leaderskill_HOTHLEIA": {
+"unit": "HOTHLEIA",
+"name": "Battlefront Command",
+"kind": "Leader",
+"omicron": 7,
+"mode": "TB"
+},
+"leaderskill_IDENVERSIOEMPIRE": {
+"unit": "IDENVERSIOEMPIRE",
+"name": "Exactly as Planned",
+"kind": "Leader",
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_INQUISITORBARRISS": {
+"unit": "INQUISITORBARRISS",
+"name": "Those Left Behind",
+"kind": "Leader",
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"leaderskill_JABBATHEHUTT": {
+"unit": "JABBATHEHUTT",
+"name": "His High Exaltedness",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_JANGOFETT": {
+"unit": "JANGOFETT",
+"name": "Anything to Get Ahead",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_JEDIKNIGHTCAL": {
+"unit": "JEDIKNIGHTCAL",
+"name": "Weight of the Galaxy",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TB"
+},
+"leaderskill_JEDIKNIGHTLUKE": {
+"unit": "JEDIKNIGHTLUKE",
+"name": "Return of the Jedi",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_JEDIKNIGHTREVAN": {
+"unit": "JEDIKNIGHTREVAN",
+"name": "General",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_JEDIMASTERKENOBI": {
+"unit": "JEDIMASTERKENOBI",
+"name": "Harmonious Will",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_JEDIMASTERMACEWINDU": {
+"unit": "JEDIMASTERMACEWINDU",
+"name": "Solver",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_JYNERSO": {
+"unit": "JYNERSO",
+"name": "Into the Fray",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_KELLERANBEQ": {
+"unit": "KELLERANBEQ",
+"name": "By The Will Of The Council",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_KYLORENUNMASKED": {
+"unit": "KYLORENUNMASKED",
+"name": "Merciless Pursuit",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_LORDVADER": {
+"unit": "LORDVADER",
+"name": "My New Empire",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_LUKESKYWALKER": {
+"unit": "LUKESKYWALKER",
+"name": "A New Hope",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_LUMINARAUNDULI": {
+"unit": "LUMINARAUNDULI",
+"name": "Elegant Steps",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_MAJORPARTAGAZ": {
+"unit": "MAJORPARTAGAZ",
+"name": "Calibrate Your Enthusiasm",
+"kind": "Leader",
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_MANDALORBOKATAN": {
+"unit": "MANDALORBOKATAN",
+"name": "Way of the Mandalore",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"leaderskill_MAUL": {
+"unit": "MAUL",
+"name": "Dancing Shadows",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_MAZKANATA": {
+"unit": "MAZKANATA",
+"name": "Pirate Queen",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_MOFFGIDEONS1": {
+"unit": "MOFFGIDEONS1",
+"name": "Tactical Deployment",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_MOFFGIDEONS3": {
+"unit": "MOFFGIDEONS3",
+"name": "Shadow Contingency",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"leaderskill_MONMOTHMA": {
+"unit": "MONMOTHMA",
+"name": "Alliance Chancellor",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_MOTHERTALZIN": {
+"unit": "MOTHERTALZIN",
+"name": "The Great Mother",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_NINTHSISTER": {
+"unit": "NINTHSISTER",
+"name": "Can't Stop the Empire",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_OMEGAS3": {
+"unit": "OMEGAS3",
+"name": "Learn by Watching",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_PADMEAMIDALA": {
+"unit": "PADMEAMIDALA",
+"name": "Unwavering Courage",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_PHASMA": {
+"unit": "PHASMA",
+"name": "Fire at Will",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"leaderskill_QUEENAMIDALA": {
+"unit": "QUEENAMIDALA",
+"name": "My Place is with My People",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_QUIGONJINN": {
+"unit": "QUIGONJINN",
+"name": "Agility Training",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"leaderskill_RACCOON": {
+"unit": "RACCOON",
+"name": "A Legacy Reforged",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_REMNANTSNOWCOMMANDER": {
+"unit": "REMNANTSNOWCOMMANDER",
+"name": "Warlord's Enforcer",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"leaderskill_REYJEDITRAINING": {
+"unit": "REYJEDITRAINING",
+"name": "Inspirational Presence",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_SANASTARROS": {
+"unit": "SANASTARROS",
+"name": "Rebel Sympathizer",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_SATELESHAN": {
+"unit": "SATELESHAN",
+"name": "Grand Master of the Old Republic",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_SAWGERRERA": {
+"unit": "SAWGERRERA",
+"name": "Freedom Isn't Free",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_SECONDSISTER": {
+"unit": "SECONDSISTER",
+"name": "They Will Never Be Victorious",
+"kind": "Leader",
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_SEVENTHSISTER": {
+"unit": "SEVENTHSISTER",
+"name": "Guess Again",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_SHAAKTI": {
+"unit": "SHAAKTI",
+"name": "Unity Wins War",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_SITHPALPATINE": {
+"unit": "SITHPALPATINE",
+"name": "Sith Eternal",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_STORMTROOPERLUKE": {
+"unit": "STORMTROOPERLUKE",
+"name": "The Brains",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"leaderskill_STRANGER": {
+"unit": "STRANGER",
+"name": "I Want a Pupil",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"leaderskill_SUPREMELEADERKYLOREN": {
+"unit": "SUPREMELEADERKYLOREN",
+"name": "Supreme Leader",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_TARFFUL": {
+"unit": "TARFFUL",
+"name": "It's All in the Fur",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_THEMANDALORIAN": {
+"unit": "THEMANDALORIAN",
+"name": "Asset Acquisition",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_THEMANDALORIANBESKARARMOR": {
+"unit": "THEMANDALORIANBESKARARMOR",
+"name": "Seasoned Tactics",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_THIRDSISTER": {
+"unit": "THIRDSISTER",
+"name": "Harbored Aggression",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"leaderskill_TRENCH": {
+"unit": "TRENCH",
+"name": "Feared Tactician",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"leaderskill_TUSKENCHIEFTAIN": {
+"unit": "TUSKENCHIEFTAIN",
+"name": "Nomadic People",
+"kind": "Leader",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"leaderskill_VADER": {
+"unit": "VADER",
+"name": "Inspiring Through Fear",
+"kind": "Leader",
+"zeta": 6
+},
+"leaderskill_carthonasi": {
+"unit": "CARTHONASI",
+"name": "Soldier of the Old Republic",
+"kind": "Leader",
+"zeta": 6,
+"omicron": 7,
+"mode": "TB"
+},
+"specialskill_50RT01": {
+"unit": "50RT",
+"name": "Sabacc Shuffle",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_ADMIRALPIETT02": {
+"unit": "ADMIRALPIETT",
+"name": "Suborbital Strike",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_ADMIRALRADDUS01": {
+"unit": "ADMIRALRADDUS",
+"name": "Inspiring Maneuver",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_APPO02": {
+"unit": "APPO",
+"name": "No Witnesses",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_ARMORER01": {
+"unit": "ARMORER",
+"name": "Earn Your Signet",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_AURRA_SING02": {
+"unit": "AURRA_SING",
+"name": "Snipers Expertise",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_BADBATCHOMEGA01": {
+"unit": "BADBATCHOMEGA",
+"name": "Adaptive Learner",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_BATCHERS302": {
+"unit": "BATCHERS3",
+"name": "Ferocious Bite",
+"kind": "Special",
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_BAYLANSKOLL02": {
+"unit": "BAYLANSKOLL",
+"name": "Power. Such as You've Never Dreamed",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_BENSOLO01": {
+"unit": "BENSOLO",
+"name": "Obscured",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_BENSOLO02": {
+"unit": "BENSOLO",
+"name": "Family Legacy",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_BOBAFETTSCION01": {
+"unit": "BOBAFETTSCION",
+"name": "Dual Barrage",
+"kind": "Special",
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_C3POCHEWBACCA02": {
+"unit": "C3POCHEWBACCA",
+"name": "Chewie's Rage",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_C3POLEGENDARY01": {
+"unit": "C3POLEGENDARY",
+"name": "Oh My Goodness!",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_CALKESTIS02": {
+"unit": "CALKESTIS",
+"name": "Not So Fast",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_CAPTAINREX01": {
+"unit": "CAPTAINREX",
+"name": "Master Marksman",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_CAPTAINSILVO02": {
+"unit": "CAPTAINSILVO",
+"name": "The Only Thing That Matters",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_CASSIANUNDERCOVER02": {
+"unit": "CASSIANUNDERCOVER",
+"name": "Varian Skye",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_CEREJUNDA02": {
+"unit": "CEREJUNDA",
+"name": "Determined Assault",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_CLONEWARSCHEWBACCA01": {
+"unit": "CLONEWARSCHEWBACCA",
+"name": "Defiant Roar",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_COBBVANTH02": {
+"unit": "COBBVANTH",
+"name": "High Noons",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"specialskill_COMMANDERAHSOKA01": {
+"unit": "COMMANDERAHSOKA",
+"name": "Shien",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_COMMANDERAHSOKA02": {
+"unit": "COMMANDERAHSOKA",
+"name": "Force Leap",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_DARKREY02": {
+"unit": "DARKREY",
+"name": "Malevolent Lineage",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_DARKTROOPER01": {
+"unit": "DARKTROOPER",
+"name": "Bombarding Reinforcements",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_DARTHBANE01": {
+"unit": "DARTHBANE",
+"name": "Malevolent Whirlwind",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_DARTHBANE02": {
+"unit": "DARTHBANE",
+"name": "Essence of Dominance",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_DARTHJARJAR01": {
+"unit": "DARTHJARJAR",
+"name": "Yousa People Gonna Die",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_DARTHJARJAR02": {
+"unit": "DARTHJARJAR",
+"name": "Letten the Haten Flow",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_DARTHMALGUS01": {
+"unit": "DARTHMALGUS",
+"name": "Deprive Senses",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_DARTHMALGUS02": {
+"unit": "DARTHMALGUS",
+"name": "Dark Deception",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_DEATHTROOPERPERIDEA01": {
+"unit": "DEATHTROOPERPERIDEA",
+"name": "Just a Little Nibble",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_DEPABILLABA02": {
+"unit": "DEPABILLABA",
+"name": "Will of the Council",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_DOCTORAPHRA01": {
+"unit": "DOCTORAPHRA",
+"name": "Dangerous Tech",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_DOCTORAPHRA02": {
+"unit": "DOCTORAPHRA",
+"name": "Rogue Archaeology",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC 5v5"
+},
+"specialskill_EIGHTHBROTHER02": {
+"unit": "EIGHTHBROTHER",
+"name": "Bladed Hilt",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_EMBOANDKEIBU01": {
+"unit": "EMBOANDKEIBU",
+"name": "Kyuzo Hat Trick",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_EMBOANDKEIBU02": {
+"unit": "EMBOANDKEIBU",
+"name": "Flush Out the Quarry",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"specialskill_EZRABRIDGERS301": {
+"unit": "EZRABRIDGERS3",
+"name": "Flourish",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_EZRAEXILE01": {
+"unit": "EZRAEXILE",
+"name": "Kanan's Legacy",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_EZRAEXILE02": {
+"unit": "EZRAEXILE",
+"name": "Daring Advance",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_FIFTHBROTHER02": {
+"unit": "FIFTHBROTHER",
+"name": "Shrouded in Darkness",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_FULCRUMAHSOKA02": {
+"unit": "FULCRUMAHSOKA",
+"name": "Whirlwind",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_GENERALSYNDULLA02": {
+"unit": "GENERALSYNDULLA",
+"name": "I'm Not Just Going to Sit Around",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_GLAHSOKATANO01": {
+"unit": "GLAHSOKATANO",
+"name": "Shatterstrike",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLAHSOKATANO02": {
+"unit": "GLAHSOKATANO",
+"name": "Defiant Resolve",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLHONDO01": {
+"unit": "GLHONDO",
+"name": "Loot First, Ask Later",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLHONDO02": {
+"unit": "GLHONDO",
+"name": "Charismatic Captain",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLLEIA01": {
+"unit": "GLLEIA",
+"name": "Rebel Ambush",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLLEIA02": {
+"unit": "GLLEIA",
+"name": "Tactical Offensive",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLREY01": {
+"unit": "GLREY",
+"name": "Lifeblood",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLREY02": {
+"unit": "GLREY",
+"name": "Sudden Whirlwind",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GRANDINQUISITOR02": {
+"unit": "GRANDINQUISITOR",
+"name": "Ready to Die?",
+"kind": "Special",
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_GRANDMASTERLUKE01": {
+"unit": "GRANDMASTERLUKE",
+"name": "They Grow Beyond",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GRANDMASTERLUKE02": {
+"unit": "GRANDMASTERLUKE",
+"name": "Efflux",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GRANDMASTERYODA03": {
+"unit": "GRANDMASTERYODA",
+"name": "Battle Meditation",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_GREATMOTHERS01": {
+"unit": "GREATMOTHERS",
+"name": "Majik Storm",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_GREEDO02": {
+"unit": "GREEDO",
+"name": "Threaten",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_GREEFKARGA01": {
+"unit": "GREEFKARGA",
+"name": "Bring Them in Cold",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_GREEFKARGA02": {
+"unit": "GREEFKARGA",
+"name": "Sweeten the Deal",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_HERASYNDULLAS301": {
+"unit": "HERASYNDULLAS3",
+"name": "Play to Strengths",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_HERMITYODA02": {
+"unit": "HERMITYODA",
+"name": "Strength Flows From the Force",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_HONDO01": {
+"unit": "HONDO",
+"name": "I Don't Want to Kill You Per Se",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_HUYANG01": {
+"unit": "HUYANG",
+"name": "Auxiliary Grapplers",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_HUYANG02": {
+"unit": "HUYANG",
+"name": "Stay Together",
+"kind": "Special",
+"omicron": 6,
+"mode": "TB"
+},
+"specialskill_INQUISITORBARRISS02": {
+"unit": "INQUISITORBARRISS",
+"name": "Flicker of the Light",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_ITHANO02": {
+"unit": "ITHANO",
+"name": "Intimidating Display",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_JABBATHEHUTT01": {
+"unit": "JABBATHEHUTT",
+"name": "Crime Lord",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_JABBATHEHUTT02": {
+"unit": "JABBATHEHUTT",
+"name": "Crumb's Revenge",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_JARJARBINKS01": {
+"unit": "JARJARBINKS",
+"name": "Uh Oh, Big Boomas",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_JARJARBINKS02": {
+"unit": "JARJARBINKS",
+"name": "Wesa Warriors",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_JEDIKNIGHTCAL01": {
+"unit": "JEDIKNIGHTCAL",
+"name": "Whirlwind Slam",
+"kind": "Special",
+"omicron": 6,
+"mode": "TB"
+},
+"specialskill_JEDIKNIGHTCAL02": {
+"unit": "JEDIKNIGHTCAL",
+"name": "Windmill Defense",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_JEDIKNIGHTCAL03": {
+"unit": "JEDIKNIGHTCAL",
+"name": "Impetuous Assault",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"specialskill_JEDIKNIGHTREVAN02": {
+"unit": "JEDIKNIGHTREVAN",
+"name": "Direct Focus",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_JEDIMASTERKENOBI01": {
+"unit": "JEDIMASTERKENOBI",
+"name": "I Will Do What I Must",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_JEDIMASTERKENOBI02": {
+"unit": "JEDIMASTERKENOBI",
+"name": "Hello There",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_JEDIMASTERMACEWINDU01": {
+"unit": "JEDIMASTERMACEWINDU",
+"name": "Decapitation Strike",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_JEDIMASTERMACEWINDU02": {
+"unit": "JEDIMASTERMACEWINDU",
+"name": "The Hammer of Ryloth",
+"kind": "Special",
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_JOCASTANU01": {
+"unit": "JOCASTANU",
+"name": "Shhh! Quiet!",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_JOLEEBINDO02": {
+"unit": "JOLEEBINDO",
+"name": "That Looks Pretty Bad",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_KANANJARRUSS302": {
+"unit": "KANANJARRUSS3",
+"name": "Total Defense",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_KELLERANBEQ02": {
+"unit": "KELLERANBEQ",
+"name": "Jedi Bravery",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_KIX02": {
+"unit": "KIX",
+"name": "Emergency Medpac",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_KYLEKATARN02": {
+"unit": "KYLEKATARN",
+"name": "Power of the Valley",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_KYLOREN02": {
+"unit": "KYLOREN",
+"name": "Outrage",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_LEIAJEDITRAINING01": {
+"unit": "LEIAJEDITRAINING",
+"name": "Instinct of the Force",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_LEIAJEDITRAINING02": {
+"unit": "LEIAJEDITRAINING",
+"name": "The Final Lesson",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_LORDVADER01": {
+"unit": "LORDVADER",
+"name": "Dark Harbinger",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_LORDVADER02": {
+"unit": "LORDVADER",
+"name": "Unshackled Emotions",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_LUMINARAUNDULI02": {
+"unit": "LUMINARAUNDULI",
+"name": "Master Healer's Blessing",
+"kind": "Special",
+"omicron": 7,
+"mode": "GAC"
+},
+"specialskill_LUTHENRAEL01": {
+"unit": "LUTHENRAEL",
+"name": "What Do I Sacrifice?",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_LUTHENRAEL02": {
+"unit": "LUTHENRAEL",
+"name": "A Sunless Space",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MACEWINDU02": {
+"unit": "MACEWINDU",
+"name": "This Party's Over",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MAGNAGUARD02": {
+"unit": "MAGNAGUARD",
+"name": "Stunning Strike",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MAJORPARTAGAZ01": {
+"unit": "MAJORPARTAGAZ",
+"name": "Authority Is Brittle",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MANDALORBOKATAN01": {
+"unit": "MANDALORBOKATAN",
+"name": "Darksaber Flourish",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MANDALORBOKATAN02": {
+"unit": "MANDALORBOKATAN",
+"name": "Reinforcements Have Arrived",
+"kind": "Special",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"specialskill_MARAJADE01": {
+"unit": "MARAJADE",
+"name": "Ultimate Predator",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MARAJADE02": {
+"unit": "MARAJADE",
+"name": "Infiltrate and Disrupt",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MAULHATEFUELED01": {
+"unit": "MAULHATEFUELED",
+"name": "Relentless Malice",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_MAULHATEFUELED02": {
+"unit": "MAULHATEFUELED",
+"name": "Howl of the Broken",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_MAULS701": {
+"unit": "MAULS7",
+"name": "Fervent Rush",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MAULS702": {
+"unit": "MAULS7",
+"name": "Seething Rage",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MAZKANATA02": {
+"unit": "MAZKANATA",
+"name": "Keeper of Secrets",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_MERRIN01": {
+"unit": "MERRIN",
+"name": "Shadow Stride",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MOFFGIDEONS102": {
+"unit": "MOFFGIDEONS1",
+"name": "Control the Situation",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MOFFGIDEONS301": {
+"unit": "MOFFGIDEONS3",
+"name": "Strategic Onslaught",
+"kind": "Special",
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_MOFFGIDEONS302": {
+"unit": "MOFFGIDEONS3",
+"name": "Unwavering Presence",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_MORGANELSBETH02": {
+"unit": "MORGANELSBETH",
+"name": "Let None Pass",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_NIGHTTROOPER01": {
+"unit": "NIGHTTROOPER",
+"name": "March of the Undying",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_NINTHSISTER02": {
+"unit": "NINTHSISTER",
+"name": "Ground Pound",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_OLDBENKENOBI02": {
+"unit": "OLDBENKENOBI",
+"name": "Devoted Protector",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_OMEGAS301": {
+"unit": "OMEGAS3",
+"name": "Big Sister",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_PAZVIZSLA02": {
+"unit": "PAZVIZSLA",
+"name": "Vengeful Incineration",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_PRINCESSKNEESAA02": {
+"unit": "PRINCESSKNEESAA",
+"name": "Yub Nub",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_QUEENAMIDALA01": {
+"unit": "QUEENAMIDALA",
+"name": "I am Queen Amidala",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_RACCOON01": {
+"unit": "RACCOON",
+"name": "Knock 'Em Dead",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_RACCOON02": {
+"unit": "RACCOON",
+"name": "Showboat",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_RANGERZEB01": {
+"unit": "RANGERZEB",
+"name": "Devastating Sweep",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_SABINEWRENS302": {
+"unit": "SABINEWRENS3",
+"name": "Demolish",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_SATELESHAN01": {
+"unit": "SATELESHAN",
+"name": "Force Stun",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_SATELESHAN02": {
+"unit": "SATELESHAN",
+"name": "Into the Fray",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_SCOUTTROOPER_V302": {
+"unit": "SCOUTTROOPER_V3",
+"name": "Strategic Assessment",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_SEVENTHSISTER02": {
+"unit": "SEVENTHSISTER",
+"name": "ID9 Enemy Intelligence",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_SITHPALPATINE01": {
+"unit": "SITHPALPATINE",
+"name": "So Be It, Jedi",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_SITHPALPATINE02": {
+"unit": "SITHPALPATINE",
+"name": "Unraveled Destiny",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_SM3301": {
+"unit": "SM33",
+"name": "Limb From Limb",
+"kind": "Special",
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_SM3302": {
+"unit": "SM33",
+"name": "Forearm Bucklers",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"specialskill_STARKILLER01": {
+"unit": "STARKILLER",
+"name": "Boundless Force Throw",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_STARKILLER02": {
+"unit": "STARKILLER",
+"name": "Force Repulse",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_STORMTROOPERLUKE01": {
+"unit": "STORMTROOPERLUKE",
+"name": "Short for a Stormtrooper",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_STRANGER01": {
+"unit": "STRANGER",
+"name": "An Acolyte Kills the Dream",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_STRANGER02": {
+"unit": "STRANGER",
+"name": "Was That Its Name?",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_SUPREMELEADERKYLOREN01": {
+"unit": "SUPREMELEADERKYLOREN",
+"name": "Stasis Strike",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_SUPREMELEADERKYLOREN02": {
+"unit": "SUPREMELEADERKYLOREN",
+"name": "Furious Onslaught",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_TARONMALICOS01": {
+"unit": "TARONMALICOS",
+"name": "Vile Thrash",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_TARONMALICOS02": {
+"unit": "TARONMALICOS",
+"name": "Die, Whelp!",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_THIRDSISTER01": {
+"unit": "THIRDSISTER",
+"name": "Unyielding Onslaught",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_THIRDSISTER02": {
+"unit": "THIRDSISTER",
+"name": "Reckless Sweep",
+"kind": "Special",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"specialskill_TRENCH01": {
+"unit": "TRENCH",
+"name": "Net Positive",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_TRIPLEZERO01": {
+"unit": "TRIPLEZERO",
+"name": "Specialized in Torture",
+"kind": "Special",
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"specialskill_TUSKENHUNTRESS02": {
+"unit": "TUSKENHUNTRESS",
+"name": "Finishing Strikes",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_UNDERCOVERLANDO02": {
+"unit": "UNDERCOVERLANDO",
+"name": "Covert Coordination",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_VADER03": {
+"unit": "VADER",
+"name": "Merciless Massacre",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_VADERDUELSEND02": {
+"unit": "VADERDUELSEND",
+"name": "You Will Always Lose",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"specialskill_WAMPA02": {
+"unit": "WAMPA",
+"name": "Furious Foe",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_WRECKERS302": {
+"unit": "WRECKERS3",
+"name": "Improvised Weapon",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_YODADSV02": {
+"unit": "YODADSV",
+"name": "Hear Me, You Will",
+"kind": "Special",
+"zeta": 6
+},
+"specialskill_ZEBS301": {
+"unit": "ZEBS3",
+"name": "Staggering Sweep",
+"kind": "Special",
+"zeta": 6
+},
+"uniqueskill_4LOM01": {
+"unit": "4LOM",
+"name": "Override Programming",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_AAYLASECURA02": {
+"unit": "AAYLASECURA",
+"name": "Let it Guide You",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ADELPHIRANGER01": {
+"unit": "ADELPHIRANGER",
+"name": "Rodian Ranger",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_ADMIRALPIETT01": {
+"unit": "ADMIRALPIETT",
+"name": "The Emperor's Trap",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ADMIRALRADDUS01": {
+"unit": "ADMIRALRADDUS",
+"name": "Transmission from Scarif",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_AHSOKATANO01": {
+"unit": "AHSOKATANO",
+"name": "Daring Padawan",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_AMILYNHOLDO01": {
+"unit": "AMILYNHOLDO",
+"name": "Quiet Confidence",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ANAKINKNIGHT01": {
+"unit": "ANAKINKNIGHT",
+"name": "Righteous Fury",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_APPO01": {
+"unit": "APPO",
+"name": "Vader's Fist",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_ARCTROOPER501ST01": {
+"unit": "ARCTROOPER501ST",
+"name": "ARC Arsenal",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ASAJJDARKDISCIPLE01": {
+"unit": "ASAJJDARKDISCIPLE",
+"name": "Train Under Me",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_ASAJVENTRESS01": {
+"unit": "ASAJVENTRESS",
+"name": "Rampage",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_B1MERCDROID01": {
+"unit": "B1MERCDROID",
+"name": "Mercenary Gotra",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_B1MERCDROID02": {
+"unit": "B1MERCDROID",
+"name": "Droid Mercenary",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"uniqueskill_B2SUPERBATTLEDROID02": {
+"unit": "B2SUPERBATTLEDROID",
+"name": "Reactive Protocol",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BADBATCHECHO01": {
+"unit": "BADBATCHECHO",
+"name": "One That Survives",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BADBATCHOMEGA01": {
+"unit": "BADBATCHOMEGA",
+"name": "Part of the Squad",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TB"
+},
+"uniqueskill_BADBATCHTECH01": {
+"unit": "BADBATCHTECH",
+"name": "Clone Interpreter",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BADBATCHWRECKER01": {
+"unit": "BADBATCHWRECKER",
+"name": "Dauntless Commando",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BARRISSOFFEE01": {
+"unit": "BARRISSOFFEE",
+"name": "Swift Recovery",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BASTILASHANDARK02": {
+"unit": "BASTILASHANDARK",
+"name": "Sith Apprentice",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BATCHERS301": {
+"unit": "BATCHERS3",
+"name": "LH-201",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BAYLANSKOLL01": {
+"unit": "BAYLANSKOLL",
+"name": "Master and Apprentice",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_BB801": {
+"unit": "BB8",
+"name": "Roll with the Punches",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BB802": {
+"unit": "BB8",
+"name": "Self-Preservation Protocol",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BENSOLO01": {
+"unit": "BENSOLO",
+"name": "Redeemed",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_BENSOLO02": {
+"unit": "BENSOLO",
+"name": "Force Dyad",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_BISHOP01": {
+"unit": "BISHOP",
+"name": "New Republic Officer",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_BOBAFETT01": {
+"unit": "BOBAFETT",
+"name": "Bounty Hunter's Resolve",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BOBAFETTSCION01": {
+"unit": "BOBAFETTSCION",
+"name": "Fett Legacy",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_BODHIROOK01": {
+"unit": "BODHIROOK",
+"name": "Double Duty",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BOKATAN01": {
+"unit": "BOKATAN",
+"name": "Stronger Together",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BOOMADIER01": {
+"unit": "BOOMADIER",
+"name": "Grand Army Specialist",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "Raid"
+},
+"uniqueskill_BOSSK01": {
+"unit": "BOSSK",
+"name": "Trandoshan Rage",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BOSSNASS01": {
+"unit": "BOSSNASS",
+"name": "Ankura Resilience",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BOUSHH01": {
+"unit": "BOUSHH",
+"name": "Fearless",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_BOUSHH02": {
+"unit": "BOUSHH",
+"name": "Ubese Ogygian Cloak",
+"kind": "Unique",
+"omicron": 6,
+"mode": "Raid"
+},
+"uniqueskill_BRUTUS01": {
+"unit": "BRUTUS",
+"name": "Mutineer",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_BT101": {
+"unit": "BT1",
+"name": "Homicidal Counterpart",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"uniqueskill_C3POLEGENDARY02": {
+"unit": "C3POLEGENDARY",
+"name": "Wait for Me!",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CALKESTIS01": {
+"unit": "CALKESTIS",
+"name": "I'm Persistent",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_CANDEROUSORDO01": {
+"unit": "CANDEROUSORDO",
+"name": "I Like a Challenge",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CAPTAINDROGAN01": {
+"unit": "CAPTAINDROGAN",
+"name": "Second in Command",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_CAPTAINENOCH01": {
+"unit": "CAPTAINENOCH",
+"name": "Ominous Sentinel",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_CAPTAINREX01": {
+"unit": "CAPTAINREX",
+"name": "The Lost Commander",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_CAPTAINSILVO01": {
+"unit": "CAPTAINSILVO",
+"name": "Well Now It's Mine",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_CAPTAINTARPALS01": {
+"unit": "CAPTAINTARPALS",
+"name": "Mesa Tink Of Something",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_CARADUNE02": {
+"unit": "CARADUNE",
+"name": "Ex-Rebel Shock Trooper",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CARSONTEVA01": {
+"unit": "CARSONTEVA",
+"name": "Unauthorized Operation",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CASSIANANDOR01": {
+"unit": "CASSIANANDOR",
+"name": "Groundwork",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TB"
+},
+"uniqueskill_CASSIANUNDERCOVER01": {
+"unit": "CASSIANUNDERCOVER",
+"name": "More Than Your Fear",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_CHEWBACCALEGENDARY01": {
+"unit": "CHEWBACCALEGENDARY",
+"name": "Loyal Friend",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CHEWBACCALEGENDARY02": {
+"unit": "CHEWBACCALEGENDARY",
+"name": "Raging Wookiee",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CINTA01": {
+"unit": "CINTA",
+"name": "Blooded, Fearless Warrior",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_COBBVANTH01": {
+"unit": "COBBVANTH",
+"name": "The Marshal",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_COLONELSTARCK01": {
+"unit": "COLONELSTARCK",
+"name": "Imperial Intelligence",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_COMMANDERAHSOKA01": {
+"unit": "COMMANDERAHSOKA",
+"name": "Her Own Path",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_COMMANDERLUKESKYWALKER01": {
+"unit": "COMMANDERLUKESKYWALKER",
+"name": "Learn Control",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_COMMANDERLUKESKYWALKER02": {
+"unit": "COMMANDERLUKESKYWALKER",
+"name": "It Binds All Things",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_COUNTDOOKU01": {
+"unit": "COUNTDOOKU",
+"name": "Flawless Riposte",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CROSSHAIRS301": {
+"unit": "CROSSHAIRS3",
+"name": "It's In My Head",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_CT555501": {
+"unit": "CT5555",
+"name": "Domino Squad",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_CT555502": {
+"unit": "CT5555",
+"name": "Tactical Awareness",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DAKA01": {
+"unit": "DAKA",
+"name": "Serve Again",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARKREY01": {
+"unit": "DARKREY",
+"name": "Dont Be Afraid of Who You Are",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_DARKREY02": {
+"unit": "DARKREY",
+"name": "In Our Nature",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_DARTHBANE01": {
+"unit": "DARTHBANE",
+"name": "Rule of Two",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_DARTHJARJAR01": {
+"unit": "DARTHJARJAR",
+"name": "The Phantom Menace",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_DARTHMALAK01": {
+"unit": "DARTHMALAK",
+"name": "Gnawing Terror",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARTHMALAK02": {
+"unit": "DARTHMALAK",
+"name": "Jaws of Life",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARTHMALGUS01": {
+"unit": "DARTHMALGUS",
+"name": "Korriban's Legacy",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_DARTHNIHILUS01": {
+"unit": "DARTHNIHILUS",
+"name": "Lord of Hunger",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARTHREVAN01": {
+"unit": "DARTHREVAN",
+"name": "Conqueror",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARTHREVAN02": {
+"unit": "DARTHREVAN",
+"name": "Villain",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARTHSIDIOUS01": {
+"unit": "DARTHSIDIOUS",
+"name": "Sadistic Glee",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_DARTHSION01": {
+"unit": "DARTHSION",
+"name": "Lord of Pain",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARTHTALON01": {
+"unit": "DARTHTALON",
+"name": "Proven Loyalty",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DARTHTALON02": {
+"unit": "DARTHTALON",
+"name": "Sith Cruelty",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_DARTHTRAYA01": {
+"unit": "DARTHTRAYA",
+"name": "Lord of Betrayal",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_DASHRENDAR": {
+"unit": "DASHRENDAR",
+"name": "Hotshot",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DEATHTROOPER01": {
+"unit": "DEATHTROOPER",
+"name": "Krennic's Guard",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DEDRAMEERO01": {
+"unit": "DEDRAMEERO",
+"name": "Systems Either Change or Die",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"uniqueskill_DENGAR01": {
+"unit": "DENGAR",
+"name": "Grizzled Veteran",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DEPABILLABA01": {
+"unit": "DEPABILLABA",
+"name": "Nothing and Everything",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_DIRECTORKRENNIC01": {
+"unit": "DIRECTORKRENNIC",
+"name": "Immeasurable Power",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_DISGUISEDCLONETROOPER01": {
+"unit": "DISGUISEDCLONETROOPER",
+"name": "Clever Ruse",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_DISGUISEDCLONETROOPER02": {
+"unit": "DISGUISEDCLONETROOPER",
+"name": "Decoy Squad Five",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_DOCTORAPHRA01": {
+"unit": "DOCTORAPHRA",
+"name": "Droid Savant",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 5v5"
+},
+"uniqueskill_DROIDEKA01": {
+"unit": "DROIDEKA",
+"name": "Deflector Shield Generator",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_EMBO01": {
+"unit": "EMBO",
+"name": "Way of the Kyuzo",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_EMBOANDKEIBU": {
+"unit": "EMBOANDKEIBU",
+"name": "Soldier of Fortune",
+"kind": "Unique",
+"omicron": 1,
+"mode": "TW"
+},
+"uniqueskill_EMPERORPALPATINE01": {
+"unit": "EMPERORPALPATINE",
+"name": "Crackling Doom",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ENFYSNEST01": {
+"unit": "ENFYSNEST",
+"name": "Fighting Instinct",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_EPIXFINN01": {
+"unit": "EPIXFINN",
+"name": "Spark of Resistance",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_EPIXPOE01": {
+"unit": "EPIXPOE",
+"name": "Spark of Resistance",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_EZRAEXILE01": {
+"unit": "EZRAEXILE",
+"name": "Exile",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_EZRAEXILE02": {
+"unit": "EZRAEXILE",
+"name": "The Force Is My Ally",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_FENNECSHAND01": {
+"unit": "FENNECSHAND",
+"name": "Making an Impression",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_FIRSTORDERTIEPILOT01": {
+"unit": "FIRSTORDERTIEPILOT",
+"name": "Keen Eye",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_FIRSTORDERTROOPER01": {
+"unit": "FIRSTORDERTROOPER",
+"name": "Return Fire",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_FOSITHTROOPER01": {
+"unit": "FOSITHTROOPER",
+"name": "Emperor's Legacy",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_FULCRUMAHSOKA01": {
+"unit": "FULCRUMAHSOKA",
+"name": "Perseverance",
+"kind": "Unique",
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_GALACTICLEGEND01": {
+"unit": "JABBATHEHUTT",
+"name": "Galactic Legend",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_GAMORREANGUARD01": {
+"unit": "GAMORREANGUARD",
+"name": "Loyal Enforcer",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_GENERALHUX01": {
+"unit": "GENERALHUX",
+"name": "Boundless Ambition",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GENERALKENOBI01": {
+"unit": "GENERALKENOBI",
+"name": "Soresu",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GENERALSKYWALKER01": {
+"unit": "GENERALSKYWALKER",
+"name": "The Chosen One",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GENERALSKYWALKER02": {
+"unit": "GENERALSKYWALKER",
+"name": "Hero with no Fear",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GENERALSYNDULLA01": {
+"unit": "GENERALSYNDULLA",
+"name": "Unauthorized Mission",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_GEONOSIANBROODALPHA01": {
+"unit": "GEONOSIANBROODALPHA",
+"name": "Queen's Will",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GLAHSOKATANO01": {
+"unit": "GLAHSOKATANO",
+"name": "Daughter of Mortis",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_GLHONDO01": {
+"unit": "GLHONDO",
+"name": "It's Not Personal. It's Profitable.",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_GLLEIA01": {
+"unit": "GLLEIA",
+"name": "Forever Our Princess",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_GLREY01": {
+"unit": "GLREY",
+"name": "Manifest Inspiration",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_GOPHERANTS01": {
+"unit": "GOPHERANTS",
+"name": "Bad Baby!",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_GRANDADMIRALTHRAWN01": {
+"unit": "GRANDADMIRALTHRAWN",
+"name": "Ebb and Flow",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GRANDINQUISITOR01": {
+"unit": "GRANDINQUISITOR",
+"name": "Compassion Leaves a Trail",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_GRANDMASTERLUKE01": {
+"unit": "GRANDMASTERLUKE",
+"name": "Jedi Legacy",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_GRANDMOFFTARKIN01": {
+"unit": "GRANDMOFFTARKIN",
+"name": "Callous Conviction",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GREATMOTHERS01": {
+"unit": "GREATMOTHERS",
+"name": "To The Old Ways",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_GRIEVOUS01": {
+"unit": "GRIEVOUS",
+"name": "Metalloid Monstrosity",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_GUNGANPHALANX01": {
+"unit": "GUNGANPHALANX",
+"name": "Let Mesa Help",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_HANSOLO01": {
+"unit": "HANSOLO",
+"name": "Shoots First",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_HERMITYODA02": {
+"unit": "HERMITYODA",
+"name": "Do or Do Not",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_HK4701": {
+"unit": "HK47",
+"name": "Self-Reconstruction",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_HK4702": {
+"unit": "HK47",
+"name": "Loyalty to the Maker",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_HONDO01": {
+"unit": "HONDO",
+"name": "That's Just Good Business",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_HOTHHAN01": {
+"unit": "HOTHHAN",
+"name": "Nick of Time",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_HOTHLEIA01": {
+"unit": "HOTHLEIA",
+"name": "Dauntless",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_HUNTERS301": {
+"unit": "HUNTERS3",
+"name": "Focused Co-operation",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_HUYANG01": {
+"unit": "HUYANG",
+"name": "Lightsaber Architect",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_IDENVERSIOEMPIRE01": {
+"unit": "IDENVERSIOEMPIRE",
+"name": "First In, Last Out",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_IG1101": {
+"unit": "IG11",
+"name": "Child's Favor",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_IG1201": {
+"unit": "IG12",
+"name": "Yes. Yes. Yes.",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_IG8801": {
+"unit": "IG88",
+"name": "Adaptive Aim Algorithm",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_IG9001": {
+"unit": "IG90",
+"name": "QUERY: Dead or Alive?",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_IMPERIALPROBEDROID01": {
+"unit": "IMPERIALPROBEDROID",
+"name": "Imperial Logistics",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TB"
+},
+"uniqueskill_ITHANO01": {
+"unit": "ITHANO",
+"name": "I Don't Die So Easily",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_JABBATHEHUTT01": {
+"unit": "JABBATHEHUTT",
+"name": "The Illustrious",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_JANGOFETT01": {
+"unit": "JANGOFETT",
+"name": "Notorious Reputation",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_JARJARBINKS01": {
+"unit": "JARJARBINKS",
+"name": "Mesa Okeyday",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_JARJARBINKS02": {
+"unit": "JARJARBINKS",
+"name": "Mooie-Mooie, I Love You",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_JAXXON01": {
+"unit": "JAXXON",
+"name": "Starship Down",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_JEDIKNIGHTCAL01": {
+"unit": "JEDIKNIGHTCAL",
+"name": "Jedi Survivor",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_JEDIKNIGHTLUKE01": {
+"unit": "JEDIKNIGHTLUKE",
+"name": "Jedi Knight's Resolve",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_JEDIKNIGHTREVAN02": {
+"unit": "JEDIKNIGHTREVAN",
+"name": "Hero",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_JEDIMASTERKENOBI01": {
+"unit": "JEDIMASTERKENOBI",
+"name": "May The Force Be With You",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_JEDIMASTERMACEWINDU01": {
+"unit": "JEDIMASTERMACEWINDU",
+"name": "Arrest Warrant",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_JOCASTANU01": {
+"unit": "JOCASTANU",
+"name": "Jedi Archivist",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_JYNERSO01": {
+"unit": "JYNERSO",
+"name": "Fierce Determination",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_K2SO02": {
+"unit": "K2SO",
+"name": "Reprogrammed Imperial Droid",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_KELLERANBEQ01": {
+"unit": "KELLERANBEQ",
+"name": "The Sabered Hand",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_KIX01": {
+"unit": "KIX",
+"name": "Republic Medic Corps",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_KLEYA01": {
+"unit": "KLEYA",
+"name": "I Don't Have Lately, I Have Always",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"uniqueskill_KRRSANTAN01": {
+"unit": "KRRSANTAN",
+"name": "Champion of the Fighting Pits",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_KUIIL01": {
+"unit": "KUIIL",
+"name": "Frontier Wisdom",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_KXSECURITYDROID01": {
+"unit": "KXSECURITYDROID",
+"name": "Controlled Operation",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_KYLEKATARN01": {
+"unit": "KYLEKATARN",
+"name": "Blue Milk Run",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_KYLORENUNMASKED01": {
+"unit": "KYLORENUNMASKED",
+"name": "Scarred",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_LEIAJEDITRAINING01": {
+"unit": "LEIAJEDITRAINING",
+"name": "The Unchosen Path",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_LEIAJEDITRAINING02": {
+"unit": "LEIAJEDITRAINING",
+"name": "Disciple Of The Force",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_LOGRAY01": {
+"unit": "LOGRAY",
+"name": "Shaman's Insight",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_LORDVADER01": {
+"unit": "LORDVADER",
+"name": "Twisted Prophecy",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_LUKESKYWALKER01": {
+"unit": "LUKESKYWALKER",
+"name": "Draw a Bead",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_LUKESTARKILLER01": {
+"unit": "LUKESTARKILLER",
+"name": "The Force of Others",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_LUTHENRAEL01": {
+"unit": "LUTHENRAEL",
+"name": "Dreams With Ghosts",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_MACEWINDU01": {
+"unit": "MACEWINDU",
+"name": "Vaapad",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_MACEWINDU02": {
+"unit": "MACEWINDU",
+"name": "Sense Weakness",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_MANDALORBOKATAN01": {
+"unit": "MANDALORBOKATAN",
+"name": "For Mandalore!",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_MARAJADE01": {
+"unit": "MARAJADE",
+"name": "The Emperor's Hand",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_MARAJADESKYWALKER01": {
+"unit": "MARAJADESKYWALKER",
+"name": "A Galactic Union",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_MARROK01": {
+"unit": "MARROK",
+"name": "Masked Hunter",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_MASTERQUIGON01": {
+"unit": "MASTERQUIGON",
+"name": "Stay Close to Me",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_MAULHATEFUELED01": {
+"unit": "MAULHATEFUELED",
+"name": "Hatred Sustains",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_MAULS701": {
+"unit": "MAULS7",
+"name": "Bound By Hatred",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_MAZKANATA01": {
+"unit": "MAZKANATA",
+"name": "Ancient Wisdom",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_MERRIN01": {
+"unit": "MERRIN",
+"name": "Last of the Nightsisters",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_MERRIN02": {
+"unit": "MERRIN",
+"name": "Vengeful Bond",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_MISSIONVAO02": {
+"unit": "MISSIONVAO",
+"name": "Me and Big Z Forever",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_MOFFGIDEONS301": {
+"unit": "MOFFGIDEONS3",
+"name": "Dark Trooper Beskar Armor",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_MONMOTHMA01": {
+"unit": "MONMOTHMA",
+"name": "This Is Our Rebellion",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_MORGANELSBETH01": {
+"unit": "MORGANELSBETH",
+"name": "Preordained Destiny",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_MOTHERTALZIN01": {
+"unit": "MOTHERTALZIN",
+"name": "Plaguebearer",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_NIGHTSISTERINITIATE01": {
+"unit": "NIGHTSISTERINITIATE",
+"name": "Nightsister Retaliation",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_NIGHTTROOPER01": {
+"unit": "NIGHTTROOPER",
+"name": "Inevitable End",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_NUTEGUNRAY01": {
+"unit": "NUTEGUNRAY",
+"name": "Viceroy's Reach",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_OLDBENKENOBI01": {
+"unit": "OLDBENKENOBI",
+"name": "If You Strike Me Down",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_OPERATIVE01": {
+"unit": "OPERATIVE",
+"name": "You Chose the Wrong Side",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"uniqueskill_OPERATIVE02": {
+"unit": "OPERATIVE",
+"name": "Focused and Determined",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_PADAWANOBIWAN01": {
+"unit": "PADAWANOBIWAN",
+"name": "Nobility in Restraint",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "Conquest"
+},
+"uniqueskill_PADAWANSABINE01": {
+"unit": "PADAWANSABINE",
+"name": "Sentinel of Lothal",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_PADMEAMIDALA01": {
+"unit": "PADMEAMIDALA",
+"name": "Always a Choice",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_PAO01": {
+"unit": "PAO",
+"name": "For Pipada",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_PAPLOO01": {
+"unit": "PAPLOO",
+"name": "Don't Hold Back",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_PAZVIZSLA01": {
+"unit": "PAZVIZSLA",
+"name": "Legacy of House Vizsla",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_POGGLETHELESSER01": {
+"unit": "POGGLETHELESSER",
+"name": "Hive Tactics",
+"kind": "Unique",
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_PRINCESSKNEESAA01": {
+"unit": "PRINCESSKNEESAA",
+"name": "Bright Tree Village",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_PRINCESSLEIA01": {
+"unit": "PRINCESSLEIA",
+"name": "Against All Odds",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_QIRA01": {
+"unit": "QIRA",
+"name": "Insult to Injury",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_QUEENAMIDALA01": {
+"unit": "QUEENAMIDALA",
+"name": "Loyal Bodyguard",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_QUIGGOLD01": {
+"unit": "QUIGGOLD",
+"name": "First Mate",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_QUIGGOLD02": {
+"unit": "QUIGGOLD",
+"name": "Prayer Necklace",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_R2D2_LEGENDARY01": {
+"unit": "R2D2_LEGENDARY",
+"name": "Combat Analysis",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_R2D2_LEGENDARY02": {
+"unit": "R2D2_LEGENDARY",
+"name": "Number Crunch",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_R5D401": {
+"unit": "R5D4",
+"name": "Built for Adventure",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_RACCOON01": {
+"unit": "RACCOON",
+"name": "Pedunkee Mufkin",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_RANGERZEB01": {
+"unit": "RANGERZEB",
+"name": "Lasat Enforcer",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC 3v3"
+},
+"uniqueskill_REX01": {
+"unit": "CT7567",
+"name": "Captain of the 501st",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_REY01": {
+"unit": "REY",
+"name": "Focused Strikes",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_REYJEDITRAINING01": {
+"unit": "REYJEDITRAINING",
+"name": "Virtuous Protector",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_REYJEDITRAINING02": {
+"unit": "REYJEDITRAINING",
+"name": "Insight",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ROSETICO01": {
+"unit": "ROSETICO",
+"name": "Valiant Spirit",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_ROYALGUARD01": {
+"unit": "ROYALGUARD",
+"name": "Unyielding Defender",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_SATELESHAN01": {
+"unit": "SATELESHAN",
+"name": "Legendary Defiance",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_SAVAGEOPRESS01": {
+"unit": "SAVAGEOPRESS",
+"name": "Brute",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_SAWGERRERA01": {
+"unit": "SAWGERRERA",
+"name": "Adapt and Survive",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_SCORCH01": {
+"unit": "SCORCH",
+"name": "Following Protocol",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_SCOUTTROOPER_V301": {
+"unit": "SCOUTTROOPER_V3",
+"name": "Imperial Vanguard",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "Raid"
+},
+"uniqueskill_SECONDSISTER01": {
+"unit": "SECONDSISTER",
+"name": "Everyone is Expendable",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_SHAAKTI01": {
+"unit": "SHAAKTI",
+"name": "Heightened Reflexes",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_SHINHATI01": {
+"unit": "SHINHATI",
+"name": "You Have No Power",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_SITHPALPATINE01": {
+"unit": "SITHPALPATINE",
+"name": "Sow Discord",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_SM3301": {
+"unit": "SM33",
+"name": "First Mate of the Onyx Cinder",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_SMUGGLERCHEWBACCA01": {
+"unit": "SMUGGLERCHEWBACCA",
+"name": "Let the Wookiee Win",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_SMUGGLERHAN01": {
+"unit": "SMUGGLERHAN",
+"name": "Swindle",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_STAP01": {
+"unit": "STAP",
+"name": "Single Trooper Aerial Platform",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_STARKILLER01": {
+"unit": "STARKILLER",
+"name": "Force Energy",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_STARKILLER02": {
+"unit": "STARKILLER",
+"name": "There is Much Conflict in You",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_STORMTROOPER01": {
+"unit": "STORMTROOPER",
+"name": "Wall of Stormtroopers",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_STORMTROOPERCONCEPT01": {
+"unit": "STORMTROOPERCONCEPT",
+"name": "Alderaan Prison Security",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_STORMTROOPERHAN01": {
+"unit": "STORMTROOPERHAN",
+"name": "Bluff",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_STRANGER01": {
+"unit": "STRANGER",
+"name": "You Might Call Me...Sith",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_SUPREMELEADERKYLOREN01": {
+"unit": "SUPREMELEADERKYLOREN",
+"name": "Press the Advantage",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_TARFFUL01": {
+"unit": "TARFFUL",
+"name": "Better Together",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_TARONMALICOS01": {
+"unit": "TARONMALICOS",
+"name": "Echo of the Fallen Order",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_TARONMALICOS02": {
+"unit": "TARONMALICOS",
+"name": "Strength is Power",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_THEMANDALORIAN01": {
+"unit": "THEMANDALORIAN",
+"name": "Disciplined Bounty Hunter",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_THEMANDALORIANBESKARARMOR01": {
+"unit": "THEMANDALORIANBESKARARMOR",
+"name": "Protective Intuition",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_THERONIN01": {
+"unit": "THERONIN",
+"name": "Mercy Left Behind",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_THIRDSISTER01": {
+"unit": "THIRDSISTER",
+"name": "Driven by Revenge",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_TRENCH01": {
+"unit": "TRENCH",
+"name": "I Smell Fear, and It Smells Good",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_TRIPLEZERO02": {
+"unit": "TRIPLEZERO",
+"name": "Drain Organics",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_TUSKENHUNTRESS01": {
+"unit": "TUSKENHUNTRESS",
+"name": "Centuries of Tradition",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_TUSKENRAIDER01": {
+"unit": "TUSKENRAIDER",
+"name": "Strength in Numbers",
+"kind": "Unique",
+"omicron": 7,
+"mode": "GAC 3v3"
+},
+"uniqueskill_UNDERCOVERLANDO01": {
+"unit": "UNDERCOVERLANDO",
+"name": "Agent On The Inside",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_VADER01": {
+"unit": "VADER",
+"name": "No Escape",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_VADERDUELSEND01": {
+"unit": "VADERDUELSEND",
+"name": "I Am What Remains",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_VADERDUELSEND02": {
+"unit": "VADERDUELSEND",
+"name": "You Didn't Kill Anakin Skywalker, I Did",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_VANE01": {
+"unit": "VANE",
+"name": "Myth of the Outer Rim",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_VANGUARDTEMPLEGUARD01": {
+"unit": "VANGUARDTEMPLEGUARD",
+"name": "Patience... Is A Virtue",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_VEERS01": {
+"unit": "VEERS",
+"name": "Aggressive Tactician",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_VEL01": {
+"unit": "VEL",
+"name": "One Path One Choice",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_VEL02": {
+"unit": "VEL",
+"name": "She Was a Miracle",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_VISASMARR01": {
+"unit": "VISASMARR",
+"name": "Returned to the Light",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_WAMPA02": {
+"unit": "WAMPA",
+"name": "Cornered Beast",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_WATTAMBOR02": {
+"unit": "WATTAMBOR",
+"name": "Mass Manufacture",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_WICKET01": {
+"unit": "WICKET",
+"name": "Furtive Tactics",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_WRECKERS301": {
+"unit": "WRECKERS3",
+"name": "You Gotta Be in Front To Win",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_YODACHEWBACCA01": {
+"unit": "YODACHEWBACCA",
+"name": "The Furce is My Ally",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_YODADSV02": {
+"unit": "YODADSV",
+"name": "You are Weak... POWERLESS",
+"kind": "Unique",
+"omicron": 6,
+"mode": "TB"
+},
+"uniqueskill_YOUNGCHEWBACCA02": {
+"unit": "YOUNGCHEWBACCA",
+"name": "Ferocious Protector",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_YOUNGHAN01": {
+"unit": "YOUNGHAN",
+"name": "Ready For Anything",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_YOUNGLANDO_01": {
+"unit": "YOUNGLANDO",
+"name": "Perfect Timing",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ZAALBAR02": {
+"unit": "ZAALBAR",
+"name": "Mission's Guardian",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_ZAMWESELL01": {
+"unit": "ZAMWESELL",
+"name": "Shapeshifter",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "GAC"
+},
+"uniqueskill_ZORIIBLISS_V201": {
+"unit": "ZORIIBLISS_V2",
+"name": "There's More of Us",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_ZORIIBLISS_V202": {
+"unit": "ZORIIBLISS_V2",
+"name": "Spice Runner Skills",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ZUCKUSS01": {
+"unit": "ZUCKUSS",
+"name": "Findsman's Intuition",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
+"uniqueskill_b1battledroidv2_02": {
+"unit": "B1BATTLEDROIDV2",
+"name": "Droid Battalion",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_ct21040802": {
+"unit": "CT210408",
+"name": "Domino Squad",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_juhani01": {
+"unit": "JUHANI",
+"name": "Cathar Resilience",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+},
+"uniqueskill_kiadimundi01": {
+"unit": "KIADIMUNDI",
+"name": "Jedi Council",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_l3_37_01": {
+"unit": "L3_37",
+"name": "For the Droids",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_t3_m4_01": {
+"unit": "T3_M4",
+"name": "Combat Logic Upgrade",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_t3_m4_02": {
+"unit": "T3_M4",
+"name": "Master Gearhead",
+"kind": "Unique",
+"zeta": 6,
+"omicron": 7,
+"mode": "TW"
+}
+}
