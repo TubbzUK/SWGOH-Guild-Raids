@@ -12,6 +12,10 @@ site_order: 2
 # Name of the GitHub secret holding this guild's Discord webhook URL
 discord_secret: DISCORD_WEBHOOK_NEWGUILD
 
+# Any member's ally code: the site pulls the roster, raid scores and TW results from the game
+# every 4 hours (or set it on the upload page: Connect a guild to the game)
+# ally_code: "123456789"
+
 # Dates inside WookieeBot files are UK style (06/10/2026 = 6 October). Use "mdy" for US style.
 date_format: "dmy"
 

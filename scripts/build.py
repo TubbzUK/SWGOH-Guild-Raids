@@ -846,6 +846,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
     return {"slug": gdir.name, "name": cfg.get("guild_name", gdir.name), "members": len(current),
             "raids": raids_index, "default_raid": default,
             "has_data": bool(with_scores or roster or tb_data or tw_data), "order": cfg.get("site_order", 99),
+            "game": len(re.sub(r"\D", "", str(cfg.get("ally_code") or ""))) == 9,
             "platoons": {"roster": has_platoon_roster, "saved": platoons_saved},
             "tb": tb_index, "tw": tw_index}
 

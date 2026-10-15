@@ -50,6 +50,32 @@ history: charts against the guild median, phase by phase for TBs, and a table of
 scoring and weights are the same as the Guild effectiveness page. A link straight to someone's page:
 `player.html?guild=oanr&player=<name>`.
 
+## Pulling data from the game (no uploads)
+
+Give a guild any member's ally code and the site fetches its data from the game itself every 4 hours,
+through SWGoH Comlink (a free community tool that reads the game's public data; it runs inside the
+GitHub Action, so there's nothing to host):
+
+- **Roster** - every member's units, stars, gear and relics, plus GP (once a day). Readiness and the
+  platoon planner stay current without roster uploads.
+- **Raid scores** - each member's score in the guild's latest finished raid of each type, added as a
+  new raid (and posted to Discord like an upload). The game only shows the latest raid, which is why it
+  checks every 4 hours. A raid already uploaded for that date is left alone.
+- **TW results** - win or loss and both scores for recent territory wars (a result an officer entered
+  is never changed).
+
+TB stats and TW banners per member aren't available from the game, so those still come from WookieeBot
+uploads, and uploads of anything else still work as before.
+
+**Connecting a guild:** side menu → Upload → **🔗 Connect a guild to the game**, pick the guild and enter
+an ally code (or fill in the ally code when adding a new guild). It's saved as `ally_code:` in the
+guild's config.yml; clear it to disconnect. **🔄 Pull from the game now** (Officers) fetches straight
+away instead of waiting. To pull by hand on GitHub: Actions → Update raid site → Run workflow.
+
+If the Action log warns about a raid ID that doesn't match, add it to that raid's file in raids/, e.g.
+`game_ids: ["the_id_from_the_warning"]`. New ships are learned from WookieeBot rosters or can be added
+to scripts/ships.txt.
+
 ## Uploading from the website (easiest)
 
 Open **Upload** in the side menu on any page (or open `…/upload.html`). Pick the guild,

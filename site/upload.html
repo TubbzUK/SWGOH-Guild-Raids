@@ -83,11 +83,21 @@ a { color: var(--accent); }
       <div>
         <label class="title" for="guild">Guild</label>
         <select id="guild"></select>
-        <div class="row" style="margin-top:6px"><button type="button" class="link" id="newGuildLink">+ Add a new guild</button></div>
+        <div class="row" style="margin-top:6px"><button type="button" class="link" id="newGuildLink">+ Add a new guild</button><button type="button" class="link" id="connectLink">🔗 Connect a guild to the game</button></div>
+        <div class="newguild" id="connect" hidden>
+          <label class="title" for="cnAlly" style="margin-top:4px">Connect <span id="cnGuild">this guild</span> to the game</label>
+          <input type="text" id="cnAlly" inputmode="numeric" maxlength="11" placeholder="Any member's ally code, e.g. 123-456-789" autocomplete="off">
+          <div class="sub" style="margin-top:6px">Every 4 hours the site then pulls the roster, raid scores and TW results straight from the game, so those don't need uploading. TB and TW member stats still come from WookieeBot uploads. Leave it blank and save to disconnect.</div>
+          <div class="row"><button type="button" class="primary small" id="cnGo">Save</button><button type="button" class="link" id="cnCancel">Cancel</button></div>
+          <ul class="progress" id="cnProgress"></ul>
+        </div>
         <div class="newguild" id="newGuild" hidden>
           <label class="title" for="ngName" style="margin-top:4px">New guild's name</label>
           <input type="text" id="ngName" maxlength="40" placeholder="e.g. Rebel Scum" autocomplete="off">
           <div class="sub" id="ngInfo" style="margin-top:6px"></div>
+          <label class="title" for="ngAlly" style="margin-top:10px">A member's ally code <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(optional)</span></label>
+          <input type="text" id="ngAlly" inputmode="numeric" maxlength="11" placeholder="e.g. 123-456-789" autocomplete="off">
+          <div class="sub" style="margin-top:4px">Connects the guild to the game: its roster, raid scores and TW results are then pulled automatically every 4 hours.</div>
           <div class="choices" style="margin-top:8px">
             <label><input type="radio" name="ngDate" value="dmy" checked> <span>UK dates<small>06/10/2026 = 6 October</small></span></label>
             <label><input type="radio" name="ngDate" value="mdy"> <span>US dates<small>10/06/2026 = 6 October</small></span></label>
@@ -632,7 +642,8 @@ a { color: var(--accent); }
   }
   $("#ngGo").onclick = async () => {
     const name = $("#ngName").value.trim(), slug = slugify(name), secret = secretOf(slug);
-    const df = document.querySelector("input[name=ngDate]:checked").value;
+    const df = document.querySelector("input[name=ngDate]:checked").value, ngAlly = $("#ngAlly").value.replace(/\D/g, "");
+    if (ngAlly && ngAlly.length !== 9) { $("#ngProgress").innerHTML = `<li class="fail"><span class="ic">✗</span><span>An ally code has 9 digits (like 123-456-789).</span></li>`; return; }
     const show = list => { $("#ngProgress").innerHTML = list.map(([st, t]) => `<li class="${st}"><span class="ic">${st === "done" ? "✓" : st === "fail" ? "✗" : '<span class="spin" aria-hidden="true"></span>'}</span><span>${t}</span></li>`).join(""); };
     $("#ngGo").disabled = true;
     show([["run", mode === "password" ? "Checking the password…" : "Checking the token…"]]);
@@ -658,6 +669,10 @@ site_order: ${order}
 
 # Name of the GitHub secret holding this guild's Discord webhook URL
 discord_secret: ${secret}
+
+# Any member's ally code: the site pulls the roster, raid scores and TW results from the game
+# every 4 hours (remove the line to stop)
+${ngAlly ? `ally_code: "${ngAlly}"` : `# ally_code: "123456789"`}
 
 # Dates inside WookieeBot files: "dmy" = UK style (06/10/2026 = 6 October), "mdy" = US style
 date_format: "${df}"
@@ -687,8 +702,48 @@ tb_max_waves: [27, 27, 36, 35, 33, 35]
       $("#guild").value = slug; backLink(); runChecks();
       show([["done", `<b>${esc(name)}</b> created and selected above. Now upload its roster (and any raid or TB results) below; it appears on the site with its first file.`],
             ["done", `For Discord posts: in GitHub <b>Settings → Secrets and variables → Actions</b>, add a secret named <span class="num">${esc(secret)}</span> with the channel's webhook URL.`]]);
-      $("#ngName").value = ""; ngCheck();
+      $("#ngName").value = ""; $("#ngAlly").value = ""; ngCheck();
     } catch (err) { show([["fail", `Couldn't reach GitHub (${esc(err.message)}).`]]); ngCheck(); }
+  };
+
+  // ---------- connect an existing guild to the game (ally_code in its config.yml) ----------
+  const cnOpen = () => { $("#connect").hidden = false; $("#cnGuild").textContent = $("#guild").selectedOptions[0]?.text || "this guild"; $("#cnProgress").innerHTML = ""; $("#cnAlly").focus(); };
+  $("#connectLink").onclick = cnOpen;
+  $("#cnCancel").onclick = () => { $("#connect").hidden = true; };
+  $("#guild").addEventListener("change", () => { if (!$("#connect").hidden) $("#cnGuild").textContent = $("#guild").selectedOptions[0]?.text || "this guild"; });
+  const cnFromHash = () => { if (location.hash === "#connect") { cnOpen(); $("#connect").scrollIntoView({ block: "center" }); } };
+  addEventListener("hashchange", cnFromHash); cnFromHash();
+  $("#cnGo").onclick = async () => {
+    const show = list => { $("#cnProgress").innerHTML = list.map(([st, t]) => `<li class="${st}"><span class="ic">${st === "done" ? "✓" : st === "fail" ? "✗" : '<span class="spin" aria-hidden="true"></span>'}</span><span>${t}</span></li>`).join(""); };
+    const g = $("#guild").value, gName = $("#guild").selectedOptions[0]?.text || g, ally = $("#cnAlly").value.replace(/\D/g, "");
+    if (!g) { show([["fail", "Pick the guild first (step 1)."]]); return; }
+    if (ally && ally.length !== 9) { show([["fail", "An ally code has 9 digits (like 123-456-789)."]]); return; }
+    $("#cnGo").disabled = true;
+    show([["run", mode === "password" ? "Checking the password…" : "Checking the token…"]]);
+    const token = await getToken(m => show([["fail", m]]));
+    if (!token) { $("#cnGo").disabled = false; return; }
+    try {
+      const api = `/repos/${repo}/contents/${["guilds", g, "config.yml"].map(encodeURIComponent).join("/")}`;
+      const cur = await gh(`${api}?ref=${encodeURIComponent(branch)}`, token);
+      if (!cur.ok) { show([["fail", cur.status === 404 ? `guilds/${esc(g)}/config.yml wasn't found on GitHub.` : await explain(cur)]]); $("#cnGo").disabled = false; return; }
+      const j = await cur.json();
+      let yml = new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\s/g, "")), c => c.charCodeAt(0)));
+      const line = `ally_code: "${ally}"`;
+      if (/^ally_code:.*$/m.test(yml)) yml = ally ? yml.replace(/^ally_code:.*$/m, line) : yml.replace(/^ally_code:.*\n?/m, "");
+      else if (ally) yml = yml.replace(/\s*$/, "") + `\n\n# Any member's ally code: the site pulls the roster, raid scores and TW results from the game\n# every 4 hours (remove the line to stop)\n${line}\n`;
+      const bytes = new TextEncoder().encode(yml); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+      const res = await gh(api, token, { method: "PUT", body: JSON.stringify({ message: `${ally ? "Connect" : "Disconnect"} ${gName} ${ally ? "to" : "from"} the game`, content: btoa(bin), branch, sha: j.sha }) });
+      if (!res.ok) { show([["fail", await explain(res)]]); $("#cnGo").disabled = false; return; }
+      // and pull straight away rather than waiting for the next 4-hourly check
+      if (ally) {
+        const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+        await gh(`/repos/${repo}/contents/${["guilds", g, `sync-now-${stamp}.json`].map(encodeURIComponent).join("/")}`, token,
+          { method: "PUT", body: JSON.stringify({ message: `Pull ${gName} from the game`, content: btoa("{}"), branch }) });
+      }
+      show([["done", ally ? `<b>${esc(gName)}</b> is connected. Its roster, raid scores and TW results are being pulled now (about 3 minutes), then every 4 hours.` : `<b>${esc(gName)}</b> is disconnected from the game.`]]);
+      $("#cnAlly").value = "";
+    } catch (err) { show([["fail", `Couldn't reach GitHub (${esc(err.message)}).`]]); }
+    $("#cnGo").disabled = false;
   };
 
   // ---------- owner setup: lock a token with the officer password ----------

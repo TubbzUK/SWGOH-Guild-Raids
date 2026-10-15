@@ -120,7 +120,8 @@ def build_tw(gdir: Path, cfg: dict, current_names: dict[str, str]) -> dict | Non
             p["hist"][i] = r
         joined = {B.norm(r["name"]) for r in rows}
         missing = sorted((n for k, n in current_names.items() if k not in joined), key=str.lower) if i == len(tws) - 1 else []
-        res = results.get(t["date"].isoformat()) or {}
+        res = results.get(t["date"].isoformat()) or next(
+            (results[k] for k in ((t["date"] + dt.timedelta(days=dd)).isoformat() for dd in (-1, 1)) if k in results), {})
         out.append({
             "id": t["date"].isoformat(), "date": t["date"].isoformat(), "file": t["file"], "opponent": t["opponent"],
             "joined": len(rows), "members": len(current_names) if i == len(tws) - 1 and current_names else None,

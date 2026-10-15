@@ -214,11 +214,28 @@
       if (/upload\.html$/.test(here)) up.setAttribute("aria-current", "page");
     }
     menuItem("upload", "＋ Add a new guild", "upload.html#newguild");
+    menuItem("upload", "🔗 Connect a guild to the game", "upload.html" + (guildNow() ? "?guild=" + encodeURIComponent(guildNow()) : "") + "#connect");
+    if (document.querySelector('script[src*="officer.js"]')) menuItem("officer", "🔄 Pull from the game now", pullNow);
     menuItem("officer", "🔒 Forget my officer login", () => {
       try { localStorage.removeItem("raidTrackerPassword"); localStorage.removeItem("raidTrackerToken"); } catch (e) {}
       alertish("Officer login forgotten on this device.");
     }, true);
     tidy();
+  }
+  // ask the next site update to pull rosters, raid scores and TW results from the game straight away
+  async function pullNow() {
+    if (!window.Officer) { alertish("Officer tools are still loading - try again in a moment."); return; }
+    let g = guildNow();
+    if (!g) { try { g = ((await (await fetch("guilds.json", { cache: "no-store" })).json())[0] || {}).slug; } catch (e) {} }
+    if (!g) { alertish("No guild found."); return; }
+    Officer.form({ title: "Pull from the game now",
+      html: `Fetch the latest roster, raid scores and territory war results for this guild from the game now, instead of waiting for the next 4-hourly check. The site updates in about 3 minutes.<br><br>The guild needs an ally code set (Upload → Connect a guild to the game).`,
+      button: "Pull now",
+      run: async ({ putFile }) => {
+        const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
+        await putFile(`guilds/${g}/sync-now-${stamp}.json`, "{}", "Pull from the game now");
+      },
+      done: "🔄 Pulling from the game - the site updates in about 3 minutes." });
   }
   function alertish(text) {
     const t = document.createElement("div"); t.textContent = text;

@@ -221,6 +221,11 @@ def main() -> int:
                     and Path(final).suffix.lower() in build.TABLE_EXTS):
                 post.add(f"{gdir.name}/{parts[2]}")
 
+    # "Pull from the game now" requests: the workflow has already pulled; just tidy them away
+    for req in build.GUILDS_DIR.glob("*/sync-now*.json"):
+        req.unlink()
+        log.append(f"{req.parent.name}: pull from the game requested")
+
     # "Post to Discord" requests from the site's buttons: queue them for the Discord step and remove them
     queue = []
     for req in sorted(build.GUILDS_DIR.glob("*/posts/*.json")):
