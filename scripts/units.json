@@ -1,0 +1,2138 @@
+{
+"_fetched": "2026-10-15T20:25:16+00:00",
+"4LOM": {
+"name": "4-LOM",
+"img": "textures/tex.charui_4lom.png",
+"side": "D"
+},
+"50RT": {
+"name": "50R-T",
+"img": "textures/tex.charui_50rt.png",
+"side": "L"
+},
+"AAYLASECURA": {
+"name": "Aayla Secura",
+"img": "textures/tex.charui_aaylasecura.png",
+"side": "L"
+},
+"ADELPHIRANGER": {
+"name": "Adelphi Ranger",
+"img": "textures/tex.charui_adelphiranger.png",
+"side": "L"
+},
+"ADMINISTRATORLANDO": {
+"name": "Lando Calrissian",
+"img": "textures/tex.charui_landobespin.png",
+"side": "L"
+},
+"ADMIRALACKBAR": {
+"name": "Admiral Ackbar",
+"img": "textures/tex.charui_ackbaradmiral.png",
+"side": "L"
+},
+"ADMIRALPIETT": {
+"name": "Admiral Piett",
+"img": "textures/tex.charui_piett.png",
+"side": "D"
+},
+"ADMIRALRADDUS": {
+"name": "Admiral Raddus",
+"img": "textures/tex.charui_admiralraddus.png",
+"side": "L"
+},
+"AHSOKATANO": {
+"name": "Ahsoka Tano (Snips)",
+"img": "textures/tex.charui_ahsoka.png",
+"side": "L"
+},
+"AMILYNHOLDO": {
+"name": "Amilyn Holdo",
+"img": "textures/tex.charui_holdo.png",
+"side": "L"
+},
+"ANAKINKNIGHT": {
+"name": "Jedi Knight Anakin",
+"img": "textures/tex.charui_anakinknight.png",
+"side": "L"
+},
+"APPO": {
+"name": "CC-1119 \"Appo\"",
+"img": "textures/tex.charui_appo.png",
+"side": "D"
+},
+"ARC170CLONESERGEANT": {
+"name": "Clone Sergeant's ARC-170",
+"img": "textures/tex.charui_arc170.png",
+"ship": true,
+"side": "L"
+},
+"ARC170REX": {
+"name": "Rex's ARC-170",
+"img": "textures/tex.charui_arc170_02.png",
+"ship": true,
+"side": "L"
+},
+"ARCTROOPER501ST": {
+"name": "ARC Trooper",
+"img": "textures/tex.charui_trooperclone_arc.png",
+"side": "L"
+},
+"ARMORER": {
+"name": "The Armorer",
+"img": "textures/tex.charui_armorer.png",
+"side": "L"
+},
+"ASAJJDARKDISCIPLE": {
+"name": "Asajj Ventress (Dark Disciple)",
+"img": "textures/tex.charui_asajjdarkdisciple.png",
+"side": "D"
+},
+"ASAJVENTRESS": {
+"name": "Asajj Ventress",
+"img": "textures/tex.charui_ventress.png",
+"side": "D"
+},
+"AURRA_SING": {
+"name": "Aurra Sing",
+"img": "textures/tex.charui_aurrasing.png",
+"side": "D"
+},
+"B1BATTLEDROIDV2": {
+"name": "B1 Battle Droid",
+"img": "textures/tex.charui_b1.png",
+"side": "D"
+},
+"B1MERCDROID": {
+"name": "Mercenary Guard Droid (B1)",
+"img": "textures/tex.charui_b1mercdroid.png",
+"side": "D"
+},
+"B2SUPERBATTLEDROID": {
+"name": "B2 Super Battle Droid",
+"img": "textures/tex.charui_b2.png",
+"side": "D"
+},
+"BADBATCHECHO": {
+"name": "Echo",
+"img": "textures/tex.charui_bb_echo.png",
+"side": "L"
+},
+"BADBATCHHUNTER": {
+"name": "Hunter",
+"img": "textures/tex.charui_bb_hunter.png",
+"side": "L"
+},
+"BADBATCHOMEGA": {
+"name": "Omega",
+"img": "textures/tex.charui_badbatchomega.png",
+"side": "L"
+},
+"BADBATCHTECH": {
+"name": "Tech",
+"img": "textures/tex.charui_bb_tech.png",
+"side": "L"
+},
+"BADBATCHWRECKER": {
+"name": "Wrecker",
+"img": "textures/tex.charui_bb_wrecker.png",
+"side": "L"
+},
+"BARRISSOFFEE": {
+"name": "Barriss Offee",
+"img": "textures/tex.charui_barriss_light.png",
+"side": "L"
+},
+"BASTILASHAN": {
+"name": "Bastila Shan",
+"img": "textures/tex.charui_bastilashan.png",
+"side": "L"
+},
+"BASTILASHANDARK": {
+"name": "Bastila Shan (Fallen)",
+"img": "textures/tex.charui_bastilashan_dark.png",
+"side": "D"
+},
+"BATCHERS3": {
+"name": "Batcher",
+"img": "textures/tex.charui_batcher.png",
+"side": "L"
+},
+"BAYLANSKOLL": {
+"name": "Baylan Skoll",
+"img": "textures/tex.charui_baylanskoll.png",
+"side": "D"
+},
+"BAZEMALBUS": {
+"name": "Baze Malbus",
+"img": "textures/tex.charui_bazemalbus.png",
+"side": "L"
+},
+"BB8": {
+"name": "BB-8",
+"img": "textures/tex.charui_bb8.png",
+"side": "L"
+},
+"BENSOLO": {
+"name": "Ben Solo",
+"img": "textures/tex.charui_bensolo.png",
+"side": "L"
+},
+"BIGGSDARKLIGHTER": {
+"name": "Biggs Darklighter",
+"img": "textures/tex.charui_rebelpilot_biggs.png",
+"side": "L"
+},
+"BISHOP": {
+"name": "Colonel Ward",
+"img": "textures/tex.charui_colonelward.png",
+"side": "L"
+},
+"BISTAN": {
+"name": "Bistan",
+"img": "textures/tex.charui_bistan.png",
+"side": "L"
+},
+"BLADEOFDORIN": {
+"name": "Plo Koon's Jedi Starfighter",
+"img": "textures/tex.charui_jedi_fighter_bladeofdorin.png",
+"ship": true,
+"side": "L"
+},
+"BOBAFETT": {
+"name": "Boba Fett",
+"img": "textures/tex.charui_bobafett.png",
+"side": "D"
+},
+"BOBAFETTSCION": {
+"name": "Boba Fett, Scion of Jango",
+"img": "textures/tex.charui_bobafettold.png",
+"side": "D"
+},
+"BODHIROOK": {
+"name": "Bodhi Rook",
+"img": "textures/tex.charui_bodhi.png",
+"side": "L"
+},
+"BOKATAN": {
+"name": "Bo-Katan Kryze",
+"img": "textures/tex.charui_bokatan.png",
+"side": "L"
+},
+"BOOMADIER": {
+"name": "Gungan Boomadier",
+"img": "textures/tex.charui_gunganboomadier.png",
+"side": "L"
+},
+"BOSSK": {
+"name": "Bossk",
+"img": "textures/tex.charui_bossk.png",
+"side": "D"
+},
+"BOSSNASS": {
+"name": "Boss Nass",
+"img": "textures/tex.charui_bossnass.png",
+"side": "L"
+},
+"BOUSHH": {
+"name": "Boushh (Leia Organa)",
+"img": "textures/tex.charui_boushh.png",
+"side": "L"
+},
+"BRUTUS": {
+"name": "Brutus",
+"img": "textures/tex.charui_brutus.png",
+"side": "D"
+},
+"BT1": {
+"name": "BT-1",
+"img": "textures/tex.charui_bt1.png",
+"side": "D"
+},
+"BWINGREBEL": {
+"name": "Rebel B-wing",
+"img": "textures/tex.charui_bwingrebel.png",
+"ship": true,
+"side": "L"
+},
+"C3POCHEWBACCA": {
+"name": "Threepio & Chewie",
+"img": "textures/tex.charui_chewbacca_c3po.png",
+"side": "L"
+},
+"C3POLEGENDARY": {
+"name": "C-3PO",
+"img": "textures/tex.charui_c3p0.png",
+"side": "L"
+},
+"CADBANE": {
+"name": "Cad Bane",
+"img": "textures/tex.charui_cadbane.png",
+"side": "D"
+},
+"CALKESTIS": {
+"name": "Cal Kestis",
+"img": "textures/tex.charui_calkestis.png",
+"side": "L"
+},
+"CANDEROUSORDO": {
+"name": "Canderous Ordo",
+"img": "textures/tex.charui_canderous.png",
+"side": "D"
+},
+"CAPITALCHIMAERA": {
+"name": "Chimaera",
+"img": "textures/tex.charui_chimaera.png",
+"ship": true,
+"side": "D"
+},
+"CAPITALEXECUTOR": {
+"name": "Executor",
+"img": "textures/tex.charui_executor.png",
+"ship": true,
+"side": "D"
+},
+"CAPITALFINALIZER": {
+"name": "Finalizer",
+"img": "textures/tex.charui_finalizer.png",
+"ship": true,
+"side": "D"
+},
+"CAPITALJEDICRUISER": {
+"name": "Endurance",
+"img": "textures/tex.charui_venator.png",
+"ship": true,
+"side": "L"
+},
+"CAPITALLEVIATHAN": {
+"name": "Leviathan",
+"img": "textures/tex.charui_leviathan.png",
+"ship": true,
+"side": "D"
+},
+"CAPITALMALEVOLENCE": {
+"name": "Malevolence",
+"img": "textures/tex.charui_malevolence.png",
+"ship": true,
+"side": "D"
+},
+"CAPITALMONCALAMARICRUISER": {
+"name": "Home One",
+"img": "textures/tex.charui_moncalamarilibertycruiser.png",
+"ship": true,
+"side": "L"
+},
+"CAPITALNEGOTIATOR": {
+"name": "Negotiator",
+"img": "textures/tex.charui_negotiator.png",
+"ship": true,
+"side": "L"
+},
+"CAPITALPROFUNDITY": {
+"name": "Profundity",
+"img": "textures/tex.charui_profundity.png",
+"ship": true,
+"side": "L"
+},
+"CAPITALRADDUS": {
+"name": "Raddus",
+"img": "textures/tex.charui_raddus.png",
+"ship": true,
+"side": "L"
+},
+"CAPITALSTARDESTROYER": {
+"name": "Executrix",
+"img": "textures/tex.charui_stardestroyer.png",
+"ship": true,
+"side": "D"
+},
+"CAPTAINDROGAN": {
+"name": "Captain Drogan",
+"img": "textures/tex.charui_captaindrogan.png",
+"side": "L"
+},
+"CAPTAINENOCH": {
+"name": "Captain Enoch",
+"img": "textures/tex.charui_captainenoch.png",
+"side": "D"
+},
+"CAPTAINREX": {
+"name": "Captain Rex",
+"img": "textures/tex.charui_captainrex.png",
+"side": "L"
+},
+"CAPTAINSILVO": {
+"name": "Captain Silvo",
+"img": "textures/tex.charui_captainsilvo.png",
+"side": "D"
+},
+"CAPTAINTARPALS": {
+"name": "Captain Tarpals",
+"img": "textures/tex.charui_captaintarpals.png",
+"side": "L"
+},
+"CARADUNE": {
+"name": "Cara Dune",
+"img": "textures/tex.charui_caradune.png",
+"side": "L"
+},
+"CARSONTEVA": {
+"name": "Captain Carson Teva",
+"img": "textures/tex.charui_carsonteva.png",
+"side": "L"
+},
+"CARTHONASI": {
+"name": "Carth Onasi",
+"img": "textures/tex.charui_carth.png",
+"side": "L"
+},
+"CASSIANANDOR": {
+"name": "Cassian Andor",
+"img": "textures/tex.charui_cassian.png",
+"side": "L"
+},
+"CASSIANUNDERCOVER": {
+"name": "Cassian Andor (Undercover)",
+"img": "textures/tex.charui_cassianundercover.png",
+"side": "L"
+},
+"CC2224": {
+"name": "CC-2224 \"Cody\"",
+"img": "textures/tex.charui_trooperclone_cody.png",
+"side": "L"
+},
+"CEREJUNDA": {
+"name": "Cere Junda",
+"img": "textures/tex.charui_cerejunda.png",
+"side": "L"
+},
+"CHEWBACCALEGENDARY": {
+"name": "Chewbacca",
+"img": "textures/tex.charui_chewbacca_ot.png",
+"side": "L"
+},
+"CHIEFCHIRPA": {
+"name": "Chief Chirpa",
+"img": "textures/tex.charui_ewok_chirpa.png",
+"side": "L"
+},
+"CHIEFNEBIT": {
+"name": "Chief Nebit",
+"img": "textures/tex.charui_jawa_nebit.png",
+"side": "L"
+},
+"CHIRRUTIMWE": {
+"name": "Chirrut Îmwe",
+"img": "textures/tex.charui_chirrut.png",
+"side": "L"
+},
+"CHOPPERS3": {
+"name": "Chopper",
+"img": "textures/tex.charui_chopper.png",
+"side": "L"
+},
+"CINTA": {
+"name": "Cinta Kaz",
+"img": "textures/tex.charui_cinta.png",
+"side": "L"
+},
+"CLONESERGEANTPHASEI": {
+"name": "Clone Sergeant - Phase I",
+"img": "textures/tex.charui_trooperclonegreen.png",
+"side": "L"
+},
+"CLONEWARSCHEWBACCA": {
+"name": "Clone Wars Chewbacca",
+"img": "textures/tex.charui_chewbacca.png",
+"side": "L"
+},
+"COBBVANTH": {
+"name": "Cobb Vanth",
+"img": "textures/tex.charui_cobbvanth.png",
+"side": "L"
+},
+"COLONELSTARCK": {
+"name": "Colonel Starck",
+"img": "textures/tex.charui_colonel_stark.png",
+"side": "D"
+},
+"COMEUPPANCE": {
+"name": "Comeuppance",
+"img": "textures/tex.charui_comeuppance.png",
+"ship": true,
+"side": "L"
+},
+"COMMANDERAHSOKA": {
+"name": "Commander Ahsoka Tano",
+"img": "textures/tex.charui_commanderahsokatano.png",
+"side": "L"
+},
+"COMMANDERLUKESKYWALKER": {
+"name": "Commander Luke Skywalker",
+"img": "textures/tex.charui_lukebespin.png",
+"side": "L"
+},
+"COMMANDSHUTTLE": {
+"name": "Kylo Ren's Command Shuttle",
+"img": "textures/tex.charui_upsilon_shuttle_kylo.png",
+"ship": true,
+"side": "D"
+},
+"CORUSCANTUNDERWORLDPOLICE": {
+"name": "Coruscant Underworld Police",
+"img": "textures/tex.charui_coruscantpolice.png",
+"side": "L"
+},
+"COUNTDOOKU": {
+"name": "Count Dooku",
+"img": "textures/tex.charui_dooku.png",
+"side": "D"
+},
+"CROSSHAIRS3": {
+"name": "Crosshair (Scarred)",
+"img": "textures/tex.charui_crosshair_scarred.png",
+"side": "L"
+},
+"CT210408": {
+"name": "CT-21-0408 \"Echo\"",
+"img": "textures/tex.charui_trooperclone_echo.png",
+"side": "L"
+},
+"CT5555": {
+"name": "CT-5555 \"Fives\"",
+"img": "textures/tex.charui_trooperclone_fives.png",
+"side": "L"
+},
+"CT7567": {
+"name": "CT-7567 \"Rex\"",
+"img": "textures/tex.charui_trooperclone_rex.png",
+"side": "L"
+},
+"DAKA": {
+"name": "Old Daka",
+"img": "textures/tex.charui_daka.png",
+"side": "D"
+},
+"DARKREY": {
+"name": "Rey (Dark Side Vision)",
+"img": "textures/tex.charui_darkrey.png",
+"side": "D"
+},
+"DARKTROOPER": {
+"name": "Dark Trooper",
+"img": "textures/tex.charui_darktrooper.png",
+"side": "D"
+},
+"DARTHBANE": {
+"name": "Darth Bane",
+"img": "textures/tex.charui_darthbane.png",
+"side": "D"
+},
+"DARTHJARJAR": {
+"name": "Darth Jar Jar",
+"img": "textures/tex.charui_darthjarjar.png",
+"side": "D"
+},
+"DARTHMALAK": {
+"name": "Darth Malak",
+"img": "textures/tex.charui_darthmalak.png",
+"side": "D"
+},
+"DARTHMALGUS": {
+"name": "Darth Malgus",
+"img": "textures/tex.charui_darthmalgus.png",
+"side": "D"
+},
+"DARTHNIHILUS": {
+"name": "Darth Nihilus",
+"img": "textures/tex.charui_nihilus.png",
+"side": "D"
+},
+"DARTHREVAN": {
+"name": "Darth Revan",
+"img": "textures/tex.charui_sithrevan.png",
+"side": "D"
+},
+"DARTHSIDIOUS": {
+"name": "Darth Sidious",
+"img": "textures/tex.charui_sidious.png",
+"side": "D"
+},
+"DARTHSION": {
+"name": "Darth Sion",
+"img": "textures/tex.charui_sion.png",
+"side": "D"
+},
+"DARTHTALON": {
+"name": "Darth Talon",
+"img": "textures/tex.charui_darthtalon.png",
+"side": "D"
+},
+"DARTHTRAYA": {
+"name": "Darth Traya",
+"img": "textures/tex.charui_traya.png",
+"side": "D"
+},
+"DASHRENDAR": {
+"name": "Dash Rendar",
+"img": "textures/tex.charui_dashrendar.png",
+"side": "L"
+},
+"DATHCHA": {
+"name": "Dathcha",
+"img": "textures/tex.charui_jawa_dathcha.png",
+"side": "L"
+},
+"DEATHTROOPER": {
+"name": "Death Trooper",
+"img": "textures/tex.charui_trooperdeath.png",
+"side": "D"
+},
+"DEATHTROOPERPERIDEA": {
+"name": "Death Trooper (Peridea)",
+"img": "textures/tex.charui_deathtrooperperidea.png",
+"side": "D"
+},
+"DEDRAMEERO": {
+"name": "Dedra Meero",
+"img": "textures/tex.charui_dedrameero.png",
+"side": "D"
+},
+"DENGAR": {
+"name": "Dengar",
+"img": "textures/tex.charui_dengar.png",
+"side": "D"
+},
+"DEPABILLABA": {
+"name": "Depa Billaba",
+"img": "textures/tex.charui_depabillaba.png",
+"side": "L"
+},
+"DIRECTORKRENNIC": {
+"name": "Director Krennic",
+"img": "textures/tex.charui_krennic.png",
+"side": "D"
+},
+"DISGUISEDCLONETROOPER": {
+"name": "Disguised Clone Trooper",
+"img": "textures/tex.charui_disguisedclonetrooper.png",
+"side": "D"
+},
+"DOCTORAPHRA": {
+"name": "Doctor Aphra",
+"img": "textures/tex.charui_doctoraphra.png",
+"side": "D"
+},
+"DROIDEKA": {
+"name": "Droideka",
+"img": "textures/tex.charui_droideka.png",
+"side": "D"
+},
+"EBONHAWK": {
+"name": "Ebon Hawk",
+"img": "textures/tex.charui_ebonhawk.png",
+"ship": true,
+"side": "L"
+},
+"EETHKOTH": {
+"name": "Eeth Koth",
+"img": "textures/tex.charui_eethkoth.png",
+"side": "L"
+},
+"EIGHTHBROTHER": {
+"name": "Eighth Brother",
+"img": "textures/tex.charui_eighthbrother.png",
+"side": "D"
+},
+"EMBO": {
+"name": "Embo",
+"img": "textures/tex.charui_embo.png",
+"side": "D"
+},
+"EMBOANDKEIBU": {
+"name": "Embo & Keibu",
+"img": "textures/tex.charui_emboandkeibu.png",
+"side": "D"
+},
+"EMPERORPALPATINE": {
+"name": "Emperor Palpatine",
+"img": "textures/tex.charui_palpatineemperor.png",
+"side": "D"
+},
+"EMPERORSSHUTTLE": {
+"name": "Emperor's Shuttle",
+"img": "textures/tex.charui_imperialshuttle.png",
+"ship": true,
+"side": "D"
+},
+"ENFYSNEST": {
+"name": "Enfys Nest",
+"img": "textures/tex.charui_enfys.png",
+"side": "L"
+},
+"EPIXFINN": {
+"name": "Resistance Hero Finn",
+"img": "textures/tex.charui_finn.png",
+"side": "L"
+},
+"EPIXPOE": {
+"name": "Resistance Hero Poe",
+"img": "textures/tex.charui_poe_tros.png",
+"side": "L"
+},
+"EWOKELDER": {
+"name": "Ewok Elder",
+"img": "textures/tex.charui_ewok_chief.png",
+"side": "L"
+},
+"EWOKSCOUT": {
+"name": "Ewok Scout",
+"img": "textures/tex.charui_ewok_scout.png",
+"side": "L"
+},
+"EZRABRIDGERS3": {
+"name": "Ezra Bridger",
+"img": "textures/tex.charui_ezra_s3.png",
+"side": "L"
+},
+"EZRAEXILE": {
+"name": "Ezra Bridger (Exile)",
+"img": "textures/tex.charui_ezraexile.png",
+"side": "L"
+},
+"FENNECSHAND": {
+"name": "Fennec Shand",
+"img": "textures/tex.charui_fennec.png",
+"side": "D"
+},
+"FIFTHBROTHER": {
+"name": "Fifth Brother",
+"img": "textures/tex.charui_fifthbrother.png",
+"side": "D"
+},
+"FINN": {
+"name": "Finn",
+"img": "textures/tex.charui_finnjakku.png",
+"side": "L"
+},
+"FIRSTORDEREXECUTIONER": {
+"name": "First Order Executioner",
+"img": "textures/tex.charui_firstorder_executioner.png",
+"side": "D"
+},
+"FIRSTORDEROFFICERMALE": {
+"name": "First Order Officer",
+"img": "textures/tex.charui_firstorderofficer.png",
+"side": "D"
+},
+"FIRSTORDERSPECIALFORCESPILOT": {
+"name": "First Order SF TIE Pilot",
+"img": "textures/tex.charui_firstorder_pilot.png",
+"side": "D"
+},
+"FIRSTORDERTIEECHELON": {
+"name": "TIE Echelon",
+"img": "textures/tex.charui_firstordertieechelon.png",
+"ship": true,
+"side": "D"
+},
+"FIRSTORDERTIEPILOT": {
+"name": "First Order TIE Pilot",
+"img": "textures/tex.charui_firstordertiepilot.png",
+"side": "D"
+},
+"FIRSTORDERTROOPER": {
+"name": "First Order Stormtrooper",
+"img": "textures/tex.charui_firstordertrooper.png",
+"side": "D"
+},
+"FOSITHTROOPER": {
+"name": "Sith Trooper",
+"img": "textures/tex.charui_firstorder_sithtrooper.png",
+"side": "D"
+},
+"FULCRUMAHSOKA": {
+"name": "Ahsoka Tano (Fulcrum)",
+"img": "textures/tex.charui_ahsokaadult.png",
+"side": "L"
+},
+"FURYCLASSINTERCEPTOR": {
+"name": "Fury-class Interceptor",
+"img": "textures/tex.charui_furyclassinterceptor.png",
+"ship": true,
+"side": "D"
+},
+"GAMORREANGUARD": {
+"name": "Gamorrean Guard",
+"img": "textures/tex.charui_gamorreanguard.png",
+"side": "D"
+},
+"GARSAXON": {
+"name": "Gar Saxon",
+"img": "textures/tex.charui_gar_saxon.png",
+"side": "D"
+},
+"GAUNTLETSTARFIGHTER": {
+"name": "Gauntlet Starfighter",
+"img": "textures/tex.charui_gauntlet.png",
+"ship": true,
+"side": "D"
+},
+"GENERALHUX": {
+"name": "General Hux",
+"img": "textures/tex.charui_generalhux.png",
+"side": "D"
+},
+"GENERALKENOBI": {
+"name": "General Kenobi",
+"img": "textures/tex.charui_obiwangeneral.png",
+"side": "L"
+},
+"GENERALSKYWALKER": {
+"name": "General Skywalker",
+"img": "textures/tex.charui_generalanakin.png",
+"side": "L"
+},
+"GENERALSYNDULLA": {
+"name": "General Syndulla",
+"img": "textures/tex.charui_generalsyndulla.png",
+"side": "L"
+},
+"GEONOSIANBROODALPHA": {
+"name": "Geonosian Brood Alpha",
+"img": "textures/tex.charui_geonosian_broodalpha.png",
+"side": "D"
+},
+"GEONOSIANSOLDIER": {
+"name": "Geonosian Soldier",
+"img": "textures/tex.charui_geonosian_soldier.png",
+"side": "D"
+},
+"GEONOSIANSPY": {
+"name": "Geonosian Spy",
+"img": "textures/tex.charui_geonosian_spy.png",
+"side": "D"
+},
+"GEONOSIANSTARFIGHTER1": {
+"name": "Sun Fac's Geonosian Starfighter",
+"img": "textures/tex.charui_geonosis_fighter_sunfac.png",
+"ship": true,
+"side": "D"
+},
+"GEONOSIANSTARFIGHTER2": {
+"name": "Geonosian Soldier's Starfighter",
+"img": "textures/tex.charui_geonosis_fighter_soldier.png",
+"ship": true,
+"side": "D"
+},
+"GEONOSIANSTARFIGHTER3": {
+"name": "Geonosian Spy's Starfighter",
+"img": "textures/tex.charui_geonosis_fighter_spy.png",
+"ship": true,
+"side": "D"
+},
+"GHOST": {
+"name": "Ghost",
+"img": "textures/tex.charui_ghost.png",
+"ship": true,
+"side": "L"
+},
+"GLAHSOKATANO": {
+"name": "Ahsoka Tano",
+"img": "textures/tex.charui_ahsokatanogray.png",
+"side": "L"
+},
+"GLHONDO": {
+"name": "Pirate King Hondo Ohnaka",
+"img": "textures/tex.charui_glhondo.png",
+"side": "D"
+},
+"GLLEIA": {
+"name": "Leia Organa",
+"img": "textures/tex.charui_leiaendor.png",
+"side": "L"
+},
+"GLREY": {
+"name": "Rey",
+"img": "textures/tex.charui_rey_tros.png",
+"side": "L"
+},
+"GOPHERANTS": {
+"name": "Grogu & Anzellans",
+"img": "textures/tex.charui_groguanz.png",
+"side": "L"
+},
+"GRANDADMIRALTHRAWN": {
+"name": "Grand Admiral Thrawn",
+"img": "textures/tex.charui_thrawn.png",
+"side": "D"
+},
+"GRANDINQUISITOR": {
+"name": "Grand Inquisitor",
+"img": "textures/tex.charui_grandinquisitor.png",
+"side": "D"
+},
+"GRANDMASTERLUKE": {
+"name": "Jedi Master Luke Skywalker",
+"img": "textures/tex.charui_luke_jml.png",
+"side": "L"
+},
+"GRANDMASTERYODA": {
+"name": "Grand Master Yoda",
+"img": "textures/tex.charui_yodagrandmaster.png",
+"side": "L"
+},
+"GRANDMOFFTARKIN": {
+"name": "Grand Moff Tarkin",
+"img": "textures/tex.charui_tarkinadmiral.png",
+"side": "D"
+},
+"GREATMOTHERS": {
+"name": "Great Mothers",
+"img": "textures/tex.charui_greatmothers.png",
+"side": "D"
+},
+"GREEDO": {
+"name": "Greedo",
+"img": "textures/tex.charui_greedo.png",
+"side": "D"
+},
+"GREEFKARGA": {
+"name": "Greef Karga",
+"img": "textures/tex.charui_greefkarga.png",
+"side": "L"
+},
+"GRIEVOUS": {
+"name": "General Grievous",
+"img": "textures/tex.charui_grievous.png",
+"side": "D"
+},
+"GUNGANPHALANX": {
+"name": "Gungan Phalanx",
+"img": "textures/tex.charui_gunganphalanx.png",
+"side": "L"
+},
+"HANSOLO": {
+"name": "Han Solo",
+"img": "textures/tex.charui_han.png",
+"side": "L"
+},
+"HERASYNDULLAS3": {
+"name": "Hera Syndulla",
+"img": "textures/tex.charui_hera_s3.png",
+"side": "L"
+},
+"HERMITYODA": {
+"name": "Hermit Yoda",
+"img": "textures/tex.charui_yodahermit.png",
+"side": "L"
+},
+"HK47": {
+"name": "HK-47",
+"img": "textures/tex.charui_hk47.png",
+"side": "D"
+},
+"HONDO": {
+"name": "Hondo Ohnaka",
+"img": "textures/tex.charui_hondoohnaka.png",
+"side": "N"
+},
+"HOTHHAN": {
+"name": "Captain Han Solo",
+"img": "textures/tex.charui_hoth_han.png",
+"side": "L"
+},
+"HOTHLEIA": {
+"name": "Rebel Officer Leia Organa",
+"img": "textures/tex.charui_leiahoth.png",
+"side": "L"
+},
+"HOTHREBELSCOUT": {
+"name": "Hoth Rebel Scout",
+"img": "textures/tex.charui_rebelhothscout.png",
+"side": "L"
+},
+"HOTHREBELSOLDIER": {
+"name": "Hoth Rebel Soldier",
+"img": "textures/tex.charui_rebelhoth.png",
+"side": "L"
+},
+"HOUNDSTOOTH": {
+"name": "Hound's Tooth",
+"img": "textures/tex.charui_houndstooth.png",
+"ship": true,
+"side": "D"
+},
+"HUMANTHUG": {
+"name": "Mob Enforcer",
+"img": "textures/tex.charui_mob_enforcer.png",
+"side": "D"
+},
+"HUNTERS3": {
+"name": "Hunter (Mercenary)",
+"img": "textures/tex.charui_hunters3.png",
+"side": "L"
+},
+"HUYANG": {
+"name": "Huyang",
+"img": "textures/tex.charui_huyang.png",
+"side": "L"
+},
+"HYENABOMBER": {
+"name": "Hyena Bomber",
+"img": "textures/tex.charui_hyenabomber.png",
+"ship": true,
+"side": "D"
+},
+"IDENVERSIOEMPIRE": {
+"name": "Iden Versio",
+"img": "textures/tex.charui_idenversioempire.png",
+"side": "D"
+},
+"IG11": {
+"name": "IG-11",
+"img": "textures/tex.charui_ig11_nurse.png",
+"side": "L"
+},
+"IG12": {
+"name": "IG-12 & Grogu",
+"img": "textures/tex.charui_ig12.png",
+"side": "L"
+},
+"IG2000": {
+"name": "IG-2000",
+"img": "textures/tex.charui_ig2000.png",
+"ship": true,
+"side": "D"
+},
+"IG86SENTINELDROID": {
+"name": "IG-86 Sentinel Droid",
+"img": "textures/tex.charui_ig86.png",
+"side": "D"
+},
+"IG88": {
+"name": "IG-88",
+"img": "textures/tex.charui_ig88.png",
+"side": "D"
+},
+"IG90": {
+"name": "IG-90",
+"img": "textures/tex.charui_ig-90.png",
+"side": "D"
+},
+"IMAGUNDI": {
+"name": "Ima-Gun Di",
+"img": "textures/tex.charui_imagundi.png",
+"side": "L"
+},
+"IMPERIALPROBEDROID": {
+"name": "Imperial Probe Droid",
+"img": "textures/tex.charui_probedroid.png",
+"side": "D"
+},
+"IMPERIALSUPERCOMMANDO": {
+"name": "Imperial Super Commando",
+"img": "textures/tex.charui_imperial_super_commando.png",
+"side": "D"
+},
+"INQUISITORBARRISS": {
+"name": "Inquisitor Barriss",
+"img": "textures/tex.charui_inquisitorbarriss.png",
+"side": "D"
+},
+"ITHANO": {
+"name": "Captain Ithano",
+"img": "textures/tex.charui_ithano.png",
+"side": "D"
+},
+"JABBATHEHUTT": {
+"name": "Jabba the Hutt",
+"img": "textures/tex.charui_jabbathehutt.png",
+"side": "D"
+},
+"JANGOFETT": {
+"name": "Jango Fett",
+"img": "textures/tex.charui_jangofett.png",
+"side": "D"
+},
+"JARJARBINKS": {
+"name": "Jar Jar Binks",
+"img": "textures/tex.charui_jarjarbinks.png",
+"side": "L"
+},
+"JAWA": {
+"name": "Jawa",
+"img": "textures/tex.charui_jawa_jawa.png",
+"side": "L"
+},
+"JAWAENGINEER": {
+"name": "Jawa Engineer",
+"img": "textures/tex.charui_jawa_engineer.png",
+"side": "L"
+},
+"JAWASCAVENGER": {
+"name": "Jawa Scavenger",
+"img": "textures/tex.charui_jawa_scavenger.png",
+"side": "L"
+},
+"JAXXON": {
+"name": "Jaxxon",
+"img": "textures/tex.charui_jaxxon.png",
+"side": "L"
+},
+"JEDIKNIGHTCAL": {
+"name": "Jedi Knight Cal Kestis",
+"img": "textures/tex.charui_jediknightcal.png",
+"side": "L"
+},
+"JEDIKNIGHTCONSULAR": {
+"name": "Jedi Consular",
+"img": "textures/tex.charui_jedi_consular_03.png",
+"side": "L"
+},
+"JEDIKNIGHTGUARDIAN": {
+"name": "Jedi Knight Guardian",
+"img": "textures/tex.charui_jedi_guardian_01.png",
+"side": "L"
+},
+"JEDIKNIGHTLUKE": {
+"name": "Jedi Knight Luke Skywalker",
+"img": "textures/tex.charui_luke_jediknight.png",
+"side": "L"
+},
+"JEDIKNIGHTREVAN": {
+"name": "Jedi Knight Revan",
+"img": "textures/tex.charui_jedirevan.png",
+"side": "L"
+},
+"JEDIMASTERKENOBI": {
+"name": "Jedi Master Kenobi",
+"img": "textures/tex.charui_globiwan.png",
+"side": "L"
+},
+"JEDIMASTERMACEWINDU": {
+"name": "Jedi Master Mace Windu",
+"img": "textures/tex.charui_jedimastermacewindu.png",
+"side": "L"
+},
+"JEDISTARFIGHTERAHSOKATANO": {
+"name": "Ahsoka Tano's Jedi Starfighter",
+"img": "textures/tex.charui_jedi_fighter_ahsoka.png",
+"ship": true,
+"side": "L"
+},
+"JEDISTARFIGHTERANAKIN": {
+"name": "Anakin's Eta-2 Starfighter",
+"img": "textures/tex.charui_jedi_fighter_anakin.png",
+"ship": true,
+"side": "L"
+},
+"JEDISTARFIGHTERCONSULAR": {
+"name": "Jedi Consular's Starfighter",
+"img": "textures/tex.charui_jedi_fighter.png",
+"ship": true,
+"side": "L"
+},
+"JOCASTANU": {
+"name": "Jocasta Nu",
+"img": "textures/tex.charui_jocastanu_blaster.png",
+"side": "L"
+},
+"JOLEEBINDO": {
+"name": "Jolee Bindo",
+"img": "textures/tex.charui_joleebindo.png",
+"side": "L"
+},
+"JUHANI": {
+"name": "Juhani",
+"img": "textures/tex.charui_juhani.png",
+"side": "L"
+},
+"JYNERSO": {
+"name": "Jyn Erso",
+"img": "textures/tex.charui_jyn.png",
+"side": "L"
+},
+"K2SO": {
+"name": "K-2SO",
+"img": "textures/tex.charui_k2so.png",
+"side": "L"
+},
+"KANANJARRUSS3": {
+"name": "Kanan Jarrus",
+"img": "textures/tex.charui_kanan_s3.png",
+"side": "L"
+},
+"KELLERANBEQ": {
+"name": "Kelleran Beq",
+"img": "textures/tex.charui_kelleranbeq.png",
+"side": "L"
+},
+"KIADIMUNDI": {
+"name": "Ki-Adi-Mundi",
+"img": "textures/tex.charui_kiadimundi.png",
+"side": "L"
+},
+"KITFISTO": {
+"name": "Kit Fisto",
+"img": "textures/tex.charui_kitfisto.png",
+"side": "L"
+},
+"KIX": {
+"name": "Kix",
+"img": "textures/tex.charui_kix.png",
+"side": "L"
+},
+"KLEYA": {
+"name": "Kleya Marki",
+"img": "textures/tex.charui_kleya.png",
+"side": "L"
+},
+"KRRSANTAN": {
+"name": "Krrsantan",
+"img": "textures/tex.charui_krrsantan.png",
+"side": "D"
+},
+"KUIIL": {
+"name": "Kuiil",
+"img": "textures/tex.charui_kuiil.png",
+"side": "L"
+},
+"KXSECURITYDROID": {
+"name": "KX Security Droid",
+"img": "textures/tex.charui_kxsecuritydroid.png",
+"side": "D"
+},
+"KYLEKATARN": {
+"name": "Kyle Katarn",
+"img": "textures/tex.charui_kylekatarn.png",
+"side": "L"
+},
+"KYLOREN": {
+"name": "Kylo Ren",
+"img": "textures/tex.charui_kyloren.png",
+"side": "D"
+},
+"KYLORENUNMASKED": {
+"name": "Kylo Ren (Unmasked)",
+"img": "textures/tex.charui_kylo_unmasked.png",
+"side": "D"
+},
+"L3_37": {
+"name": "L3-37",
+"img": "textures/tex.charui_l337.png",
+"side": "L"
+},
+"LEIAJEDITRAINING": {
+"name": "Leia (Jedi Training)",
+"img": "textures/tex.charui_leiajeditraining.png",
+"side": "L"
+},
+"LOBOT": {
+"name": "Lobot",
+"img": "textures/tex.charui_lobot.png",
+"side": "L"
+},
+"LOGRAY": {
+"name": "Logray",
+"img": "textures/tex.charui_ewok_logray.png",
+"side": "L"
+},
+"LORDVADER": {
+"name": "Lord Vader",
+"img": "textures/tex.charui_lordvader.png",
+"side": "D"
+},
+"LUKESKYWALKER": {
+"name": "Luke Skywalker (Farmboy)",
+"img": "textures/tex.charui_luke_ep4.png",
+"side": "L"
+},
+"LUKESTARKILLER": {
+"name": "Starkiller (Luke Concept)",
+"img": "textures/tex.charui_lukestarkiller.png",
+"side": "L"
+},
+"LUMINARAUNDULI": {
+"name": "Luminara Unduli",
+"img": "textures/tex.charui_luminara.png",
+"side": "L"
+},
+"LUTHENRAEL": {
+"name": "Luthen Rael",
+"img": "textures/tex.charui_luthenrael.png",
+"side": "L"
+},
+"MACEWINDU": {
+"name": "Mace Windu",
+"img": "textures/tex.charui_macewindu.png",
+"side": "L"
+},
+"MAGMATROOPER": {
+"name": "Magmatrooper",
+"img": "textures/tex.charui_trooperstorm_magma.png",
+"side": "D"
+},
+"MAGNAGUARD": {
+"name": "IG-100 MagnaGuard",
+"img": "textures/tex.charui_magnaguard.png",
+"side": "D"
+},
+"MAJORPARTAGAZ": {
+"name": "Major Partagaz",
+"img": "textures/tex.charui_majorpartagaz.png",
+"side": "D"
+},
+"MANDALORBOKATAN": {
+"name": "Bo-Katan (Mand'alor)",
+"img": "textures/tex.charui_mandalorbokatan.png",
+"side": "L"
+},
+"MARAJADE": {
+"name": "Mara Jade, The Emperor's Hand",
+"img": "textures/tex.charui_marajade.png",
+"side": "D"
+},
+"MARAJADESKYWALKER": {
+"name": "Mara Jade Skywalker",
+"img": "textures/tex.charui_marajadeskywalker.png",
+"side": "L"
+},
+"MARAUDER": {
+"name": "Marauder",
+"img": "textures/tex.charui_marauder.png",
+"ship": true,
+"side": "L"
+},
+"MARROK": {
+"name": "Marrok",
+"img": "textures/tex.charui_marrok.png",
+"side": "D"
+},
+"MASTERQUIGON": {
+"name": "Master Qui-Gon",
+"img": "textures/tex.charui_masterquigon.png",
+"side": "L"
+},
+"MAUL": {
+"name": "Darth Maul",
+"img": "textures/tex.charui_maul.png",
+"side": "D"
+},
+"MAULHATEFUELED": {
+"name": "Maul (Hate-Fueled)",
+"img": "textures/tex.charui_maulhatefueled.png",
+"side": "D"
+},
+"MAULS7": {
+"name": "Maul",
+"img": "textures/tex.charui_maul_cyborg.png",
+"side": "D"
+},
+"MAZKANATA": {
+"name": "Maz Kanata",
+"img": "textures/tex.charui_mazkanata.png",
+"side": "L"
+},
+"MERRIN": {
+"name": "Merrin",
+"img": "textures/tex.charui_merrin.png",
+"side": "D"
+},
+"MG100STARFORTRESSSF17": {
+"name": "MG-100 StarFortress SF-17",
+"img": "textures/tex.charui_mg100.png",
+"ship": true,
+"side": "L"
+},
+"MILLENNIUMFALCON": {
+"name": "Han's Millennium Falcon",
+"img": "textures/tex.charui_mfalcon.png",
+"ship": true,
+"side": "L"
+},
+"MILLENNIUMFALCONEP7": {
+"name": "Rey's Millennium Falcon",
+"img": "textures/tex.charui_mfalcon_ep7.png",
+"ship": true,
+"side": "L"
+},
+"MILLENNIUMFALCONPRISTINE": {
+"name": "Lando's Millennium Falcon",
+"img": "textures/tex.charui_mil_fal_pristine.png",
+"ship": true,
+"side": "L"
+},
+"MISSIONVAO": {
+"name": "Mission Vao",
+"img": "textures/tex.charui_mission.png",
+"side": "L"
+},
+"MOFFGIDEONS1": {
+"name": "Moff Gideon",
+"img": "textures/tex.charui_moffgideon.png",
+"side": "D"
+},
+"MOFFGIDEONS3": {
+"name": "Dark Trooper Moff Gideon",
+"img": "textures/tex.charui_moffgideons3.png",
+"side": "D"
+},
+"MONMOTHMA": {
+"name": "Mon Mothma",
+"img": "textures/tex.charui_monmothma.png",
+"side": "L"
+},
+"MORGANELSBETH": {
+"name": "Morgan Elsbeth",
+"img": "textures/tex.charui_morganelsbeth.png",
+"side": "D"
+},
+"MOTHERTALZIN": {
+"name": "Mother Talzin",
+"img": "textures/tex.charui_nightsisters_talzin.png",
+"side": "D"
+},
+"NIGHTSISTERACOLYTE": {
+"name": "Nightsister Acolyte",
+"img": "textures/tex.charui_nightsister_acolyte.png",
+"side": "D"
+},
+"NIGHTSISTERINITIATE": {
+"name": "Nightsister Initiate",
+"img": "textures/tex.charui_nightsister_initiate.png",
+"side": "D"
+},
+"NIGHTSISTERSPIRIT": {
+"name": "Nightsister Spirit",
+"img": "textures/tex.charui_nightsisters_wraith.png",
+"side": "D"
+},
+"NIGHTSISTERZOMBIE": {
+"name": "Nightsister Zombie",
+"img": "textures/tex.charui_nightsisters_zombie.png",
+"side": "D"
+},
+"NIGHTTROOPER": {
+"name": "Night Trooper",
+"img": "textures/tex.charui_nighttrooper_a.png",
+"side": "D"
+},
+"NINTHSISTER": {
+"name": "Ninth Sister",
+"img": "textures/tex.charui_ninthsister.png",
+"side": "D"
+},
+"NUTEGUNRAY": {
+"name": "Nute Gunray",
+"img": "textures/tex.charui_nutegunray.png",
+"side": "D"
+},
+"OLDBENKENOBI": {
+"name": "Obi-Wan Kenobi (Old Ben)",
+"img": "textures/tex.charui_obiwanep4.png",
+"side": "L"
+},
+"OMEGAS3": {
+"name": "Omega (Fugitive)",
+"img": "textures/tex.charui_omegas3.png",
+"side": "L"
+},
+"OPERATIVE": {
+"name": "CX-2",
+"img": "textures/tex.charui_operative.png",
+"side": "D"
+},
+"OUTRIDER": {
+"name": "Outrider",
+"img": "textures/tex.charui_outrider.png",
+"ship": true,
+"side": "L"
+},
+"PADAWANOBIWAN": {
+"name": "Padawan Obi-Wan",
+"img": "textures/tex.charui_padawanobiwan.png",
+"side": "L"
+},
+"PADAWANSABINE": {
+"name": "Padawan Sabine Wren",
+"img": "textures/tex.charui_padawansabine.png",
+"side": "L"
+},
+"PADMEAMIDALA": {
+"name": "Padmé Amidala",
+"img": "textures/tex.charui_padme_geonosis.png",
+"side": "L"
+},
+"PAO": {
+"name": "Pao",
+"img": "textures/tex.charui_pao.png",
+"side": "L"
+},
+"PAPLOO": {
+"name": "Paploo",
+"img": "textures/tex.charui_ewok_paploo.png",
+"side": "L"
+},
+"PAZVIZSLA": {
+"name": "Paz Vizsla",
+"img": "textures/tex.charui_pazvizsla.png",
+"side": "L"
+},
+"PHANTOM2": {
+"name": "Phantom II",
+"img": "textures/tex.charui_phantom2.png",
+"ship": true,
+"side": "L"
+},
+"PHASMA": {
+"name": "Captain Phasma",
+"img": "textures/tex.charui_phasma.png",
+"side": "D"
+},
+"PLOKOON": {
+"name": "Plo Koon",
+"img": "textures/tex.charui_plokoon.png",
+"side": "L"
+},
+"POE": {
+"name": "Poe Dameron",
+"img": "textures/tex.charui_poe.png",
+"side": "L"
+},
+"POGGLETHELESSER": {
+"name": "Poggle the Lesser",
+"img": "textures/tex.charui_geonosian_poggle.png",
+"side": "D"
+},
+"PRINCESSKNEESAA": {
+"name": "Princess Kneesaa",
+"img": "textures/tex.charui_princesskneesaa.png",
+"side": "L"
+},
+"PRINCESSLEIA": {
+"name": "Princess Leia",
+"img": "textures/tex.charui_leia_princess.png",
+"side": "L"
+},
+"PUNISHINGONE": {
+"name": "Punishing One",
+"img": "textures/tex.charui_punishingone.png",
+"ship": true,
+"side": "D"
+},
+"QIRA": {
+"name": "Qi'ra",
+"img": "textures/tex.charui_qira.png",
+"side": "L"
+},
+"QUEENAMIDALA": {
+"name": "Queen Amidala",
+"img": "textures/tex.charui_queenamidala.png",
+"side": "L"
+},
+"QUIGGOLD": {
+"name": "Quiggold",
+"img": "textures/tex.charui_quiggold.png",
+"side": "D"
+},
+"QUIGONJINN": {
+"name": "Qui-Gon Jinn",
+"img": "textures/tex.charui_quigon.png",
+"side": "L"
+},
+"R2D2_LEGENDARY": {
+"name": "R2-D2",
+"img": "textures/tex.charui_astromech_r2d2.png",
+"side": "L"
+},
+"R5D4": {
+"name": "R5-D4",
+"img": "textures/tex.charui_r5d4.png",
+"side": "L"
+},
+"RACCOON": {
+"name": "Rotta the Hutt",
+"img": "textures/tex.charui_rotta.png",
+"side": "L"
+},
+"RANGERZEB": {
+"name": "Zeb Orrelios (New Republic Pilot)",
+"img": "textures/tex.charui_rangerzeb.png",
+"side": "L"
+},
+"RANGETROOPER": {
+"name": "Range Trooper",
+"img": "textures/tex.charui_trooperranger.png",
+"side": "D"
+},
+"RAVENSCLAW": {
+"name": "Raven's Claw",
+"img": "textures/tex.charui_ravensclaw.png",
+"ship": true,
+"side": "L"
+},
+"RAZORCREST": {
+"name": "Razor Crest",
+"img": "textures/tex.charui_razorcrest.png",
+"ship": true,
+"side": "L"
+},
+"REMNANTSNOWCOMMANDER": {
+"name": "Snowtrooper Commander",
+"img": "textures/tex.charui_remnantsnowcommander.png",
+"side": "D"
+},
+"RESISTANCEPILOT": {
+"name": "Resistance Pilot",
+"img": "textures/tex.charui_resistancepilot.png",
+"side": "L"
+},
+"RESISTANCETROOPER": {
+"name": "Resistance Trooper",
+"img": "textures/tex.charui_resistancetrooper.png",
+"side": "L"
+},
+"REY": {
+"name": "Rey (Scavenger)",
+"img": "textures/tex.charui_reyjakku.png",
+"side": "L"
+},
+"REYJEDITRAINING": {
+"name": "Rey (Jedi Training)",
+"img": "textures/tex.charui_rey_tlj.png",
+"side": "L"
+},
+"ROGUEONESHIP": {
+"name": "Rogue One",
+"img": "textures/tex.charui_rogueoneship.png",
+"ship": true,
+"side": "L"
+},
+"ROSETICO": {
+"name": "Rose Tico",
+"img": "textures/tex.charui_rose.png",
+"side": "L"
+},
+"ROYALGUARD": {
+"name": "Royal Guard",
+"img": "textures/tex.charui_royalguard.png",
+"side": "D"
+},
+"SABINEWRENS3": {
+"name": "Sabine Wren",
+"img": "textures/tex.charui_sabine_s3.png",
+"side": "L"
+},
+"SANASTARROS": {
+"name": "Sana Starros",
+"img": "textures/tex.charui_sanastarros.png",
+"side": "L"
+},
+"SATELESHAN": {
+"name": "Satele Shan",
+"img": "textures/tex.charui_sateleshan.png",
+"side": "L"
+},
+"SAVAGEOPRESS": {
+"name": "Savage Opress",
+"img": "textures/tex.charui_savageopress.png",
+"side": "D"
+},
+"SAWGERRERA": {
+"name": "Saw Gerrera",
+"img": "textures/tex.charui_sawgerrera.png",
+"side": "L"
+},
+"SCARIFREBEL": {
+"name": "Scarif Rebel Pathfinder",
+"img": "textures/tex.charui_rebel_scarif.png",
+"side": "L"
+},
+"SCORCH": {
+"name": "RC-1262 \"Scorch\"",
+"img": "textures/tex.charui_scorch.png",
+"side": "D"
+},
+"SCOUTTROOPER_V3": {
+"name": "Scout Trooper",
+"img": "textures/tex.charui_trooperscout.png",
+"side": "D"
+},
+"SCYTHE": {
+"name": "Scythe",
+"img": "textures/tex.charui_scythe.png",
+"ship": true,
+"side": "D"
+},
+"SECONDSISTER": {
+"name": "Second Sister",
+"img": "textures/tex.charui_secondsister.png",
+"side": "D"
+},
+"SEVENTHSISTER": {
+"name": "Seventh Sister",
+"img": "textures/tex.charui_seventhsister.png",
+"side": "D"
+},
+"SHAAKTI": {
+"name": "Shaak Ti",
+"img": "textures/tex.charui_shaakti.png",
+"side": "L"
+},
+"SHINHATI": {
+"name": "Shin Hati",
+"img": "textures/tex.charui_shinhati.png",
+"side": "D"
+},
+"SHORETROOPER": {
+"name": "Shoretrooper",
+"img": "textures/tex.charui_troopershore.png",
+"side": "D"
+},
+"SITHASSASSIN": {
+"name": "Sith Assassin",
+"img": "textures/tex.charui_sithassassin.png",
+"side": "D"
+},
+"SITHBOMBER": {
+"name": "B-28 Extinction-class Bomber",
+"img": "textures/tex.charui_b28extinctionclassbomber.png",
+"ship": true,
+"side": "D"
+},
+"SITHFIGHTER": {
+"name": "Sith Fighter",
+"img": "textures/tex.charui_sithfighter.png",
+"ship": true,
+"side": "D"
+},
+"SITHINFILTRATOR": {
+"name": "Scimitar",
+"img": "textures/tex.charui_sithinfiltrator.png",
+"ship": true,
+"side": "D"
+},
+"SITHMARAUDER": {
+"name": "Sith Marauder",
+"img": "textures/tex.charui_sithmarauder.png",
+"side": "D"
+},
+"SITHPALPATINE": {
+"name": "Sith Eternal Emperor",
+"img": "textures/tex.charui_espalpatine_pre.png",
+"side": "D"
+},
+"SITHSUPREMACYCLASS": {
+"name": "Mark VI Interceptor",
+"img": "textures/tex.charui_sithsupremacyclass.png",
+"ship": true,
+"side": "D"
+},
+"SITHTROOPER": {
+"name": "Sith Empire Trooper",
+"img": "textures/tex.charui_sithtrooper.png",
+"side": "D"
+},
+"SLAVE1": {
+"name": "Slave I",
+"img": "textures/tex.charui_slave1.png",
+"ship": true,
+"side": "D"
+},
+"SM33": {
+"name": "SM-33",
+"img": "textures/tex.charui_sm33.png",
+"side": "D"
+},
+"SMUGGLERCHEWBACCA": {
+"name": "Veteran Smuggler Chewbacca",
+"img": "textures/tex.charui_tfa_chewbacca.png",
+"side": "L"
+},
+"SMUGGLERHAN": {
+"name": "Veteran Smuggler Han Solo",
+"img": "textures/tex.charui_tfa_han.png",
+"side": "L"
+},
+"SNOWTROOPER": {
+"name": "Snowtrooper",
+"img": "textures/tex.charui_troopersnow.png",
+"side": "D"
+},
+"STAP": {
+"name": "STAP",
+"img": "textures/tex.charui_stap.png",
+"side": "D"
+},
+"STARKILLER": {
+"name": "Starkiller",
+"img": "textures/tex.charui_starkiller.png",
+"side": "D"
+},
+"STORMTROOPER": {
+"name": "Stormtrooper",
+"img": "textures/tex.charui_trooperstorm.png",
+"side": "D"
+},
+"STORMTROOPERCONCEPT": {
+"name": "Stormtrooper (Concept)",
+"img": "textures/tex.charui_stormtrooperconcept.png",
+"side": "D"
+},
+"STORMTROOPERHAN": {
+"name": "Stormtrooper Han",
+"img": "textures/tex.charui_trooperstorm_han.png",
+"side": "L"
+},
+"STORMTROOPERLUKE": {
+"name": "Stormtrooper Luke",
+"img": "textures/tex.charui_stormtrooperluke.png",
+"side": "L"
+},
+"STRANGER": {
+"name": "The Stranger",
+"img": "textures/tex.charui_stranger.png",
+"side": "D"
+},
+"SUNFAC": {
+"name": "Sun Fac",
+"img": "textures/tex.charui_geonosian_sunfac.png",
+"side": "D"
+},
+"SUPREMELEADERKYLOREN": {
+"name": "Supreme Leader Kylo Ren",
+"img": "textures/tex.charui_kyloren_tros.png",
+"side": "D"
+},
+"T3_M4": {
+"name": "T3-M4",
+"img": "textures/tex.charui_t3m4.png",
+"side": "L"
+},
+"TALIA": {
+"name": "Talia",
+"img": "textures/tex.charui_nightsister_talia.png",
+"side": "D"
+},
+"TARFFUL": {
+"name": "Tarfful",
+"img": "textures/tex.charui_tarfful.png",
+"side": "L"
+},
+"TARONMALICOS": {
+"name": "Taron Malicos",
+"img": "textures/tex.charui_taronmalicos.png",
+"side": "D"
+},
+"TEEBO": {
+"name": "Teebo",
+"img": "textures/tex.charui_ewok_teebo.png",
+"side": "L"
+},
+"THEMANDALORIAN": {
+"name": "The Mandalorian",
+"img": "textures/tex.charui_mandalorian.png",
+"side": "L"
+},
+"THEMANDALORIANBESKARARMOR": {
+"name": "The Mandalorian (Beskar Armor)",
+"img": "textures/tex.charui_mandobeskar.png",
+"side": "L"
+},
+"THERONIN": {
+"name": "The Ronin",
+"img": "textures/tex.charui_theronin.png",
+"side": "D"
+},
+"THIRDSISTER": {
+"name": "Third Sister",
+"img": "textures/tex.charui_thirdsister.png",
+"side": "D"
+},
+"TIEADVANCED": {
+"name": "TIE Advanced x1",
+"img": "textures/tex.charui_tieadvanced.png",
+"ship": true,
+"side": "D"
+},
+"TIEBOMBERIMPERIAL": {
+"name": "Imperial TIE Bomber",
+"img": "textures/tex.charui_tiebomber.png",
+"ship": true,
+"side": "D"
+},
+"TIEDAGGER": {
+"name": "TIE Dagger",
+"img": "textures/tex.charui_tiedagger.png",
+"ship": true,
+"side": "D"
+},
+"TIEDEFENDER": {
+"name": "TIE Defender",
+"img": "textures/tex.charui_tiedefender.png",
+"ship": true,
+"side": "D"
+},
+"TIEFIGHTERFIRSTORDER": {
+"name": "First Order TIE Fighter",
+"img": "textures/tex.charui_firstorder_tiefighter.png",
+"ship": true,
+"side": "D"
+},
+"TIEFIGHTERFOSF": {
+"name": "First Order SF TIE Fighter",
+"img": "textures/tex.charui_fosf_tie_fighter.png",
+"ship": true,
+"side": "D"
+},
+"TIEFIGHTERIMPERIAL": {
+"name": "Imperial TIE Fighter",
+"img": "textures/tex.charui_tiefighter.png",
+"ship": true,
+"side": "D"
+},
+"TIEFIGHTERPILOT": {
+"name": "TIE Fighter Pilot",
+"img": "textures/tex.charui_tiepilot.png",
+"side": "D"
+},
+"TIEINTERCEPTOR": {
+"name": "TIE/IN Interceptor Prototype",
+"img": "textures/tex.charui_tie_interceptor_prototype.png",
+"ship": true,
+"side": "D"
+},
+"TIEREAPER": {
+"name": "TIE Reaper",
+"img": "textures/tex.charui_tiereaper.png",
+"ship": true,
+"side": "D"
+},
+"TIESILENCER": {
+"name": "TIE Silencer",
+"img": "textures/tex.charui_tie_silencer.png",
+"ship": true,
+"side": "D"
+},
+"TRENCH": {
+"name": "Admiral Trench",
+"img": "textures/tex.charui_admiraltrench.png",
+"side": "D"
+},
+"TRIPLEZERO": {
+"name": "0-0-0",
+"img": "textures/tex.charui_triplezero.png",
+"side": "D"
+},
+"TUSKENCHIEFTAIN": {
+"name": "Tusken Chieftain",
+"img": "textures/tex.charui_tuskenchieftain.png",
+"side": "D"
+},
+"TUSKENHUNTRESS": {
+"name": "Tusken Warrior",
+"img": "textures/tex.charui_tuskenhuntress.png",
+"side": "D"
+},
+"TUSKENRAIDER": {
+"name": "Tusken Raider",
+"img": "textures/tex.charui_tuskenraider.png",
+"side": "D"
+},
+"TUSKENSHAMAN": {
+"name": "Tusken Shaman",
+"img": "textures/tex.charui_tuskenshaman.png",
+"side": "D"
+},
+"UGNAUGHT": {
+"name": "Ugnaught",
+"img": "textures/tex.charui_ugnaught.png",
+"side": "L"
+},
+"UMBARANSTARFIGHTER": {
+"name": "Umbaran Starfighter",
+"img": "textures/tex.charui_umbaran_star_fighter.png",
+"ship": true,
+"side": "L"
+},
+"UNDERCOVERLANDO": {
+"name": "Skiff Guard (Lando Calrissian)",
+"img": "textures/tex.charui_undercoverlando.png",
+"side": "L"
+},
+"URORRURRR": {
+"name": "URoRRuR'R'R",
+"img": "textures/tex.charui_urorrurrr.png",
+"side": "D"
+},
+"UWINGROGUEONE": {
+"name": "Cassian's U-wing",
+"img": "textures/tex.charui_uwing_hero.png",
+"ship": true,
+"side": "L"
+},
+"UWINGSCARIF": {
+"name": "Bistan's U-wing",
+"img": "textures/tex.charui_uwing.png",
+"ship": true,
+"side": "L"
+},
+"VADER": {
+"name": "Darth Vader",
+"img": "textures/tex.charui_vader.png",
+"side": "D"
+},
+"VADERDUELSEND": {
+"name": "Darth Vader (Duel's End)",
+"img": "textures/tex.charui_vaderduelsend.png",
+"side": "D"
+},
+"VANE": {
+"name": "Vane",
+"img": "textures/tex.charui_vane.png",
+"side": "D"
+},
+"VANGUARDTEMPLEGUARD": {
+"name": "Temple Guard",
+"img": "textures/tex.charui_vanguardtempleguard.png",
+"side": "L"
+},
+"VEERS": {
+"name": "General Veers",
+"img": "textures/tex.charui_veers.png",
+"side": "D"
+},
+"VEL": {
+"name": "Vel Sartha",
+"img": "textures/tex.charui_vel.png",
+"side": "L"
+},
+"VISASMARR": {
+"name": "Visas Marr",
+"img": "textures/tex.charui_visas.png",
+"side": "L"
+},
+"VULTUREDROID": {
+"name": "Vulture Droid",
+"img": "textures/tex.charui_vulturedroid.png",
+"ship": true,
+"side": "D"
+},
+"WAMPA": {
+"name": "Wampa",
+"img": "textures/tex.charui_wampa.png",
+"side": "D"
+},
+"WATTAMBOR": {
+"name": "Wat Tambor",
+"img": "textures/tex.charui_wattambor.png",
+"side": "D"
+},
+"WEDGEANTILLES": {
+"name": "Wedge Antilles",
+"img": "textures/tex.charui_rebelpilot_wedge.png",
+"side": "L"
+},
+"WICKET": {
+"name": "Wicket",
+"img": "textures/tex.charui_ewok_wicket.png",
+"side": "L"
+},
+"WRECKERS3": {
+"name": "Wrecker (Mercenary)",
+"img": "textures/tex.charui_wreckers3.png",
+"side": "L"
+},
+"XANADUBLOOD": {
+"name": "Xanadu Blood",
+"img": "textures/tex.charui_xanadublood.png",
+"ship": true,
+"side": "D"
+},
+"XWINGBLACKONE": {
+"name": "Poe Dameron's X-wing",
+"img": "textures/tex.charui_xwing_blackone.png",
+"ship": true,
+"side": "L"
+},
+"XWINGRED2": {
+"name": "Wedge Antilles's X-wing",
+"img": "textures/tex.charui_xwing_red2.png",
+"ship": true,
+"side": "L"
+},
+"XWINGRED3": {
+"name": "Biggs Darklighter's X-wing",
+"img": "textures/tex.charui_xwing_red3.png",
+"ship": true,
+"side": "L"
+},
+"XWINGRESISTANCE": {
+"name": "Resistance X-wing",
+"img": "textures/tex.charui_xwing_resistance.png",
+"ship": true,
+"side": "L"
+},
+"YODACHEWBACCA": {
+"name": "Yoda & Chewie",
+"img": "textures/tex.charui_yodachewbacca.png",
+"side": "L"
+},
+"YODADSV": {
+"name": "Yoda (Dark Side Vision)",
+"img": "textures/tex.charui_yodadsv.png",
+"side": "D"
+},
+"YOUNGCHEWBACCA": {
+"name": "Vandor Chewbacca",
+"img": "textures/tex.charui_chewbacca_vandor.png",
+"side": "L"
+},
+"YOUNGHAN": {
+"name": "Young Han Solo",
+"img": "textures/tex.charui_han_young.png",
+"side": "L"
+},
+"YOUNGLANDO": {
+"name": "Young Lando Calrissian",
+"img": "textures/tex.charui_younglando.png",
+"side": "L"
+},
+"YWINGCLONEWARS": {
+"name": "BTL-B Y-wing Starfighter",
+"img": "textures/tex.charui_ywing_btlb.png",
+"ship": true,
+"side": "L"
+},
+"YWINGREBEL": {
+"name": "Rebel Y-wing",
+"img": "textures/tex.charui_ywing.png",
+"ship": true,
+"side": "L"
+},
+"ZAALBAR": {
+"name": "Zaalbar",
+"img": "textures/tex.charui_zaalbar.png",
+"side": "L"
+},
+"ZAMWESELL": {
+"name": "Zam Wesell",
+"img": "textures/tex.charui_zamwesell.png",
+"side": "D"
+},
+"ZEBS3": {
+"name": "Garazeb \"Zeb\" Orrelios",
+"img": "textures/tex.charui_zeb_s3.png",
+"side": "L"
+},
+"ZORIIBLISS_V2": {
+"name": "Zorii Bliss",
+"img": "textures/tex.charui_zoriibliss.png",
+"side": "L"
+},
+"ZUCKUSS": {
+"name": "Zuckuss",
+"img": "textures/tex.charui_zuckuss.png",
+"side": "D"
+}
+}
