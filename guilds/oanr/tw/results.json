@@ -1,4 +1,46 @@
 {
+ "2026-08-26": {
+  "result": "win",
+  "our_score": 15328,
+  "their_score": 14565,
+  "source": "game",
+  "opponent": "Shattered Order"
+ },
+ "2026-08-30": {
+  "result": "loss",
+  "our_score": 21320,
+  "their_score": 21686,
+  "source": "game",
+  "opponent": "PHANT0M LEGI0N"
+ },
+ "2026-09-09": {
+  "result": "loss",
+  "our_score": 16685,
+  "their_score": 25233,
+  "source": "game",
+  "opponent": "?lite Asesina "
+ },
+ "2026-09-13": {
+  "result": "win",
+  "our_score": 26750,
+  "their_score": 14049,
+  "source": "game",
+  "opponent": "TheJediCouncil117"
+ },
+ "2026-09-23": {
+  "result": "loss",
+  "our_score": 11644,
+  "their_score": 26009,
+  "source": "game",
+  "opponent": "CAW 2 INSANITY"
+ },
+ "2026-09-27": {
+  "result": "win",
+  "our_score": 16435,
+  "their_score": 14867,
+  "source": "game",
+  "opponent": "Nightbrothers"
+ },
  "2026-10-08": {
   "result": "loss",
   "our_score": null,
