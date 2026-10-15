@@ -172,6 +172,11 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   side menu → ⚙ Platoon planner: data, or upload a new file over it on GitHub.
 - **Saved assignments:** `guilds/<guild>/platoons.json`, written by **Save and share**. Members see
   the new assignments about two minutes after saving.
+- **Squads stay together.** With *Keep squads together* on (Platoon planner: rules, on by default),
+  whoever is given a squad's lead unit - Executor, say - also gets that squad's other units needed in
+  the same phase, as far as they own them, so nobody else loses their fleet. The squads list is preset
+  with common fleets and can be edited (lead: unit, unit, ... one per line; character squads work too).
+  Those slots show a "with Executor" tag.
 - **Each guild has its own planet and operation choices.** Officers pick them in side menu → ⚙ Platoon planner: operations
   to fill and press **Save selections** (saved to `guilds/<guild>/platoon-settings.json`). The rules
   (relic minimums, per-member limit, GL rules, tier balancing) are saved there too, per guild.
