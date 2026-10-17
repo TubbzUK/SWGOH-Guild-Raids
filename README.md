@@ -225,8 +225,10 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   rules: each phase it keeps the set of open operations the guild can fill completely and holds the rest
   for a later phase, then shows the suggested order, the operations nobody can fill yet (and why), and
   the upgrades that would close those gaps. Officers can press **Use this schedule** to apply it.
-- On **Requirements**, hover over (or tap) a character to see which members have it ready, which own it
-  below the level needed (with their level), and how many don't have it.
+- On **Requirements**, click a character to open a card under its row: every member who has it at the
+  required level or above, with their level and where the plan has them placing it (phase, planet,
+  operation and row - this phase highlighted), or "Not placing it". Members below the level and those
+  without it are listed underneath. Click again (or ✕) to close.
 - **Squads stay together.** With *Keep squads together* on (Platoon planner: rules, on by default),
   whoever is given a squad's lead unit - Executor, say - also gets that squad's other units needed in
   the same phase, as far as they own them, so nobody else loses their fleet. The squads list is preset

@@ -255,12 +255,22 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .simgap.fit{border-left-color:var(--amber)}
 .simgap ul{margin:6px 0 0;padding-left:18px;font-size:13px}
 .simup td,.simup th{text-align:right}.simup td:first-child,.simup th:first-child{text-align:left}
-/* requirements: who has it */
-.reqtable .nm .who{display:inline!important;width:auto!important;cursor:help;border-bottom:1px dotted currentColor}
-.whotip{position:absolute;z-index:80;max-width:340px;background:var(--panel);color:var(--ink);border:1px solid var(--saber);border-radius:6px;padding:10px 12px;font-size:12.5px;line-height:1.45;box-shadow:0 12px 34px rgba(0,0,0,.45)}
-.whotip h4{margin:0 0 6px;font-size:13px}
-.whotip .grp{margin-top:6px}.whotip .grp b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:2px}
-.whotip .names{display:flex;flex-wrap:wrap;gap:3px 8px}.whotip .names span small{opacity:.7;margin-left:3px}
+/* requirements: who has it (card under the row) */
+.reqtable .nm .who{display:inline!important;width:auto!important;cursor:pointer;color:var(--saber);font-weight:600}
+.reqtable .nm .who:hover{text-decoration:underline}.reqtable .nm .who .caret{font-size:10px;opacity:.8;display:inline-block;transition:transform .15s}
+.reqtable .nm .who[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.reqtable tr.whorow>td{text-align:left!important;white-space:normal;padding:0 0 10px!important;background:transparent}
+.whocard{border:1px solid var(--saber);border-radius:4px;background:var(--panel);padding:10px 12px;margin:2px 0}
+.wc-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px}
+.wc-h b{font-size:15px}.wc-n{font-size:12.5px;opacity:.85;flex:1 1 260px}
+.wc-x{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;width:28px;height:28px;cursor:pointer;margin-left:auto}
+.wctable{width:100%;font-size:13px}.wctable th,.wctable td{text-align:left!important;padding:5px 8px;white-space:normal}
+.wctable td:nth-child(2){white-space:nowrap}
+.wh{display:inline-block;border:1px solid var(--line);border-radius:3px;padding:1px 6px;margin:1px 4px 1px 0;font-size:12px;white-space:nowrap}
+.wh.now{border-color:var(--saber);background:color-mix(in srgb,var(--saber) 14%,transparent);font-weight:600}
+.wh.free{border-style:dashed;opacity:.8}
+.wc-low{margin-top:8px;font-size:12.5px}.wc-low summary{cursor:pointer}
+.wc-low .names{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:4px}.wc-low small{opacity:.7}
 .reqplanet h3{margin-bottom:4px}
 .reqtable td,.reqtable th{text-align:right}
 .reqtable .nm,.reqtable th:first-child{text-align:left;white-space:normal;min-width:120px}
@@ -1103,7 +1113,7 @@ function reqData(){
         let have=0,below=0;const owners=[];R.players.forEach(p=>{const u=unitOf(R.roster,p,s);if(!u||u.stars===0)return;const ok=qualifies(u,s,R.o);if(ok)have++;else below++;owners.push({p,u,ok})});
         const pn=phaseNeed.get(s.key);
         const lvl=isShip(s)?`${s.minStars??R.o.minStars}★`:`R${s.minRelic??R.o.relic[s.zone??s.phase]??0}`;
-        return{unit:s.unit,gl:!!s.gl||glKeys(R.o.gl).has(s.key)||glKeys(R.o.gl).has(s.nameKey),need,phaseNeed:pn,have,diff:have-pn,below,lvl,owners};
+        return{unit:s.unit,gl:!!s.gl||glKeys(R.o.gl).has(s.key)||glKeys(R.o.gl).has(s.nameKey),need,phaseNeed:pn,have,diff:have-pn,below,lvl,owners,key:s.key,phase:ph};
       }).sort((a,b)=>a.diff-b.diff||a.unit.localeCompare(b.unit));
       return{...P,ops:[...P.ops].sort(cmpOp),rows};
     });
@@ -1135,36 +1145,51 @@ function renderReq(){
       html+=`<div class="reqplanet"><h3>${esc(P.planet)}${P.zone!==d.phase?`<span class="carry">phase ${P.zone} planet</span>`:''}</h3>
         <p class="note">Operations ${P.ops.map(esc).join(', ')}. ${P.slots} slots, ${P.rows.length} different characters, ${P.rows.reduce((a,r)=>a+r.need,0)} needed in total${nShort?`, <b class="neg">${nShort} short</b>`:', none short'}.</p>`;
       if(!rows.length){html+='<p class="note">Nothing short on this planet.</p></div>';continue}
-      html+=`<div class="scroll"><table class="reqtable"><thead><tr><th>Character</th><th>Need</th><th>Have</th><th>Diff</th><th>Can upgrade</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.diff<0?'isneg':''}"><td class="nm"><span class="who" tabindex="0" data-ri="${REQROWS.push(r)-1}" aria-label="${esc(r.unit)}: who has it">${esc(r.unit)}</span>${r.gl?'<span class="gl">GL</span>':''}<br><small>${r.lvl}${r.phaseNeed!==r.need?`, ${r.phaseNeed} needed across phase ${d.phase}`:''}</small></td><td>${r.need}</td><td>${r.have}</td><td class="${r.diff<0?'neg':r.diff>0?'pos':''}"><b>${sign(r.diff)}</b></td><td>${r.below||'<span class="z">0</span>'}</td></tr>`).join('')}</tbody></table></div></div>`;
+      html+=`<div class="scroll"><table class="reqtable"><thead><tr><th>Character</th><th>Need</th><th>Have</th><th>Diff</th><th>Can upgrade</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.diff<0?'isneg':''}"><td class="nm"><span class="who" role="button" tabindex="0" aria-expanded="false" data-pl="${esc(P.zone+'|'+P.planet)}" data-ri="${REQROWS.push(r)-1}" title="Show who has it">${esc(r.unit)} <span class="caret" aria-hidden="true">▾</span></span>${r.gl?'<span class="gl">GL</span>':''}<br><small>${r.lvl}${r.phaseNeed!==r.need?`, ${r.phaseNeed} needed across phase ${d.phase}`:''}</small></td><td>${r.need}</td><td>${r.have}</td><td class="${r.diff<0?'neg':r.diff>0?'pos':''}"><b>${sign(r.diff)}</b></td><td>${r.below||'<span class="z">0</span>'}</td></tr>`).join('')}</tbody></table></div></div>`;
     }
     html+='</div>';
   }
   $('#reqView').innerHTML=html||'<p>No operations are chosen.</p>';
+  if(REQOPEN){const el=[...document.querySelectorAll('#reqView .who')].find(w=>{const r=REQROWS[+w.dataset.ri];return r&&REQOPEN===r.phase+'|'+r.key+'|'+w.dataset.pl});if(el){const keep=REQOPEN;REQOPEN=null;toggleWho(el);REQOPEN=keep}else REQOPEN=null}
 }
-// hover (or tap) a character on the Requirements tab: which members have it, and at what level
-let REQROWS=[];
+// click a character on the Requirements tab: a card opens under its row with every member who has it
+// at the required level or above, and where (if anywhere) the plan has them placing it in each phase
+let REQROWS=[],REQOPEN=null;
 const unitLvl=u=>u.ship?`${u.stars??'?'}★`:u.relic!=null&&u.relic>0?`R${u.relic}`:u.gear!=null?`G${u.gear}`:u.stars!=null?`${u.stars}★`:'';
-function whoTip(el){
-  hideWhoTip();
-  const r=REQROWS[+el.dataset.ri];if(!r)return;
+function whoCard(r){
   const lvlN=u=>u.ship?(u.stars||0):(u.relic||0)*20+(u.gear||0);
-  const ok=r.owners.filter(o=>o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p)),low=r.owners.filter(o=>!o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
-  const names=l=>l.length?`<div class="names">${l.map(o=>`<span>${esc(o.p)}<small>${esc(unitLvl(o.u))}</small></span>`).join('')}</div>`:'<div class="names"><span>Nobody</span></div>';
-  const t=document.createElement('div');t.className='whotip';t.setAttribute('role','tooltip');
-  t.innerHTML=`<h4>${esc(r.unit)} <small>(needs ${esc(r.lvl)})</small></h4><div class="grp"><b>Ready – ${ok.length}</b>${names(ok)}</div><div class="grp"><b>Own it, below ${esc(r.lvl)} – ${low.length}</b>${names(low)}</div>${r.owners.length<RESULT.players.length?`<div class="grp" style="opacity:.75">${RESULT.players.length-r.owners.length} member${RESULT.players.length-r.owners.length===1?" doesn't":"s don't"} have it unlocked</div>`:''}`;
-  document.body.appendChild(t);
-  const b=el.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;
-  let left=Math.min(innerWidth-w-8,Math.max(8,b.left)),top=b.bottom+6;if(top+h>innerHeight-8)top=Math.max(8,b.top-h-6);
-  t.style.left=left+scrollX+'px';t.style.top=top+scrollY+'px';
+  const placed=new Map();   // member -> [{phase, planet, op}]
+  RESULT.slots.forEach(s=>{if(s.player&&s.key===r.key){if(!placed.has(s.player))placed.set(s.player,[]);placed.get(s.player).push(s)}});
+  const ok=r.owners.filter(o=>o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
+  const low=r.owners.filter(o=>!o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
+  const here=o=>(placed.get(o.p)||[]).some(s=>s.phase===r.phase)?0:placed.has(o.p)?1:2;   // placing it this phase first
+  ok.sort((a,b)=>here(a)-here(b)||lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
+  const inPh=ok.filter(o=>(placed.get(o.p)||[]).some(s=>s.phase===r.phase)).length;
+  const anyPh=ok.filter(o=>placed.has(o.p)).length;
+  const where=p=>{const l=(placed.get(p)||[]).slice().sort((a,b)=>a.phase-b.phase||slotSort(a,b));
+    return l.length?l.map(s=>`<span class="wh ${s.phase===r.phase?'now':''}">P${s.phase} · ${esc(s.planet)} op ${esc(s.op)}${s.row!=null?` <small>row ${s.row}</small>`:''}</span>`).join(''):`<span class="wh free">Not placing it</span>`};
+  return`<div class="whocard"><div class="wc-h"><b>${esc(r.unit)}</b><span class="rq-need">needs ${esc(r.lvl)}</span>
+      <span class="wc-n">${ok.length} member${ok.length===1?' has':'s have'} it ready · ${inPh} placing it in phase ${r.phase} · ${anyPh} placing it in any phase · ${ok.length-anyPh} not placing it</span>
+      <button type="button" class="wc-x" aria-label="Close">✕</button></div>
+    ${ok.length?`<div class="scroll"><table class="wctable"><thead><tr><th>Member</th><th>Level</th><th>Placed in the plan</th></tr></thead><tbody>${ok.map(o=>`<tr><td>${esc(o.p)}</td><td><b>${esc(unitLvl(o.u))}</b></td><td>${where(o.p)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="note">Nobody has it at the required level yet.</p>'}
+    ${low.length?`<details class="wc-low"><summary>${low.length} member${low.length===1?' owns':'s own'} it below ${esc(r.lvl)}</summary><div class="names">${low.map(o=>`<span>${esc(o.p)} <small>${esc(unitLvl(o.u))}</small></span>`).join('')}</div></details>`:''}
+    ${r.owners.length<RESULT.players.length?`<p class="note" style="margin:6px 0 0">${RESULT.players.length-r.owners.length} member${RESULT.players.length-r.owners.length===1?" doesn't":"s don't"} have it unlocked.</p>`:''}</div>`;
 }
-function hideWhoTip(){document.querySelectorAll('.whotip').forEach(t=>t.remove())}
-$('#reqView').addEventListener('mouseover',e=>{const el=e.target.closest('.who');if(el)whoTip(el)});
-$('#reqView').addEventListener('mouseout',e=>{const el=e.target.closest('.who');if(el&&!el.contains(e.relatedTarget))hideWhoTip()});
-$('#reqView').addEventListener('click',e=>{const el=e.target.closest('.who');if(el){e.stopPropagation();whoTip(el)}});
-$('#reqView').addEventListener('focusin',e=>{const el=e.target.closest('.who');if(el)whoTip(el)});
-$('#reqView').addEventListener('focusout',hideWhoTip);
-document.addEventListener('click',e=>{if(!e.target.closest('.whotip,.who'))hideWhoTip()});
-addEventListener('scroll',hideWhoTip,{passive:true});
+function toggleWho(el){
+  const ri=+el.dataset.ri,r=REQROWS[ri],tr=el.closest('tr');if(!r||!tr)return;
+  const id=r.phase+'|'+r.key+'|'+el.dataset.pl;
+  const open=tr.nextElementSibling&&tr.nextElementSibling.classList.contains('whorow');
+  document.querySelectorAll('#reqView tr.whorow').forEach(x=>x.remove());
+  document.querySelectorAll('#reqView .who[aria-expanded="true"]').forEach(x=>x.setAttribute('aria-expanded','false'));
+  if(open&&REQOPEN===id){REQOPEN=null;return}
+  REQOPEN=id;el.setAttribute('aria-expanded','true');
+  const row=document.createElement('tr');row.className='whorow';
+  row.innerHTML=`<td colspan="${tr.children.length}">${whoCard(r)}</td>`;
+  tr.after(row);
+  row.querySelector('.wc-x').onclick=()=>{row.remove();el.setAttribute('aria-expanded','false');REQOPEN=null;el.focus()};
+}
+$('#reqView').addEventListener('click',e=>{const el=e.target.closest('.who');if(el){e.preventDefault();toggleWho(el)}});
+$('#reqView').addEventListener('keydown',e=>{const el=e.target.closest('.who');if(el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggleWho(el)}});
 $('#reqPhase').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){REQPH=+b.dataset.ph;renderReq()}});
 $('#reqFilter').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(b){REQF=b.dataset.f;renderReq()}});
 $('#reqCopy').addEventListener('click',async()=>{
