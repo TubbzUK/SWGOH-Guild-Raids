@@ -1024,7 +1024,7 @@ function render(){
     <div class="stat"><b>${active.length}</b><span>members placing</span></div>
     <div class="stat"><b>${active.length?Math.min(...loads.values()):0}–${active.length?Math.max(...active):0}</b><span>units per member</span></div>`;
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===VIEW));
-  let html='';
+  let html=VIEW==='totals'?'':`<div class="phrow" role="group" aria-label="Phase">${RESULT.phases.map(ph=>{const a=phaseSlots(ph),f=a.filter(s=>s.player).length;return`<button class="phchip" data-ph="${ph}" aria-pressed="${ph===PHASE}" title="${f} of ${a.length} slots filled">Phase ${ph}<b>${f}/${a.length}</b></button>`}).join('')}</div>`;
   if(RESULT.missing.length&&VIEW!=='totals')html+=`<div class="warn"><b>Nobody in the roster has:</b> ${RESULT.missing.map(esc).join(', ')}.</div>`;
   if(VIEW==='players'){
     const by=new Map();filled.forEach(s=>{if(!by.has(s.player))by.set(s.player,[]);by.get(s.player).push(s)});
@@ -1048,6 +1048,7 @@ function render(){
     html+=`<div class="scroll"><table><thead><tr><th>Member</th>${T?'<th>Tier</th>':''}${gp&&gp.size?'<th>GP</th>':''}${RESULT.phases.map(ph=>`<th>P${ph}</th>`).join('')}<th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.p)}</td>${T?`<td>T${T.get(r.p)}</td>`:''}${gp&&gp.size?`<td>${fmtGP(gp.get(r.p))}</td>`:''}${r.c.map(c=>`<td>${c||''}</td>`).join('')}<td><b>${r.t}</b></td></tr>`).join('')}</tbody></table></div>`;
   }
   $('#view').innerHTML=html;
+  $('#view').querySelectorAll('.phrow .phchip').forEach(b=>b.addEventListener('click',()=>{PHASE=+b.dataset.ph;render()}));
 }
 document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{VIEW=b.dataset.view;render()}));
 
