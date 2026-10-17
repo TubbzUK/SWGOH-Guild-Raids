@@ -229,6 +229,19 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .reqphase{margin-bottom:22px}
 .reqph{font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:12px}
 .reqplanet{margin-bottom:18px;padding-left:10px;border-left:2px solid var(--saber)}
+/* missing: requirements and sign-ups */
+.reqcards{display:grid;gap:10px}
+.reqcard{border:1px solid var(--line);border-left:3px solid var(--saber);border-radius:4px;padding:10px 12px;background:var(--bg)}
+.rq-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.rq-h b{font-size:15px}
+.rq-ph{font:600 11px var(--f-head);border:1px solid var(--line);border-radius:3px;padding:0 6px}
+.rq-need{font-size:12.5px;opacity:.8}.rq-short{font-size:12px;font-weight:600;color:var(--bad-ink);background:var(--bad-bg);border-radius:999px;padding:1px 8px}
+.rq-cl,.rq-pl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:6px;font-size:13px}
+.rq-lbl{font:600 10.5px var(--f-head);letter-spacing:.08em;text-transform:uppercase;opacity:.7;min-width:96px}
+.rq-cl .cl{border:1px solid var(--line);border-radius:4px;padding:2px 8px;background:var(--panel)}.rq-cl .cl small{opacity:.75}
+.rq-pl select.pledge{width:auto;min-width:200px;max-width:100%;padding:6px 8px;font-size:13px}
+.rq-pl .done{font-size:12px;font-weight:600;color:var(--good-ink)}
+@media (max-width:600px){.rq-pl select.pledge{min-width:0;width:100%}.rq-lbl{min-width:0;width:100%}}
 /* simulate */
 .simph{margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
 .simph h3{margin:0 0 8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
@@ -1270,6 +1283,7 @@ $('#simApply').addEventListener('click',()=>{
 
 function renderMissing(){
   if(!RESULT)return;
+  if(!PLEDGES_LOADED)loadPledges();
   let res=RESULT;
   if(MSCOPE==='all'){if(!RESULT.all)RESULT.all=assign(RESULT.roster,RESULT.plan,RESULT.o,true);res=RESULT.all}
   document.querySelectorAll('#mScope .phchip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scope===MSCOPE));
@@ -1295,14 +1309,74 @@ function renderMissing(){
       .sort((a,b)=>(b.u.relic??-1)-(a.u.relic??-1)||(b.u.gear??0)-(a.u.gear??0)||(b.u.stars??0)-(a.u.stars??0));
     if(!list.length)return'<span class="note">Nobody owns it below the requirement</span>';
     return list.slice(0,6).map(x=>`${esc(x.p)} <small>${lvlText(x.u)}</small>`).join(', ')+(list.length>6?` <span class="note">and ${list.length-6} more</span>`:'')};
-  let html=`<h3 style="margin-bottom:8px">Characters the guild is short on</h3>
-    <p class="note">Short by is how many more members need the unit at the required level. Closest lists members who own it but haven’t reached that level yet.</p>
-    <div class="scroll"><table><thead><tr>${MPHASE?'':'<th>Phase</th>'}<th>Unit and closest members</th><th>Short by</th><th>Needs</th></tr></thead><tbody>${rows.map(x=>`<tr style="vertical-align:top">${MPHASE?'':`<td>P${x.s.phase}</td>`}<td style="white-space:normal;min-width:180px">${esc(x.s.unit)}${x.s.gl?'<span class="gl">GL</span>':''}<br><small style="color:var(--text-2)">Closest: ${close(x.s)}</small></td><td><b>${x.count}</b></td><td>${need(x.s)}</td></tr>`).join('')}</tbody></table></div>
+  // every missing requirement, the members closest to it, and who has said they'll get it there
+  const pk=x=>`${x.s.phase}|${x.s.zone??x.s.phase}|${x.s.key}|${need(x.s)}`;
+  const dist=(u,s)=>{const ship=s.ship||u.ship;if(ship){const n=s.minStars??RESULT.o.minStars;return{d:Math.max(0,n-(u.stars||0)),t:`${Math.max(0,n-(u.stars||0))}★ to go`}}
+    const n=s.minRelic??RESULT.o.relic[s.zone??s.phase]??0;
+    if(u.gear!=null&&u.gear<13)return{d:(13-u.gear)*2+n+1,t:`G${u.gear} → G13, then R${n}`};
+    const r=u.relic??0;return{d:Math.max(0,n-r),t:`${Math.max(0,n-r)} relic level${n-r===1?'':'s'} to go`}};
+  const cand=x=>{const own=[],none=[];RESULT.players.forEach(p=>{const u=unitOf(RESULT.roster,p,x.s);if(u&&u.stars!==0){if(!qualifies(u,x.s,RESULT.o))own.push({p,u,...dist(u,x.s)})}else none.push(p)});
+    own.sort((a,b)=>a.d-b.d||a.p.localeCompare(b.p));none.sort((a,b)=>a.localeCompare(b));return{own,none}};
+  const P=pledges();
+  const reqHtml=rows.map(x=>{
+    const k=pk(x),c=cand(x),picked=P[k]||[];
+    const ops=[...x.ops];
+    const ready=p=>{const u=unitOf(RESULT.roster,p,x.s);return u&&qualifies(u,x.s,RESULT.o)};
+    const sel=i=>{const cur=picked[i]||'';return`<select class="pledge" data-k="${esc(k)}" data-i="${i}" aria-label="Who will get ${esc(x.s.unit)} to ${need(x.s)} (${i+1} of ${x.count})"><option value="">— pick a member —</option>
+      ${c.own.length?`<optgroup label="Own it - closest first">${c.own.map(o=>`<option value="${esc(o.p)}" ${o.p===cur?'selected':''}>${esc(o.p)} · ${lvlText(o.u)} (${esc(o.t)})</option>`).join('')}</optgroup>`:''}
+      ${c.none.length?`<optgroup label="Not unlocked yet">${c.none.map(p=>`<option value="${esc(p)}" ${p===cur?'selected':''}>${esc(p)}</option>`).join('')}</optgroup>`:''}
+      ${cur&&!c.own.some(o=>o.p===cur)&&!c.none.includes(cur)?`<option value="${esc(cur)}" selected>${esc(cur)}${ready(cur)?' ✓ done':''}</option>`:''}</select>${cur&&ready(cur)?'<span class="done">✓ done</span>':''}`};
+    const closest=c.own.length?c.own.slice(0,8).map(o=>`<span class="cl">${esc(o.p)} <small>${lvlText(o.u)} · ${esc(o.t)}</small></span>`).join('')+(c.own.length>8?`<span class="note">and ${c.own.length-8} more in the list</span>`:''):'<span class="note">Nobody owns it below the requirement yet</span>';
+    return`<div class="reqcard"><div class="rq-h"><span class="rq-ph">P${x.s.phase}</span><b>${esc(x.s.unit)}</b>${x.s.gl?'<span class="gl">GL</span>':''}<span class="rq-need">needs ${need(x.s)}</span><span class="rq-short">short by ${x.count}</span></div>
+      <div class="note" style="margin:2px 0 6px">${ops.slice(0,6).map(esc).join(' · ')}${ops.length>6?` and ${ops.length-6} more`:''}</div>
+      <div class="rq-cl"><span class="rq-lbl">Closest</span>${closest}</div>
+      <div class="rq-pl"><span class="rq-lbl">Who will do it</span>${Array.from({length:x.count},(_,i)=>sel(i)).join('')}</div></div>`}).join('');
+  const nPicked=rows.reduce((a,x)=>a+(P[pk(x)]||[]).filter(Boolean).length,0),nNeed=rows.reduce((a,x)=>a+x.count,0);
+  let html=`<h3 style="margin-bottom:6px">Everything missing</h3>
+    <p class="note">Each unit the guild is short on, how many more members need it at the required level, the members closest to getting there, and a box for each one needed so people can sign up for it. ${unlocked?'Press <b>Save sign-ups</b> to share them with the guild.':'Pick your name, then ask an officer to save the sign-ups (officers: Save sign-ups asks for the officer password).'}</p>
+    <div class="toolbar"><button class="btn primary" id="pledgeSave">Save sign-ups</button><button class="btn" id="pledgeCopy">Copy sign-ups for Discord</button><span class="note" id="pledgeState" style="margin:0">${nPicked}/${nNeed} signed up${PLEDGE_DIRTY?' · <b>not saved yet</b>':PLEDGES_SAVED_AT?` · saved ${esc(new Date(PLEDGES_SAVED_AT).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}`:''}</span></div>
+    <div id="pledgeMsg"></div>
+    <div class="reqcards">${reqHtml}</div>
     <h3 style="margin:20px 0 8px">Incomplete operations</h3>`;
   html+=broken.map(o=>`<div class="task"><h3>${MPHASE?'':`Phase ${o.phase}, `}${esc(o.planet)}, operation ${esc(o.op)} <span class="note">${o.total-o.missing.length}/${o.total} filled</span></h3><ul>${o.missing.sort(slotSort).map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${s.row!=null?` <small>row ${s.row}</small>`:''}<br><small>${esc(s.reason||'')}</small></li>`).join('')}</ul></div>`).join('');
   $('#mView').innerHTML=html;
+  $('#mView').querySelectorAll('select.pledge').forEach(el=>el.onchange=()=>{
+    const k=el.dataset.k,i=+el.dataset.i,cur=pledges();const arr=(cur[k]||[]).slice();
+    if(el.value&&arr.some((v,j)=>v===el.value&&j!==i)){showMsg('#pledgeMsg','err',`${esc(el.value)} is already down for this one.`);el.value=arr[i]||'';return}
+    arr[i]=el.value;while(arr.length&&!arr[arr.length-1])arr.pop();
+    if(arr.length)cur[k]=arr;else delete cur[k];
+    PLEDGE_DRAFT=cur;PLEDGE_DIRTY=true;store.set(K('rote-pledges'),JSON.stringify(cur));
+    const y=scrollY;renderMissing();scrollTo(0,y);
+  });
+  $('#pledgeSave').onclick=()=>withLogin(savePledges);
+  $('#pledgeCopy').onclick=async()=>{
+    const P=pledges(),lines=[];
+    rows.forEach(x=>{const v=(P[pk(x)]||[]).filter(Boolean);lines.push(`**P${x.s.phase} ${x.s.unit}** to ${need(x.s)} (short by ${x.count}): ${v.length?v.join(', '):'nobody yet'}`)});
+    const t='Platoon sign-ups\n'+lines.join('\n');
+    try{await navigator.clipboard.writeText(t);showMsg('#pledgeMsg','ok','Copied - paste it into Discord.')}catch(e){showMsg('#pledgeMsg','err','Copy was blocked here. Select the text below and copy it.<textarea readonly style="margin-top:6px">'+esc(t)+'</textarea>')}
+  };
 }
-$('#missingBtn').addEventListener('click',()=>setMode('missing'));
+// sign-ups: saved ones come from the site (guilds/<guild>/platoon-pledges.json); picks not saved yet stay on this device
+let PLEDGES_SAVED={},PLEDGES_SAVED_AT=null,PLEDGE_DRAFT=null,PLEDGE_DIRTY=false,PLEDGES_LOADED=false;
+function pledges(){return JSON.parse(JSON.stringify(PLEDGE_DRAFT||PLEDGES_SAVED||{}))}
+async function loadPledges(){
+  if(PLEDGES_LOADED)return;PLEDGES_LOADED=true;
+  const d=await getJSON(`data/${encodeURIComponent(GUILD)}/platoon-pledges.json`);
+  if(d&&d.pledges){PLEDGES_SAVED=d.pledges;PLEDGES_SAVED_AT=d.savedAt||null}
+  try{const loc=JSON.parse(store.get(K('rote-pledges'))||'null');if(loc&&JSON.stringify(loc)!==JSON.stringify(PLEDGES_SAVED)){PLEDGE_DRAFT=loc;PLEDGE_DIRTY=true}}catch(e){}
+  if(MODE==='missing')renderMissing();
+}
+async function savePledges(){
+  const b=$('#pledgeSave');if(b){b.disabled=true;b.textContent='Saving…'}
+  try{
+    const P=pledges(),at=new Date().toISOString();
+    await putFile(`guilds/${GUILD}/platoon-pledges.json`,JSON.stringify({savedAt:at,pledges:P},null,1),`Save ${guildName()} platoon sign-ups`);
+    PLEDGES_SAVED=P;PLEDGES_SAVED_AT=at;PLEDGE_DRAFT=null;PLEDGE_DIRTY=false;store.set(K('rote-pledges'),JSON.stringify(P));
+    renderMissing();showMsg('#pledgeMsg','ok','Saved. Everyone sees these sign-ups in about two minutes.');
+  }catch(e){showMsg('#pledgeMsg','err','Saving didn’t work: '+esc(e.message||e))}
+  finally{const b2=$('#pledgeSave');if(b2){b2.disabled=false;b2.textContent='Save sign-ups'}}
+}
+$('#missingBtn').addEventListener('click',()=>{loadPledges();setMode('missing')});
 $('#mScope').addEventListener('click',e=>{const b=e.target.closest('[data-scope]');if(b){MSCOPE=b.dataset.scope;renderMissing()}});
 $('#mPhase').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){MPHASE=+b.dataset.ph;renderMissing()}});
 
@@ -1381,7 +1455,7 @@ async function tryRemembered(){
   return false}
 async function askPassword(n){
   gatePane=n;
-  if(await tryRemembered()){unlocked=true;openMenu(n);renderSaved();return}
+  if(await tryRemembered()){unlocked=true;if(n==='__cb'){const f=afterLogin;afterLogin=null;f&&f()}else openMenu(n);renderSaved();return}
   const pw=!!SITE.keyBlob;
   $('#pwLabel').textContent=pw?'Officer password':'GitHub access token';
   $('#gateNote').textContent=pw?'The menu is for officers. Enter the officer password (the same one as the upload page).':'No officer password has been set up yet. Enter a GitHub access token, or set up the officer password on the upload page.';
@@ -1395,8 +1469,10 @@ $('#gateForm').addEventListener('submit',async e=>{
   if(!r){showMsg('#gateMsg','err',SITE.keyBlob?'That password isn’t right.':'That doesn’t look like a GitHub token (they start github_pat_).');$('#pw').select();return}
   TOKEN=r.tok;unlocked=true;
   try{if($('#pwRemember').checked){if(r.kind==='pw')localStorage.setItem('raidTrackerPassword',secret);else localStorage.setItem('raidTrackerToken',secret)}}catch(err){}
-  closeGate();openMenu(gatePane);renderSaved();
+  closeGate();if(gatePane==='__cb'){const f=afterLogin;afterLogin=null;f&&f()}else openMenu(gatePane);renderSaved();
 });
+let afterLogin=null;
+function withLogin(cb){if(unlocked&&TOKEN){cb();return}afterLogin=cb;askPassword('__cb')}
 $('#gateCancel').addEventListener('click',closeGate);
 $('#lock').addEventListener('click',()=>{unlocked=false;TOKEN=null;try{localStorage.removeItem('raidTrackerPassword');localStorage.removeItem('raidTrackerToken')}catch(e){}closeMenu()});
 $('#lock').textContent='Lock and forget login';

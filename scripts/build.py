@@ -933,6 +933,8 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
             shutil.copy2(gdir / name, out_dir / name)
     if (gdir / "platoon-settings.json").exists():
         shutil.copy2(gdir / "platoon-settings.json", out_dir / "platoon-settings.json")
+    if (gdir / "platoon-pledges.json").exists():           # who has signed up to fill missing platoon units
+        shutil.copy2(gdir / "platoon-pledges.json", out_dir / "platoon-pledges.json")
     saved = gdir / "platoons.json"
     platoons_saved = None
     if saved.exists():

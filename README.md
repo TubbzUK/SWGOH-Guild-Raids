@@ -215,6 +215,12 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   side menu → ⚙ Platoon planner: data, or upload a new file over it on GitHub.
 - **Saved assignments:** `guilds/<guild>/platoons.json`, written by **Save and share**. Members see
   the new assignments about two minutes after saving.
+- **Missing platoons** lists everything the chosen operations are short of: each unit, the level needed,
+  how many more members need it, which operations it blocks, and the members closest to getting there
+  (with how many relic levels or stars they have to go). Each one has a box per member needed, so people
+  can sign up by picking their name (closest first). Officers press **Save sign-ups** to share them
+  (saved to guilds/<guild>/platoon-pledges.json); once a signed-up member's roster reaches the level it
+  shows ✓ done. **Copy sign-ups for Discord** gives a ready-to-paste list.
 - **Simulate** (button next to Missing platoons) plays the TB through phase by phase with the roster and
   rules: each phase it keeps the set of open operations the guild can fill completely and holds the rest
   for a later phase, then shows the suggested order, the operations nobody can fill yet (and why), and
