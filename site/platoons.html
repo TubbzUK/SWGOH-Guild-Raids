@@ -229,6 +229,25 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .reqphase{margin-bottom:22px}
 .reqph{font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:12px}
 .reqplanet{margin-bottom:18px;padding-left:10px;border-left:2px solid var(--saber)}
+/* simulate */
+.simph{margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.simph h3{margin:0 0 8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.simph h3 small{font-weight:400;color:var(--ink-2,inherit);opacity:.8;font-size:12.5px;letter-spacing:0}
+.simops{display:flex;flex-wrap:wrap;gap:6px}
+.simop{border:1px solid var(--line);border-radius:4px;padding:4px 8px;font-size:12.5px;background:var(--panel)}
+.simop b{font-weight:600}
+.simop.held{border-style:dashed;border-color:var(--saber)}
+.simop.moved{box-shadow:inset 3px 0 0 var(--amber)}
+.simgap{margin:0 0 10px;padding:10px 12px;border-left:3px solid #e5484d;background:var(--bg);border-radius:0 6px 6px 0}
+.simgap.fit{border-left-color:var(--amber)}
+.simgap ul{margin:6px 0 0;padding-left:18px;font-size:13px}
+.simup td,.simup th{text-align:right}.simup td:first-child,.simup th:first-child{text-align:left}
+/* requirements: who has it */
+.reqtable .nm .who{display:inline!important;width:auto!important;cursor:help;border-bottom:1px dotted currentColor}
+.whotip{position:absolute;z-index:80;max-width:340px;background:var(--panel);color:var(--ink);border:1px solid var(--saber);border-radius:6px;padding:10px 12px;font-size:12.5px;line-height:1.45;box-shadow:0 12px 34px rgba(0,0,0,.45)}
+.whotip h4{margin:0 0 6px;font-size:13px}
+.whotip .grp{margin-top:6px}.whotip .grp b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:2px}
+.whotip .names{display:flex;flex-wrap:wrap;gap:3px 8px}.whotip .names span small{opacity:.7;margin-left:3px}
 .reqplanet h3{margin-bottom:4px}
 .reqtable td,.reqtable th{text-align:right}
 .reqtable .nm,.reqtable th:first-child{text-align:left;white-space:normal;min-width:120px}
@@ -377,7 +396,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
 
   <details class="planets" id="planetSum" hidden open><summary id="planetSumTitle">Planets this guild is filling</summary><div id="planetSumBody"></div></details>
   <div class="savebar" id="savedInfo" hidden=""></div>
-  <div class="row" id="mainbar" hidden="" style="margin-bottom:12px"><button class="btn" id="assignBtn" aria-pressed="true">Assignments</button><button class="btn" id="summaryBtn" aria-pressed="false">Summary</button><button class="btn" id="reqBtn" aria-pressed="false">Requirements</button><button class="btn" id="missingBtn" aria-pressed="false">Missing platoons</button></div>
+  <div class="row" id="mainbar" hidden="" style="margin-bottom:12px"><button class="btn" id="assignBtn" aria-pressed="true">Assignments</button><button class="btn" id="summaryBtn" aria-pressed="false">Summary</button><button class="btn" id="reqBtn" aria-pressed="false">Requirements</button><button class="btn" id="missingBtn" aria-pressed="false">Missing platoons</button><button class="btn" id="simBtn" aria-pressed="false">Simulate</button></div>
 
   <section class="panel" id="req" hidden="">
     <h2>Requirements</h2>
@@ -400,6 +419,15 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
     <div id="sumMsg"></div>
     <p class="note">Tap a column heading to sort.</p>
     <div class="scroll" id="sumView"></div>
+  </section>
+
+  <section class="panel" id="sim" hidden="">
+    <h2>Simulate the territory battle</h2>
+    <p class="note">Plays the TB through phase by phase with your guild's roster and the rules in the menu. Each phase it tries every chosen operation that's open and not done yet, keeps the set the guild can fill completely, and holds the rest for a later phase when everyone's units are free again (a unit can be placed once per phase). It then shows which operations to fill in which phase, and the gaps: operations nobody can fill yet, and the upgrades that would unlock them.</p>
+    <div class="toolbar"><button class="btn primary" id="simRun">Run the simulation</button><button class="btn" id="simApply" hidden>Use this schedule</button><span id="simWhen" class="note" style="margin:0"></span></div>
+    <div id="simMsg"></div>
+    <div class="stats" id="simStats"></div>
+    <div id="simView"></div>
   </section>
 
   <section class="panel" id="missing" hidden="">
@@ -1005,9 +1033,9 @@ const lvlText=u=>u.ship?`${u.stars??'?'}★`:u.gear!=null&&u.gear<13?`G${u.gear}
 let MODE='assign';
 function setMode(m,scroll=true){
   MODE=m;MISSING=m==='missing';
-  $('#assignBtn').setAttribute('aria-pressed',m==='assign');$('#missingBtn').setAttribute('aria-pressed',m==='missing');$('#summaryBtn').setAttribute('aria-pressed',m==='summary');$('#reqBtn').setAttribute('aria-pressed',m==='req');
+  $('#assignBtn').setAttribute('aria-pressed',m==='assign');$('#missingBtn').setAttribute('aria-pressed',m==='missing');$('#summaryBtn').setAttribute('aria-pressed',m==='summary');$('#reqBtn').setAttribute('aria-pressed',m==='req');$('#simBtn').setAttribute('aria-pressed',m==='sim');$('#sim').hidden=m!=='sim';
   $('#missing').hidden=m!=='missing';$('#summary').hidden=m!=='summary';$('#req').hidden=m!=='req';$('#results').hidden=m!=='assign';
-  if(m==='missing')renderMissing();if(m==='summary')renderSummary();if(m==='req')renderReq();
+  if(m==='missing')renderMissing();if(m==='summary')renderSummary();if(m==='req')renderReq();if(m==='sim')renderSim();
   if(scroll)$('#'+(m==='assign'?'results':m)).scrollIntoView({behavior:'smooth'});
 }
 function showMissing(on){setMode(on?'missing':'assign')}
@@ -1059,10 +1087,10 @@ function reqData(){
       if(!P.units.has(s.key))P.units.set(s.key,{s,need:0});P.units.get(s.key).need++});
     const planets=[...byPlanet.values()].sort((a,b)=>a.zone-b.zone||a.planet.localeCompare(b.planet)).map(P=>{
       const rows=[...P.units.values()].map(({s,need})=>{
-        let have=0,below=0;R.players.forEach(p=>{const u=unitOf(R.roster,p,s);if(!u||u.stars===0)return;if(qualifies(u,s,R.o))have++;else below++});
+        let have=0,below=0;const owners=[];R.players.forEach(p=>{const u=unitOf(R.roster,p,s);if(!u||u.stars===0)return;const ok=qualifies(u,s,R.o);if(ok)have++;else below++;owners.push({p,u,ok})});
         const pn=phaseNeed.get(s.key);
         const lvl=isShip(s)?`${s.minStars??R.o.minStars}★`:`R${s.minRelic??R.o.relic[s.zone??s.phase]??0}`;
-        return{unit:s.unit,gl:!!s.gl||glKeys(R.o.gl).has(s.key)||glKeys(R.o.gl).has(s.nameKey),need,phaseNeed:pn,have,diff:have-pn,below,lvl};
+        return{unit:s.unit,gl:!!s.gl||glKeys(R.o.gl).has(s.key)||glKeys(R.o.gl).has(s.nameKey),need,phaseNeed:pn,have,diff:have-pn,below,lvl,owners};
       }).sort((a,b)=>a.diff-b.diff||a.unit.localeCompare(b.unit));
       return{...P,ops:[...P.ops].sort(cmpOp),rows};
     });
@@ -1085,7 +1113,7 @@ function renderReq(){
     <div class="stat"><b>${short.size}</b><span>characters short</span></div>
     <div class="stat"><b>${[...short.values()].reduce((a,b)=>a+b,0)}</b><span>upgrades needed</span></div>`;
   const sign=v=>v>0?`+${v}`:v<0?`−${-v}`:'0';
-  let html='';
+  let html='';REQROWS=[];
   for(const d of shown){
     html+=`<div class="reqphase"><h3 class="reqph">Phase ${d.phase}</h3>`;
     for(const P of d.planets){
@@ -1094,12 +1122,36 @@ function renderReq(){
       html+=`<div class="reqplanet"><h3>${esc(P.planet)}${P.zone!==d.phase?`<span class="carry">phase ${P.zone} planet</span>`:''}</h3>
         <p class="note">Operations ${P.ops.map(esc).join(', ')}. ${P.slots} slots, ${P.rows.length} different characters, ${P.rows.reduce((a,r)=>a+r.need,0)} needed in total${nShort?`, <b class="neg">${nShort} short</b>`:', none short'}.</p>`;
       if(!rows.length){html+='<p class="note">Nothing short on this planet.</p></div>';continue}
-      html+=`<div class="scroll"><table class="reqtable"><thead><tr><th>Character</th><th>Need</th><th>Have</th><th>Diff</th><th>Can upgrade</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.diff<0?'isneg':''}"><td class="nm">${esc(r.unit)}${r.gl?'<span class="gl">GL</span>':''}<br><small>${r.lvl}${r.phaseNeed!==r.need?`, ${r.phaseNeed} needed across phase ${d.phase}`:''}</small></td><td>${r.need}</td><td>${r.have}</td><td class="${r.diff<0?'neg':r.diff>0?'pos':''}"><b>${sign(r.diff)}</b></td><td>${r.below||'<span class="z">0</span>'}</td></tr>`).join('')}</tbody></table></div></div>`;
+      html+=`<div class="scroll"><table class="reqtable"><thead><tr><th>Character</th><th>Need</th><th>Have</th><th>Diff</th><th>Can upgrade</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.diff<0?'isneg':''}"><td class="nm"><span class="who" tabindex="0" data-ri="${REQROWS.push(r)-1}" aria-label="${esc(r.unit)}: who has it">${esc(r.unit)}</span>${r.gl?'<span class="gl">GL</span>':''}<br><small>${r.lvl}${r.phaseNeed!==r.need?`, ${r.phaseNeed} needed across phase ${d.phase}`:''}</small></td><td>${r.need}</td><td>${r.have}</td><td class="${r.diff<0?'neg':r.diff>0?'pos':''}"><b>${sign(r.diff)}</b></td><td>${r.below||'<span class="z">0</span>'}</td></tr>`).join('')}</tbody></table></div></div>`;
     }
     html+='</div>';
   }
   $('#reqView').innerHTML=html||'<p>No operations are chosen.</p>';
 }
+// hover (or tap) a character on the Requirements tab: which members have it, and at what level
+let REQROWS=[];
+const unitLvl=u=>u.ship?`${u.stars??'?'}★`:u.relic!=null&&u.relic>0?`R${u.relic}`:u.gear!=null?`G${u.gear}`:u.stars!=null?`${u.stars}★`:'';
+function whoTip(el){
+  hideWhoTip();
+  const r=REQROWS[+el.dataset.ri];if(!r)return;
+  const lvlN=u=>u.ship?(u.stars||0):(u.relic||0)*20+(u.gear||0);
+  const ok=r.owners.filter(o=>o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p)),low=r.owners.filter(o=>!o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
+  const names=l=>l.length?`<div class="names">${l.map(o=>`<span>${esc(o.p)}<small>${esc(unitLvl(o.u))}</small></span>`).join('')}</div>`:'<div class="names"><span>Nobody</span></div>';
+  const t=document.createElement('div');t.className='whotip';t.setAttribute('role','tooltip');
+  t.innerHTML=`<h4>${esc(r.unit)} <small>(needs ${esc(r.lvl)})</small></h4><div class="grp"><b>Ready – ${ok.length}</b>${names(ok)}</div><div class="grp"><b>Own it, below ${esc(r.lvl)} – ${low.length}</b>${names(low)}</div>${r.owners.length<RESULT.players.length?`<div class="grp" style="opacity:.75">${RESULT.players.length-r.owners.length} member${RESULT.players.length-r.owners.length===1?" doesn't":"s don't"} have it unlocked</div>`:''}`;
+  document.body.appendChild(t);
+  const b=el.getBoundingClientRect(),w=t.offsetWidth,h=t.offsetHeight;
+  let left=Math.min(innerWidth-w-8,Math.max(8,b.left)),top=b.bottom+6;if(top+h>innerHeight-8)top=Math.max(8,b.top-h-6);
+  t.style.left=left+scrollX+'px';t.style.top=top+scrollY+'px';
+}
+function hideWhoTip(){document.querySelectorAll('.whotip').forEach(t=>t.remove())}
+$('#reqView').addEventListener('mouseover',e=>{const el=e.target.closest('.who');if(el)whoTip(el)});
+$('#reqView').addEventListener('mouseout',e=>{const el=e.target.closest('.who');if(el&&!el.contains(e.relatedTarget))hideWhoTip()});
+$('#reqView').addEventListener('click',e=>{const el=e.target.closest('.who');if(el){e.stopPropagation();whoTip(el)}});
+$('#reqView').addEventListener('focusin',e=>{const el=e.target.closest('.who');if(el)whoTip(el)});
+$('#reqView').addEventListener('focusout',hideWhoTip);
+document.addEventListener('click',e=>{if(!e.target.closest('.whotip,.who'))hideWhoTip()});
+addEventListener('scroll',hideWhoTip,{passive:true});
 $('#reqPhase').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){REQPH=+b.dataset.ph;renderReq()}});
 $('#reqFilter').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(b){REQF=b.dataset.f;renderReq()}});
 $('#reqCopy').addEventListener('click',async()=>{
@@ -1117,6 +1169,105 @@ $('#sumCopy').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(lines);showMsg('#sumMsg','ok','Copied. Paste into cell A1 of a new tab.')}
   catch(e){showMsg('#sumMsg','err','Copy was blocked here. Select the text below and copy it.<textarea readonly style="margin-top:6px">'+esc(lines)+'</textarea>')}
 });
+/* ---------- Simulate: which operations to fill in which phase ----------
+   A greedy look-ahead: phase by phase, try every chosen operation that is open (its planet's phase or later)
+   and not done yet, run the normal assignment, and if some can't be filled completely drop the one missing
+   the most and try again; then add back any dropped one that fits. Dropped operations wait for a later phase. */
+let SIM=null;
+function simTrial(R,ids,phase){
+  const all=new Set(R.plan.slots.map(s=>`${s.phase}|${s.planet}|${s.op}`));
+  const keepD=DEPLOY,keepO=OFF;
+  DEPLOY=new Map([...all].map(k=>[k,ids.has(k)?phase:0]));OFF=new Set();
+  let res;try{res=assign(R.roster,R.plan,R.o)}finally{DEPLOY=keepD;OFF=keepO}
+  const open=new Map();res.slots.forEach(s=>{const k=opId(s);if(!open.has(k))open.set(k,{empty:0,miss:[]});if(!s.player){const o=open.get(k);o.empty++;o.miss.push(s)}});
+  return{res,open};
+}
+function simulate(){
+  const R=RESULT;if(!R)return null;
+  const depR=s=>{const k=`${s.phase}|${s.planet}|${s.op}`;const d=R.deploy||{};if(k in d)return +d[k];return(R.off||[]).includes(k)?0:s.phase};
+  const ops=new Map();
+  R.plan.slots.forEach(s=>{const k=`${s.phase}|${s.planet}|${s.op}`;const d=depR(s);if(d>0&&!ops.has(k))ops.set(k,{id:k,zone:s.phase,planet:s.planet,op:s.op,cur:d,slots:0});if(ops.has(k))ops.get(k).slots++});
+  if(!ops.size)return{empty:true};
+  const last=Math.max(6,...[...ops.values()].map(o=>o.zone));
+  // operations nobody can fill even on their own (a unit nobody has at the level, or too few members with it)
+  const never=new Map();
+  for(const o of ops.values()){const t=simTrial(R,new Set([o.id]),Math.max(o.zone,1)).open.get(o.id);if(t&&t.empty)never.set(o.id,t.miss)}
+  const remaining=new Set([...ops.keys()].filter(k=>!never.has(k)));
+  const sched=[],when=new Map();
+  for(let P=1;P<=last;P++){
+    let cand=new Set([...remaining].filter(k=>ops.get(k).zone<=P));
+    if(!cand.size){sched.push({phase:P,ops:[],held:[]});continue}
+    const dropped=[];let t;
+    for(;;){
+      t=simTrial(R,cand,P);
+      const bad=[...cand].map(k=>[k,t.open.get(k)?.empty||0]).filter(x=>x[1]>0);
+      if(!bad.length)break;
+      // drop the operation missing the most; on a tie, the newest planet (it has the most phases left)
+      bad.sort((a,b)=>b[1]-a[1]||ops.get(b[0]).zone-ops.get(a[0]).zone||a[0].localeCompare(b[0]));
+      cand.delete(bad[0][0]);dropped.push(bad[0][0]);
+      if(!cand.size)break;
+    }
+    // try to add back what was dropped, easiest first
+    for(const k of dropped.slice().reverse()){const n=new Set(cand);n.add(k);const tt=simTrial(R,n,P);if([...n].every(x=>!(tt.open.get(x)?.empty))){cand=n;t=tt}}
+    cand.forEach(k=>{remaining.delete(k);when.set(k,P)});
+    sched.push({phase:P,ops:[...cand],held:[...remaining].filter(k=>ops.get(k).zone<=P),slots:[...cand].reduce((a,k)=>a+ops.get(k).slots,0)});
+  }
+  // the guild's current plan, for comparison
+  const cur=new Map();R.slots.forEach(s=>{const k=opId(s);if(!cur.has(k))cur.set(k,0);if(!s.player)cur.set(k,cur.get(k)+1)});
+  const curDone=[...cur.values()].filter(v=>v===0).length;
+  // upgrades that would unlock the operations nobody can fill
+  const ups=new Map();
+  never.forEach((miss,k)=>{const seen=new Set();miss.forEach(s=>{const lvl=(s.ship||R.players.some(p=>unitOf(R.roster,p,s)?.ship))?`${s.minStars??R.o.minStars}★`:`R${s.minRelic??R.o.relic[s.zone??s.phase]??0}`;
+    const key=s.key+'|'+lvl;if(!ups.has(key))ups.set(key,{unit:s.unit,lvl,slots:0,ops:new Set(),have:0,s});const u=ups.get(key);u.slots++;u.ops.add(k);seen.add(key)})});
+  ups.forEach(u=>{u.have=R.players.filter(p=>qualifies(unitOf(R.roster,p,u.s),u.s,R.o)).length;u.owners=R.players.filter(p=>{const x=unitOf(R.roster,p,u.s);return x&&x.stars!==0&&!qualifies(x,u.s,R.o)}).length});
+  return{ops,never,sched,when,left:[...remaining],last,curDone,curTotal:cur.size,ups:[...ups.values()].sort((a,b)=>b.ops.size-a.ops.size||b.slots-a.slots||a.unit.localeCompare(b.unit)),at:new Date()};
+}
+function renderSim(){
+  if(!SIM){$('#simStats').innerHTML='';$('#simView').innerHTML='<p class="note">Press <b>Run the simulation</b>. It takes a few seconds.</p>';$('#simApply').hidden=true;return}
+  if(SIM.empty){$('#simView').innerHTML='<p>No operations are chosen.</p>';return}
+  const S=SIM,O=S.ops,done=[...S.when.keys()].length;
+  const byPlanet=ids=>{const m=new Map();ids.forEach(k=>{const o=O.get(k);const pk=o.zone+'|'+o.planet;if(!m.has(pk))m.set(pk,{o,list:[]});m.get(pk).list.push(o)});return[...m.values()].sort((a,b)=>a.o.zone-b.o.zone||a.o.planet.localeCompare(b.o.planet))};
+  const chip=(g,P,cls='')=>`<span class="simop ${cls} ${g.o.zone<P?'held':''}" title="${g.o.zone<P?`Phase ${g.o.zone} planet, filled later`:''}"><b>${esc(g.o.planet)}</b> · op${g.list.length>1?'s':''} ${g.list.map(o=>esc(o.op)).sort(cmpOp).join(', ')}${g.o.zone<P?` <span class="carry">from P${g.o.zone}</span>`:''}</span>`;
+  $('#simStats').innerHTML=`<div class="stat"><b>${done}/${O.size}</b><span>operations completed</span></div>
+    <div class="stat"><b>${S.curDone}/${S.curTotal}</b><span>with your current plan</span></div>
+    <div class="stat"><b>${S.never.size}</b><span>can't be filled yet</span></div>
+    <div class="stat"><b>${S.left.length}</b><span>don't fit in any phase</span></div>`;
+  let h='<h3>Suggested order</h3>';
+  for(const ph of S.sched){
+    const moved=ph.ops.filter(k=>O.get(k).cur!==ph.phase);
+    h+=`<div class="simph"><h3>Phase ${ph.phase} <small>${ph.ops.length?`fill ${ph.ops.length} operation${ph.ops.length===1?'':'s'} · ${ph.slots} slots${moved.length?` · ${moved.length} moved from your current plan`:''}`:'nothing to fill'}</small></h3>
+      <div class="simops">${byPlanet(ph.ops).map(g=>chip(g,ph.phase)).join('')||'<span class="note">—</span>'}</div>
+      ${ph.held.length?`<p class="note" style="margin:8px 0 0">Held for later (not enough free units this phase): ${byPlanet(ph.held).map(g=>`${esc(g.o.planet)} op${g.list.length>1?'s':''} ${g.list.map(o=>esc(o.op)).sort(cmpOp).join(', ')}`).join(' · ')}</p>`:''}</div>`;
+  }
+  h+='<h3 style="margin-top:18px">Gaps</h3>';
+  if(!S.never.size&&!S.left.length)h+='<p>Every chosen operation can be completed. 🎉</p>';
+  if(S.never.size){
+    h+=`<p class="note">${S.never.size} operation${S.never.size===1?'':'s'} can't be filled by anyone yet, even on ${S.never.size===1?'its':'their'} own:</p>`;
+    for(const [k,miss] of S.never){const o=O.get(k);const g=new Map();miss.forEach(s=>{g.set(s.unit,(g.get(s.unit)||0)+1)});
+      h+=`<div class="simgap"><b>${esc(o.planet)}</b> · op ${esc(o.op)} <span class="carry">phase ${o.zone}</span> — ${miss.length} of ${o.slots} slot${o.slots===1?'':'s'} can't be filled<ul>${[...g].map(([u,n])=>`<li>${esc(u)}${n>1?` ×${n}`:''}: ${esc(miss.find(s=>s.unit===u).reason||'')}</li>`).join('')}</ul></div>`}
+  }
+  if(S.left.length){
+    h+=`<p class="note">These could be filled on their own, but in every phase they were open other operations needed the same units: ${byPlanet(S.left).map(g=>`<b>${esc(g.o.planet)}</b> op${g.list.length>1?'s':''} ${g.list.map(o=>esc(o.op)).sort(cmpOp).join(', ')}`).join(' · ')}.</p>`;
+  }
+  if(S.ups.length){
+    h+=`<h3 style="margin-top:18px">Upgrades that would close the gaps</h3><div class="scroll"><table class="reqtable simup"><thead><tr><th>Character</th><th>Level</th><th>Slots it blocks</th><th>Operations</th><th>Members ready</th><th>Own it, below</th></tr></thead><tbody>${S.ups.map(u=>`<tr><td class="nm">${esc(u.unit)}</td><td>${esc(u.lvl)}</td><td>${u.slots}</td><td>${u.ops.size}</td><td>${u.have}</td><td>${u.owners}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  $('#simView').innerHTML=h;
+  $('#simWhen').textContent=`Simulated ${S.at.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} with ${RESULT.players.length} members.`;
+  $('#simApply').hidden=!unlocked||!done;
+}
+$('#simBtn').addEventListener('click',()=>setMode('sim'));
+$('#simRun').addEventListener('click',()=>{
+  const b=$('#simRun');b.disabled=true;b.textContent='Simulating…';showMsg('#simMsg','','');
+  setTimeout(()=>{try{SIM=simulate();renderSim()}catch(e){showMsg('#simMsg','err','The simulation failed: '+esc(e.message))}finally{b.disabled=false;b.textContent='Run the simulation again'}},30);
+});
+$('#simApply').addEventListener('click',()=>{
+  if(!SIM||!unlocked)return;
+  if(!confirm('Set every chosen operation to the phase the simulation suggests (operations that never fit are switched off), then assign platoons again? Nothing is shared until you press Save and share.'))return;
+  for(const k of SIM.ops.keys()){const P=SIM.when.get(k);DEPLOY.set(k,P||0);if(!P)OFF.add(k);else OFF.delete(k)}
+  saveDeploy();run();if(OK){setMode('assign');showMsg('#runMsg','ok','Schedule applied from the simulation. Check it, then Save and share.')}
+});
+
 function renderMissing(){
   if(!RESULT)return;
   let res=RESULT;
