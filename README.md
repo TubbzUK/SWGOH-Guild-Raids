@@ -227,8 +227,9 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   the upgrades that would close those gaps. Officers can press **Use this schedule** to apply it.
 - On **Requirements**, click a character to open a card under its row: every member who has it at the
   required level or above, with their level and where the plan has them placing it (phase, planet,
-  operation and row - this phase highlighted), or "Not placing it". Members below the level and those
-  without it are listed underneath. Click again (or ✕) to close.
+  operation and row - this phase highlighted), or "Not placing it". A second section lists everyone one
+  level below (one relic level, or one star for ships) who could upgrade quickly and fill it; members
+  further below and those without it are listed underneath. Click again (or ✕) to close.
 - **Squads stay together.** With *Keep squads together* on (Platoon planner: rules, on by default),
   whoever is given a squad's lead unit - Executor, say - also gets that squad's other units needed in
   the same phase, as far as they own them, so nobody else loses their fleet. The squads list is preset

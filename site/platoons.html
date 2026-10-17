@@ -269,6 +269,10 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .wh{display:inline-block;border:1px solid var(--line);border-radius:3px;padding:1px 6px;margin:1px 4px 1px 0;font-size:12px;white-space:nowrap}
 .wh.now{border-color:var(--saber);background:color-mix(in srgb,var(--saber) 14%,transparent);font-weight:600}
 .wh.free{border-style:dashed;opacity:.8}
+.wc-sec{margin-top:6px}.wc-sec+.wc-sec{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.wc-sec h4{margin:0 0 6px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.wc-sec h4 span{text-transform:none;letter-spacing:0;font-weight:400;opacity:.8;font-size:12.5px}
+.wc-sec.near h4{color:var(--warn-ink)}
 .wc-low{margin-top:8px;font-size:12.5px}.wc-low summary{cursor:pointer}
 .wc-low .names{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:4px}.wc-low small{opacity:.7}
 .reqplanet h3{margin-bottom:4px}
@@ -1166,14 +1170,21 @@ function whoCard(r){
   const here=o=>(placed.get(o.p)||[]).some(s=>s.phase===r.phase)?0:placed.has(o.p)?1:2;   // placing it this phase first
   ok.sort((a,b)=>here(a)-here(b)||lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
   const inPh=ok.filter(o=>(placed.get(o.p)||[]).some(s=>s.phase===r.phase)).length;
+  // one level below the requirement: one relic level short (at G13), or one star short for ships
+  const ship=/★$/.test(r.lvl),need=parseInt(String(r.lvl).replace(/\D/g,''),10)||0;
+  const isNear=u=>ship?(u.stars||0)===need-1:u.gear!=null&&u.gear<13?false:(u.relic??0)===need-1;
+  const near=low.filter(o=>isNear(o.u)),far=low.filter(o=>!isNear(o.u));
   const anyPh=ok.filter(o=>placed.has(o.p)).length;
   const where=p=>{const l=(placed.get(p)||[]).slice().sort((a,b)=>a.phase-b.phase||slotSort(a,b));
     return l.length?l.map(s=>`<span class="wh ${s.phase===r.phase?'now':''}">P${s.phase} · ${esc(s.planet)} op ${esc(s.op)}${s.row!=null?` <small>row ${s.row}</small>`:''}</span>`).join(''):`<span class="wh free">Not placing it</span>`};
   return`<div class="whocard"><div class="wc-h"><b>${esc(r.unit)}</b><span class="rq-need">needs ${esc(r.lvl)}</span>
       <span class="wc-n">${ok.length} member${ok.length===1?' has':'s have'} it ready · ${inPh} placing it in phase ${r.phase} · ${anyPh} placing it in any phase · ${ok.length-anyPh} not placing it</span>
       <button type="button" class="wc-x" aria-label="Close">✕</button></div>
-    ${ok.length?`<div class="scroll"><table class="wctable"><thead><tr><th>Member</th><th>Level</th><th>Placed in the plan</th></tr></thead><tbody>${ok.map(o=>`<tr><td>${esc(o.p)}</td><td><b>${esc(unitLvl(o.u))}</b></td><td>${where(o.p)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="note">Nobody has it at the required level yet.</p>'}
-    ${low.length?`<details class="wc-low"><summary>${low.length} member${low.length===1?' owns':'s own'} it below ${esc(r.lvl)}</summary><div class="names">${low.map(o=>`<span>${esc(o.p)} <small>${esc(unitLvl(o.u))}</small></span>`).join('')}</div></details>`:''}
+    <div class="wc-sec"><h4>Ready <span>${ok.length} member${ok.length===1?'':'s'} at ${esc(r.lvl)} or above</span></h4>
+    ${ok.length?`<div class="scroll"><table class="wctable"><thead><tr><th>Member</th><th>Level</th><th>Marked for deployment in the plan</th></tr></thead><tbody>${ok.map(o=>`<tr><td>${esc(o.p)}</td><td><b>${esc(unitLvl(o.u))}</b></td><td>${where(o.p)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="note">Nobody has it at the required level yet.</p>'}</div>
+    <div class="wc-sec near"><h4>One level below <span>${near.length} member${near.length===1?'':'s'} who could upgrade quickly and fill it</span></h4>
+    ${near.length?`<div class="scroll"><table class="wctable"><thead><tr><th>Member</th><th>Level</th><th>Needs</th></tr></thead><tbody>${near.map(o=>`<tr><td>${esc(o.p)}</td><td><b>${esc(unitLvl(o.u))}</b></td><td>${ship?'1 more star':`1 relic level (to ${esc(r.lvl)})`}</td></tr>`).join('')}</tbody></table></div>`:`<p class="note">Nobody is one level below ${esc(r.lvl)}.</p>`}</div>
+    ${far.length?`<details class="wc-low"><summary>${far.length} more member${far.length===1?' owns':'s own'} it further below</summary><div class="names">${far.map(o=>`<span>${esc(o.p)} <small>${esc(unitLvl(o.u))}</small></span>`).join('')}</div></details>`:''}
     ${r.owners.length<RESULT.players.length?`<p class="note" style="margin:6px 0 0">${RESULT.players.length-r.owners.length} member${RESULT.players.length-r.owners.length===1?" doesn't":"s don't"} have it unlocked.</p>`:''}</div>`;
 }
 function toggleWho(el){
