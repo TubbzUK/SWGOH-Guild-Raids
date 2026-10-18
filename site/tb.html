@@ -105,6 +105,7 @@ td.sub2 { color: var(--text-2); font-size: 12.5px; }
 tr.cur-tb td { background: var(--surface-2); }
 footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 @media (max-width: 600px) { nav.tabs { max-width: 100%; overflow-x: auto; } nav.tabs button { padding: 9px 8px; letter-spacing: .04em; font-size: 11px; } .kpi .value { font-size: 20px; } }
+  #mTable tfoot td { border-top: 2px solid var(--line, #8884); padding-top: 8px; }
 </style>
 </head>
 <body>
@@ -155,6 +156,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
         <p class="hint" id="waveHint"></p>
         <div class="chart"><canvas id="waveChart" aria-label="Wave completion by phase"></canvas></div>
       </div>
+    </div>
+    <div class="card" id="starsCard">
+      <h2>Stars earned by TB</h2>
+      <p class="hint" id="starsHint"></p>
+      <div class="chart"><canvas id="starsChart" aria-label="Stars earned by TB"></canvas></div>
     </div>
     <div class="grid2">
       <div class="card">
@@ -304,6 +310,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     $("#kpis").innerHTML = [
       ["Territory points", fmt(t.tp), prev ? `<span class="${dcls(dtp)}">${signedPct(dtp)}</span> vs ${dshort(prev.date)}` : "First TB tracked"],
       ["Wave completion", t.wave_pct.toFixed(0) + "%", `${fmt(t.waves)} waves · ${fmt(t.att)} CM attempts`],
+      ...(tbs.some(x => x.stars != null) ? [["Stars earned", t.stars != null ? `★ ${t.stars}${data.max_stars ? `<span class="sub"> / ${data.max_stars}</span>` : ""}` : "–", t.stars == null ? "Not recorded for this TB" : prev && prev.stars != null ? `<span class="${dcls(t.stars - prev.stars)}">${t.stars - prev.stars > 0 ? "+" : t.stars < prev.stars ? "−" : "±"}${Math.abs(t.stars - prev.stars)}</span> vs ${dshort(prev.date)}` : "No figure for the TB before"]] : []),
       ["Platoon units", fmt(t.platoons), `Median ${t.median_platoons} per member`],
       ["Fully deployed", `${t.all_deployed}<span class="sub"> / ${t.members}</span>`, `in all ${t.phases} phases`],
       ["Participation", st ? `<span class="up">${st.active}</span><span class="sub"> ✓ </span><span style="color:var(--warn-ink)">${st.partial}</span><span class="sub"> ● </span><span class="down">${st.inactive}</span><span class="sub"> ○</span>` : "–", st ? "Active · partial · inactive" : "Shown for the latest TB"],
@@ -314,6 +321,24 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       data: { labels: tbs.map(x => dshort(x.date)), datasets: [{ label: "Territory points", data: tbs.map(x => x.tp), backgroundColor: tbs.map((x, i) => i === sel ? css("--series-1") : css("--r3") || css("--series-1")), borderRadius: 4, maxBarThickness: 48 }] },
       options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `${tbs[i[0].dataIndex].label} · ${dfmt(tbs[i[0].dataIndex].date)}`, label: c => ` ${c.parsed.y.toLocaleString("en-GB")} points`, afterLabel: c => ` ${tbs[c.dataIndex].members} members · ${tbs[c.dataIndex].wave_pct}% waves` } } }, scales: { y: axisY(), x: axisX() } }
     });
+    // stars earned per TB, with a trend line
+    const sv0 = tbs.map(x => x.stars ?? null), haveStars = sv0.filter(v => v != null).length;
+    if (!haveStars) {
+      $("#starsHint").innerHTML = "No stars recorded yet. They're read from the game for guilds connected with an ally code, or an officer can enter them with <b>★ Set TB stars</b> in the menu.";
+      $("#starsChart").parentElement.hidden = true;
+    } else {
+      $("#starsChart").parentElement.hidden = false;
+      const str = trendOf(sv0), best = Math.max(...sv0.filter(v => v != null));
+      $("#starsHint").innerHTML = `Stars the guild earned in each territory battle${data.max_stars ? ` (out of ${data.max_stars})` : ""} · best ★ ${best}` + (str.label === "new" ? " · trend shows after 3 TBs" : ` · ${tbadge(str)}`);
+      new Chart($("#starsChart"), {
+        data: { labels: tbs.map(x => dshort(x.date)), datasets: [
+          { type: "bar", label: "Stars", data: sv0, backgroundColor: tbs.map((x, i) => i === sel ? css("--series-1") : css("--r3") || css("--series-1")), borderRadius: 4, maxBarThickness: 48, order: 2 },
+          ...(haveStars >= 2 ? [{ type: "line", label: "Trend", data: fitLine(sv0), borderColor: css("--muted"), borderDash: [6, 4], borderWidth: 2, pointRadius: 0, fill: false, spanGaps: true, order: 1 }] : []),
+        ] },
+        options: { plugins: { legend: { display: false }, tooltip: { filter: c => c.dataset.type === "bar", callbacks: { title: i => `${tbs[i[0].dataIndex].label} · ${dfmt(tbs[i[0].dataIndex].date)}`, label: c => c.parsed.y == null ? " Not recorded" : ` ★ ${c.parsed.y} stars${data.max_stars ? ` of ${data.max_stars}` : ""}`, afterLabel: c => { const p = sv0.slice(0, c.dataIndex).filter(v => v != null).at(-1); return p != null && c.parsed.y != null ? ` ${c.parsed.y - p >= 0 ? "+" : ""}${c.parsed.y - p} on the TB before` : ""; } } } },
+          scales: { y: { ...axisY(v => Number.isInteger(v) ? v : ""), beginAtZero: true, ...(data.max_stars ? { suggestedMax: data.max_stars } : {}) }, x: axisX() } }
+      });
+    }
     $("#waveHint").textContent = `Waves completed ÷ the most each member could complete (${t.max_waves.map(v => Math.round(v)).join(" / ")} per phase)`;
     new Chart($("#waveChart"), {
       type: "bar",
@@ -341,7 +366,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       ["tp", "Points", "r", (p, r) => fmt(r.tp)],
       ...(isLatest ? [["delta_pct", "vs prev", "r", p => `<span class="${dcls(p.delta_pct)}">${signedPct(p.delta_pct)}</span>`],
                       ["trend", "Trend", "", p => `${badge(TREND, p.trend)}${spark(p.tp)}`]] : []),
-      ["wave_pct", "Waves", "r", (p, r) => `<span title="${r.waves} of ${Math.round(maxTot)} waves"><span class="bar"><i style="width:${Math.min(100, r.wave_pct)}%"></i></span>${r.wave_pct.toFixed(0)}%</span>`],
+      ["wave_pct", "Waves %", "r", (p, r) => `<span title="${r.waves} of ${Math.round(maxTot)} waves"><span class="bar"><i style="width:${Math.min(100, r.wave_pct)}%"></i></span>${r.wave_pct.toFixed(0)}%</span>`],
+      ["waves", "Waves done", "r", (p, r) => `<span title="${r.waves} of ${Math.round(maxTot)} combat mission waves completed">${r.waves}</span>`],
       ["att", "CMs", "r", (p, r) => r.att],
       ["platoons", "Platoons", "r", (p, r) => r.platoons],
       ["deploys", "Deployed", "", (p, r) => dots(r.phases)],
@@ -356,7 +382,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     const rows = players.map(p => ({ p, r: rowOf(p, sel) })).filter(x => x.r && (!curOnly || x.p.current) && x.p.name.toLowerCase().includes(q)
       && (!f || (f === "focus" ? x.p.focus.length && sel === latestI : x.p.status === f && sel === latestI)))
       .sort((a, b) => { const x = sv(a.p, a.r, sortK.k), y = sv(b.p, b.r, sortK.k); return (x > y ? 1 : x < y ? -1 : 0) * sortK.d || a.p.name.localeCompare(b.p.name); });
-    $("#mTable").innerHTML = `<thead><tr>${cols.map(([k, l, c]) => `<th data-sort="${k}" class="${c === "r" ? "r" : ""} ${sortK.k === k ? (sortK.d > 0 ? "asc" : "desc") : ""}">${l}</th>`).join("")}</tr></thead><tbody>${rows.map(({ p, r }) => `<tr class="click ${p.id === selected ? "sel" : ""}" data-id="${esc(p.id)}" tabindex="0">${cols.map(([k, , c, fn]) => `<td class="${c === "r" ? "r num" : c === "focus" ? "focus" : k === "name" ? "name" : ""}">${fn(p, r)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${cols.length}" class="empty">No members match</td></tr>`}</tbody>`;
+    $("#mTable").innerHTML = `<thead><tr>${cols.map(([k, l, c]) => `<th data-sort="${k}" class="${c === "r" ? "r" : ""} ${sortK.k === k ? (sortK.d > 0 ? "asc" : "desc") : ""}">${l}</th>`).join("")}</tr></thead><tbody>${rows.map(({ p, r }) => `<tr class="click ${p.id === selected ? "sel" : ""}" data-id="${esc(p.id)}" tabindex="0">${cols.map(([k, , c, fn]) => `<td class="${c === "r" ? "r num" : c === "focus" ? "focus" : k === "name" ? "name" : ""}">${fn(p, r)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${cols.length}" class="empty">No members match</td></tr>`}</tbody>${rows.length ? `<tfoot><tr class="tot">${cols.map(([k], i) => `<td class="${i ? "r num" : ""}">${i === 0 ? `<b>Total</b> <small>(${rows.length})</small>` : k === "waves" ? `<b>${rows.reduce((a, x) => a + x.r.waves, 0).toLocaleString()}</b>` : k === "tp" ? `<b>${fmt(rows.reduce((a, x) => a + x.r.tp, 0))}</b>` : k === "att" ? `<b>${rows.reduce((a, x) => a + x.r.att, 0).toLocaleString()}</b>` : ""}</td>`).join("")}</tr></tfoot>` : ""}`;
     $("#mTable").querySelectorAll("th").forEach(th => th.onclick = () => { const k = th.dataset.sort; sortK = { k, d: sortK.k === k ? -sortK.d : (k === "name" ? 1 : -1) }; renderMembers(); });
     $("#mTable").querySelectorAll("tbody tr.click").forEach(tr => { const open = () => { selected = tr.dataset.id; renderMembers(); showMember(players.find(p => p.id === selected)); }; tr.onclick = open; tr.onkeydown = e => { if (e.key === "Enter") open(); }; });
     if (selected) { const p = players.find(x => x.id === selected); if (p && rowOf(p, sel)) showMember(p, true); else $("#mDetail").hidden = true; }
@@ -454,6 +480,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     window.scrollTo({ top: $("nav.tabs").offsetTop - 8, behavior: "auto" });
   }
 
+  // the guild's median total waves completed in a TB
+  const wavesMedCache = new Map();
+  const wavesMed = t => { const i = tbs.indexOf(t); if (!wavesMedCache.has(i)) { const v = players.map(p => rowOf(p, i)).filter(Boolean).map(r => r.waves).sort((a, b) => a - b); wavesMedCache.set(i, v.length ? (v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2) : 0); } return wavesMedCache.get(i); };
   function renderPlayer() {
     playerCharts.forEach(c => c.destroy()); playerCharts = [];
     const list = players.filter(p => !$("#pCurrent").checked || p.current).slice().sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
@@ -477,6 +506,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     const M = [
       ["Territory points", r => r.tp, t => t.median_tp, v => fmt(v)],
       ["Wave completion", r => r.wave_pct, t => t.median_wave_pct, v => Math.round(v) + "%"],
+      ["Waves completed", r => r.waves, t => wavesMed(t), (v, t) => `${fmt(v)}<span class="sub"> / ${Math.round(t.max_waves.reduce((a, b) => a + b, 0))}</span>`],
       ["CM attempts", r => r.att, t => t.median_att, v => fmt(v)],
       ["Platoon units", r => r.platoons, t => t.median_platoons, v => fmt(v)],
       ["Phases fully deployed", r => r.full_deploys, t => t.median_deploys, (v, t) => `${Math.round(v)}<span class="sub"> / ${t.phases}</span>`],
@@ -642,7 +672,30 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       },
       done: "✔ Saved. The TB page updates in about 2 minutes (refresh then)." });
   }
-  (function mh() { if (!window.RaidTheme || !window.Officer) return setTimeout(mh, 50); RaidTheme.menuItem("officer", "✎ Manage TB uploads", manageTbs); })();
+  function setStars() {
+    const rows = tbs.map((t, i) => ({ t, i })).reverse();
+    const html = `<p style="margin:0 0 10px">Stars the guild earned in each territory battle. Guilds connected to the game with an ally code get these automatically; anything you enter here wins over the game's figure. Leave a box empty to clear it.</p>
+      <div style="max-height:50vh;overflow:auto;border:1px solid var(--border);border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="background:var(--surface-2)"><th style="text-align:left;padding:6px 8px">TB</th><th style="text-align:right;padding:6px 8px">Points</th><th style="text-align:right;padding:6px 8px">Stars</th></tr></thead><tbody>
+      ${rows.map(({ t, i }) => `<tr style="border-top:1px solid var(--border)"><td style="padding:6px 8px">${esc(t.label)} · ${dshort(t.date)}</td><td style="padding:6px 8px;text-align:right">${fmt(t.tp)}</td>
+        <td style="padding:6px 8px;text-align:right"><input type="number" class="stIn" data-i="${i}" min="0" max="99" step="1" inputmode="numeric" value="${t.stars ?? ""}" aria-label="Stars for ${esc(dfmt(t.date))}" style="width:58px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;text-align:right"></td></tr>`).join("")}
+      </tbody></table></div><p style="margin:10px 0 0;font-size:12.5px">Changes show on the site in about 2 minutes.</p>`;
+    Officer.form({ title: "★ Set TB stars", html, button: "Save stars",
+      run: async ({ putFile }) => {
+        const stars = {};
+        for (const el of document.querySelectorAll(".stIn")) {
+          const t = tbs[+el.dataset.i], v = el.value.trim();
+          if (v !== "" && !(/^\d{1,2}$/.test(v))) throw new Error(`stars for ${dfmt(t.date)} must be a whole number`);
+          const nv = v === "" ? null : +v;
+          if (nv !== (t.stars ?? null)) stars[t.date] = nv;
+        }
+        if (!Object.keys(stars).length) throw new Error("nothing has changed");
+        const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
+        await putFile(`guilds/${guild.slug}/tb/changes-${stamp}.json`, JSON.stringify({ action: "stars", stars, requested_at: new Date().toISOString() }, null, 1), `TB stars (${guild.name})`);
+      },
+      done: "✔ Saved. The TB page updates in about 2 minutes (refresh then)." });
+  }
+  (function mh() { if (!window.RaidTheme || !window.Officer) return setTimeout(mh, 50); RaidTheme.menuItem("officer", "✎ Manage TB uploads", manageTbs); RaidTheme.menuItem("officer", "★ Set TB stars", setStars); })();
   render();
   (function cr() { if (!window.RaidTheme) return setTimeout(cr, 30); RaidTheme.cardReady(); })();
 })();

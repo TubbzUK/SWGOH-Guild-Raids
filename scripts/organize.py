@@ -55,6 +55,7 @@ def apply_tb_changes(gdir: Path, log: list[str]) -> None:
           phase: keep the newest upload (it has every phase so far), file it under the date, remove the rest
       {"action": "rename", "file": "<file>", "date": "YYYY-MM-DD"}                    change a TB's date
       {"action": "delete", "files": [...]}                                          remove uploads
+      {"action": "stars", "stars": {"YYYY-MM-DD": 31 | null}}                       stars earned (null clears)
     Only plain file names inside that guild's tb/ folder are touched."""
     tb_dir = gdir / "tb"
     if not tb_dir.exists():
@@ -92,9 +93,38 @@ def apply_tb_changes(gdir: Path, log: list[str]) -> None:
             d = date or (build.name_date(tb_dir / keep)[0] or dt.date.today()).isoformat()
             t = file_as(tb_dir / keep, d)
             log.append(f"{gdir.name}/tb: merged {len(files)} uploads into {t.name}")
+        elif act == "stars" and isinstance(r.get("stars"), dict):
+            sf = gdir / "tb-stars.json"
+            try:
+                cur = json.loads(sf.read_text(encoding="utf-8")) if sf.exists() else {}
+            except (OSError, ValueError):
+                cur = {}
+            st, n = cur.setdefault("set", {}), 0
+            for d, v in r["stars"].items():
+                if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(d)):
+                    continue
+                if v is None or v == "":
+                    st.pop(d, None)
+                elif isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 99:
+                    st[d] = int(v)
+                else:
+                    continue
+                n += 1
+            sf.write_text(json.dumps(cur, indent=1, sort_keys=True), encoding="utf-8")
+            log.append(f"{gdir.name}/tb: stars updated for {n} TB(s)")
         elif act == "rename" and ok(r.get("file")) and date:
+            old = build.name_date(tb_dir / r["file"])[0]
             t = file_as(tb_dir / r["file"], date)
             log.append(f"{gdir.name}/tb: {r['file']} -> {t.name}")
+            sf = gdir / "tb-stars.json"   # stars an officer entered follow the TB to its new date
+            if old and sf.exists():
+                try:
+                    cur = json.loads(sf.read_text(encoding="utf-8"))
+                    if old.isoformat() in cur.get("set", {}):
+                        cur["set"][date] = cur["set"].pop(old.isoformat())
+                        sf.write_text(json.dumps(cur, indent=1, sort_keys=True), encoding="utf-8")
+                except (OSError, ValueError, AttributeError):
+                    pass
         elif act == "delete":
             for n in r.get("files") or []:
                 if ok(n):

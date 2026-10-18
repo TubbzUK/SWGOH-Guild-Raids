@@ -261,14 +261,23 @@ upload into `guilds/<guild>/tb/` on GitHub: name it `2026-10-05 RotE.csv`, or it
 
 - **Overview** – guild territory points per TB, wave completion by phase, platoon units, who fully
   deployed, how many members were active / partial / inactive, a *needs attention* list and the top 10.
+  **Stars earned by TB** charts the guild's stars in every TB with a dashed trend line (and an
+  *improving / level / declining* badge once there are 3 TBs). For a guild connected to the game with
+  an ally code the stars are read from the game on each pull; otherwise (or to correct one) an officer
+  uses **★ Set TB stars** in the menu. Both are kept in `guilds/<guild>/tb-stars.json` (`set` = typed
+  by an officer, wins; `game` = from the game, matched to a TB ending within 2 days). Add
+  `tb_max_stars: 56` (or your figure) to the guild's `config.yml` to show stars "out of" a maximum.
 - **Members** – everyone's points, change vs their last TB, trend (line of best fit over the last
   5 TBs, same rule as raids), waves completed %, combat mission attempts, platoon units, a square
   per phase for deployment (green full, amber partly, red none) and short *to work on* tags. Click a
   member for their per-phase breakdown and their points and wave % by TB against the guild median.
+  **Waves done** is the total combat mission waves each member completed in that TB (sortable;
+  hover for the most possible), and the **Total** row at the bottom adds up points, waves and CMs
+  for the members shown.
 - **Phases** – one phase at a time: points, GP deployed, waves and CM attempts for every member.
 - **Player** – pick a member (or click a name anywhere on the page) for their full summary: a
   one-line verdict (trending up / level / down, what's improving or falling, which phases are getting
-  stronger or slipping), six measures with change vs their last TB, trend and guild median, charts
+  stronger or slipping), seven measures (including total waves completed) with change vs their last TB, trend and guild median, charts
   of points and wave % by TB with a trend line, points and waves by phase for their last 5 TBs, a
   trend table per phase, charts for any one phase over time, rank by TB, CM attempts and platoons by
   TB, and their full TB history. Links can be shared: `…/tb.html?guild=oanr&player=taero#player`.

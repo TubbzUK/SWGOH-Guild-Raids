@@ -9,6 +9,8 @@ Expected export columns (one row per member):
 """
 from __future__ import annotations
 
+import datetime as dt
+import json
 import re
 import statistics
 from pathlib import Path
@@ -109,6 +111,7 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
     trend_thr = float(cfg.get("trend_threshold_pct", 3))
     cfg_max = [float(x) for x in (cfg.get("tb_max_waves") or [])]
 
+    stars_of = read_stars(gdir)
     tbs_out, people = [], {}
     for i, t in enumerate(tbs):
         n = t["n_phases"]
@@ -162,6 +165,7 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
             "median_att": statistics.median([r["att"] for r in rows]) if rows else 0,
             "median_deploys": statistics.median([sum(x["dep"] for x in r["phases"]) for r in rows]) if rows else 0,
             "phase": phase_tot,
+            "stars": stars_of(t["date"]),
         })
 
     latest_i = len(tbs) - 1
@@ -224,7 +228,28 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
     cur = [p for p in players if p["current"] and p["status"]]
     return {"tbs": tbs_out, "players": players, "trend_over_last": trend_n, "trend_threshold_pct": trend_thr,
             "status": {s: sum(p["status"] == s for p in cur) for s in ("active", "partial", "inactive")},
-            "max_waves_from_config": bool(cfg_max)}
+            "max_waves_from_config": bool(cfg_max),
+            "max_stars": int(cfg["tb_max_stars"]) if str(cfg.get("tb_max_stars") or "").isdigit() else None}
+
+
+def read_stars(gdir: Path):
+    """Stars earned per TB from guilds/<guild>/tb-stars.json: an officer's entry for that exact date wins,
+    otherwise the game's figure for a TB that ended within 2 days of it."""
+    f = gdir / "tb-stars.json"
+    try:
+        data = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    except (OSError, ValueError):
+        B.warn(f"{gdir.name}/tb-stars.json couldn't be read - TB stars not shown")
+        data = {}
+    sets, game = data.get("set") or {}, data.get("game") or {}
+
+    def get(d: dt.date):
+        if d.isoformat() in sets:
+            return sets[d.isoformat()]
+        near = sorted((abs((dt.date.fromisoformat(k) - d).days), v) for k, v in game.items()
+                      if re.fullmatch(r"\d{4}-\d{2}-\d{2}", k) and abs((dt.date.fromisoformat(k) - d).days) <= 2)
+        return near[0][1] if near else None
+    return get
 
 
 def fmt_ph(ps: list[int]) -> str:

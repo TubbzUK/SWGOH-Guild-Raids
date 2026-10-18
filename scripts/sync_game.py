@@ -198,6 +198,7 @@ class Guild:
         self.roster(members)
         self.raids(g, members)
         self.tw(g)
+        self.tb_stars(g)
 
     # roster, once a day
     def roster(self, members: list[dict]) -> None:
@@ -330,6 +331,34 @@ class Guild:
             f.write_text(json.dumps(dict(sorted(data.items())), indent=1), encoding="utf-8")
             self.changed = True
             self.log.append(f"{self.gdir.name}: {added} territory war result{'s' if added > 1 else ''} from the game")
+
+
+    # territory battle stars -> guilds/<guild>/tb-stars.json ("game" part; officer entries in "set" win)
+    def tb_stars(self, g: dict) -> None:
+        results = g.get("recentTerritoryBattleResult") or []
+        if not results:
+            return
+        f = self.gdir / "tb-stars.json"
+        try:
+            data = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+        except (OSError, ValueError):
+            print(f"::warning::{self.gdir.name}: tb-stars.json couldn't be read - TB stars not updated")
+            return
+        game = data.setdefault("game", {})
+        added = 0
+        for r in results:
+            date = when(r)
+            stars = next((num(v) for k, v in r.items() if "star" in k.lower() and num(v) is not None), None)
+            if not date or stars is None:
+                continue
+            k = date.isoformat()
+            if game.get(k) != int(stars):
+                game[k] = int(stars)
+                added += 1
+        if added:
+            f.write_text(json.dumps(data, indent=1, sort_keys=True), encoding="utf-8")
+            self.changed = True
+            self.log.append(f"{self.gdir.name}: territory battle stars from the game ({added} TB{'s' if added > 1 else ''})")
 
 
 def B_safe(s: str) -> str:
