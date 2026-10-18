@@ -24,8 +24,18 @@ guilds/
 
 Every page has a menu down the left-hand side with everything in one place:
 
-- **Pages**: Raids, Territory battles, TB contribution, Territory wars, Guild effectiveness and RotE
-  platoons. The page you're on is highlighted, and links keep the guild you're looking at.
+- **Pages**, as a tree: click a page to open its sections underneath, then click a section to go
+  straight to it (the page you're on starts open, with the section you're on highlighted):
+  - Raids → Overview, Players, Readiness
+  - Player status
+  - Territory battles → Overview, Members, Phases, Player, TB contribution
+  - Territory wars → Overview, Members
+  - Guild effectiveness → Overview, Raids vs TBs, Ranking, Members, How it's worked out
+  - RotE platoons → Assignments, Summary, Requirements, Missing platoons, Simulate, Toon lookup
+
+  Sections have their own links that can be shared (e.g. `…/platoons.html?guild=oanr#toon`,
+  `…/tb.html?guild=oanr#members`), and links keep the guild you're looking at. In the folded icon
+  strip, clicking a page's icon just opens that page.
 - **Officers**: the page's officer tools. Post this page to Discord, set a TW result, Contribution
   settings, Effectiveness weighting, the Platoon planner, and *Forget my officer login* for a shared
   computer. They all ask for the officer password.

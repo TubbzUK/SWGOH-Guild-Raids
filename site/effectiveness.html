@@ -217,14 +217,14 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   <div id="warnings" class="no-card"></div>
   <div class="kpis" id="kpis"></div>
 
-  <div class="card" style="margin-bottom:12px">
+  <div class="card" style="margin-bottom:12px;scroll-margin-top:16px" id="effQuad">
     <h2>Raids vs territory battles</h2>
     <p class="hint">Each dot is a member. The dashed lines are the guild medians, so the four corners show who is strong in both, stronger in one, or below the median in both. Click a dot for that member.</p>
     <div class="quad" id="quad"></div>
     <div class="chart scatter"><canvas id="scatter" aria-label="Raid score against TB score for each member"></canvas></div>
   </div>
 
-  <div class="card" style="margin-bottom:12px">
+  <div class="card" style="margin-bottom:12px;scroll-margin-top:16px" id="effRank">
     <h2>Effectiveness ranking</h2>
     <p class="hint" id="rankHint"></p>
     <div class="legend" id="rankLegend"></div>
@@ -245,13 +245,13 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     <div class="mlinks" id="mLinks"></div>
   </div>
 
-  <div class="toolbar no-card" style="margin-top:4px">
+  <div class="toolbar no-card" style="margin-top:4px;scroll-margin-top:16px" id="effTable">
     <input type="search" id="search" placeholder="Search members&hellip;" aria-label="Search members">
     <label class="check"><input type="checkbox" id="curOnly" checked> Current members only</label>
   </div>
   <div class="tablewrap"><table id="table"></table></div>
 
-  <details class="card how no-card" style="margin-top:12px">
+  <details class="card how no-card" style="margin-top:12px;scroll-margin-top:16px" id="effHow">
     <summary>How effectiveness is worked out</summary>
     <ul id="howList"></ul>
   </details>

@@ -52,14 +52,42 @@
   let menuPanel = null;
   const SB_KEY = "gsSidebar", G_KEY = "gsGuild";
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
+  // each page, and the sections inside it (tabs, buttons or places on the page) shown as a tree under it
+  const RAID = { id: "raidLink", file: "./", match: /(^|\/)(index\.html)?$/ };
+  const TB = { id: "tbLink", file: "tb.html", match: /tb\.html$/ };
+  const RANK = { id: "rankLink", file: "ranking.html", match: /ranking\.html$/ };
+  const TW = { id: "twLink", file: "tw.html", match: /tw\.html$/ };
+  const EFF = { id: "effLink", file: "effectiveness.html", match: /effectiveness\.html$/ };
+  const PLAT = { id: "platoonLink", file: "platoons.html", match: /platoons\.html$/ };
+  const tab = t => `nav button[data-tab="${t}"]`;
   const PAGES = [
-    { id: "raidLink", file: "./", match: /(^|\/)(index\.html)?$/, ic: "⚔", label: "Raids" },
-    { id: "playerLink", file: "player.html", match: /player\.html$/, ic: "◉", label: "Player status" },
-    { id: "tbLink", file: "tb.html", match: /tb\.html$/, ic: "◈", label: "Territory battles" },
-    { id: "rankLink", file: "ranking.html", match: /ranking\.html$/, ic: "★", label: "TB contribution" },
-    { id: "twLink", file: "tw.html", match: /tw\.html$/, ic: "✦", label: "Territory wars" },
-    { id: "effLink", file: "effectiveness.html", match: /effectiveness\.html$/, ic: "◎", label: "Guild effectiveness" },
-    { id: "platoonLink", file: "platoons.html", match: /platoons\.html$/, ic: "⚑", label: "RotE platoons" },
+    { key: "raids", ...RAID, ic: "⚔", label: "Raids", kids: [
+      { label: "Overview", hash: "overview", sel: tab("overview") },
+      { label: "Players", hash: "players", sel: tab("players") },
+      { label: "Readiness", hash: "readiness", sel: tab("readiness") }] },
+    { key: "player", id: "playerLink", file: "player.html", match: /player\.html$/, ic: "◉", label: "Player status" },
+    { key: "tb", ...TB, ic: "◈", label: "Territory battles", kids: [
+      { label: "Overview", hash: "overview", sel: tab("overview") },
+      { label: "Members", hash: "members", sel: tab("members") },
+      { label: "Phases", hash: "phases", sel: tab("phases") },
+      { label: "Player", hash: "player", sel: tab("player") },
+      { label: "TB contribution", page: RANK }] },
+    { key: "tw", ...TW, ic: "✦", label: "Territory wars", kids: [
+      { label: "Overview", hash: "overview", sel: tab("overview") },
+      { label: "Members", hash: "members", sel: tab("members") }] },
+    { key: "eff", ...EFF, ic: "◎", label: "Guild effectiveness", kids: [
+      { label: "Overview", hash: "" },
+      { label: "Raids vs TBs", hash: "effQuad" },
+      { label: "Ranking", hash: "effRank" },
+      { label: "Members", hash: "effTable" },
+      { label: "How it's worked out", hash: "effHow" }] },
+    { key: "plat", ...PLAT, ic: "⚑", label: "RotE platoons", kids: [
+      { label: "Assignments", hash: "assign", sel: "#assignBtn" },
+      { label: "Summary", hash: "summary", sel: "#summaryBtn" },
+      { label: "Requirements", hash: "requirements", sel: "#reqBtn" },
+      { label: "Missing platoons", hash: "missing", sel: "#missingBtn" },
+      { label: "Simulate", hash: "simulate", sel: "#simBtn" },
+      { label: "Toon lookup", hash: "toon", sel: "#toonBtn" }] },
   ];
   const SB_CSS = `
   :root { --sbw: 248px; }
@@ -88,6 +116,16 @@
   .sb .sb-item[aria-current="page"] { background: color-mix(in srgb, var(--accent) 16%, transparent) !important; color: var(--accent) !important; }
   .sb .sb-item[aria-current="page"]::before { content: ""; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
   .sb .sb-item[hidden], .sb [data-menu][hidden] { display: none !important; }
+  /* page tree */
+  .sb .sb-grp .car { margin-left: auto; flex: none; width: 14px; height: 14px; color: var(--text-2); transition: transform .15s ease; }
+  .sb .sb-grp[aria-expanded="true"] .car { transform: rotate(90deg); }
+  .sb .sb-grp.here { color: var(--accent) !important; }
+  .sb .sb-kids { position: relative; margin: 0 0 4px 21px; padding-left: 10px; border-left: 1px solid var(--border); }
+  .sb .sb-kids[hidden] { display: none; }
+  .sb a.sb-item.sb-kid { min-height: 32px; padding: 6px 10px !important; font: 500 13px var(--font-ui) !important; color: var(--text-2) !important; }
+  .sb a.sb-item.sb-kid[aria-current="page"]::before { left: -11px; top: 6px; bottom: 6px; }
+  .sb a.sb-item.sb-kid[aria-current="page"] { color: var(--accent) !important; font-weight: 650 !important; }
+  body.sb-min .sb .sb-kids, body.sb-min .sb .car { display: none !important; }
   .sb .ic { flex: none; width: 24px; text-align: center; font-size: 15px; line-height: 1; }
   .sb .tx { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .sb-foot { border-top: 1px solid var(--border); padding: 8px 10px 12px; }
@@ -121,6 +159,7 @@
     body.sb-min .sb-themes { display: flex !important; } body.sb-min .sb .sb-foot .sb-cycle { display: none !important; }
     body.sb-min .sb-head { padding: 16px 12px 12px 18px; justify-content: flex-start; }
     body.sb-min .sb .sb-item, body.sb-min .sb [data-menu] { justify-content: flex-start; padding: 9px 10px !important; }
+    body.sb-min .sb .sb-kids:not([hidden]) { display: block !important; } body.sb-min .sb .car { display: inline-block !important; }
     .sb-flip { display: none !important; }
   }
   html.cardmode .sb, html.cardmode .sb-scrim, html.cardmode .sb-open-btn { display: none !important; }
@@ -162,20 +201,93 @@
     body.prepend(scrim); body.prepend(sb); body.classList.add("sb-on");
     menuPanel = sb;
 
-    // pages
+    // pages, each with its sections underneath as a tree
     const here = location.pathname, pagesSec = sb.querySelector('[data-sec="pages"]');
+    const CARET = '<svg class="car" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const pageHref = p => {
+      const own = document.getElementById(p.id), g = guildNow();
+      let h = own && own.getAttribute("href") ? own.href.replace(/#.*$/, "") : p.file;
+      if (g && !/[?&]guild=/.test(h)) h += (h.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(g);   // keep the guild you're looking at
+      return h;
+    };
+    const watch = (p, fn) => { const own = document.getElementById(p.id); if (own && window.MutationObserver) new MutationObserver(fn).observe(own, { attributes: true, attributeFilter: ["hidden", "href"] }); };
+    const ownHidden = p => { const own = document.getElementById(p.id); return !!(own && own.hidden && !p.match.test(here)); };
+    const kidState = [];   // [link, kid, page] for highlighting the section you're on
     PAGES.forEach(p => {
-      const a = document.createElement("a"); a.className = "sb-item"; iconise(a, `${p.ic} ${p.label}`);
-      const own = document.getElementById(p.id);   // the page's own link (it knows the guild and hides pages a guild has no data for)
-      const href = () => { if (own && own.getAttribute("href")) return own.href; const g = guildNow(); return p.file + (g ? "?guild=" + encodeURIComponent(g) : ""); };
-      a.href = href(); ["pointerdown", "focus", "click"].forEach(ev => a.addEventListener(ev, () => { a.href = href(); }));
-      if (p.match.test(here)) a.setAttribute("aria-current", "page");
-      if (own) {
-        const sync = () => { a.hidden = own.hidden && !p.match.test(here); a.href = href(); };
-        sync(); if (window.MutationObserver) new MutationObserver(sync).observe(own, { attributes: true, attributeFilter: ["hidden", "href"] });
+      const onPage = p.match.test(here);
+      if (!p.kids) {
+        const a = document.createElement("a"); a.className = "sb-item"; iconise(a, `${p.ic} ${p.label}`);
+        a.href = pageHref(p); ["pointerdown", "focus", "click"].forEach(ev => a.addEventListener(ev, () => { a.href = pageHref(p); }));
+        if (onPage) a.setAttribute("aria-current", "page");
+        const sync = () => { a.hidden = ownHidden(p); a.href = pageHref(p); }; sync(); watch(p, sync);
+        pagesSec.appendChild(a); return;
       }
-      pagesSec.appendChild(a);
+      const here2 = onPage || p.kids.some(k => k.page && k.page.match.test(here));
+      const grp = document.createElement("button"); grp.type = "button"; grp.className = "sb-item sb-grp" + (here2 ? " here" : "");
+      iconise(grp, `${p.ic} ${p.label}`); grp.insertAdjacentHTML("beforeend", CARET);
+      const kids = document.createElement("div"); kids.className = "sb-kids"; kids.id = "sbk-" + p.key; grp.setAttribute("aria-controls", kids.id);
+      const setOpen = v => { kids.hidden = !v; grp.setAttribute("aria-expanded", String(v)); };
+      setOpen(here2);   // the page you're on starts open; the rest open with a click
+      grp.onclick = () => {
+        if (body.classList.contains("sb-min") && matchMedia("(min-width: 900px)").matches) { location.href = pageHref(p); return; }   // icon rail: go to the page
+        setOpen(kids.hidden);
+      };
+      p.kids.forEach(k => {
+        const kp = k.page || p, a = document.createElement("a"); a.className = "sb-item sb-kid"; a.textContent = k.label; a.title = k.label;
+        const href = () => { const h = pageHref(kp); return k.page ? h : h.replace(/#.*$/, "") + (k.hash ? "#" + k.hash : ""); };
+        a.href = href(); ["pointerdown", "focus"].forEach(ev => a.addEventListener(ev, () => { a.href = href(); }));
+        a.addEventListener("click", e => {
+          if (!kp.match.test(here) || k.page) return;            // another page: just follow the link
+          e.preventDefault();                                      // this page: switch to that section here
+          try { history.replaceState(null, "", location.pathname + location.search + (k.hash ? "#" + k.hash : "")); } catch (err) {}
+          goSection(k); setTimeout(markKids, 50);
+        });
+        if (k.page) { const sync = () => { a.hidden = ownHidden(k.page); }; sync(); watch(k.page, sync); }
+        kids.appendChild(a); kidState.push([a, k, kp]);
+      });
+      const sync = () => { const hid = ownHidden(p); grp.hidden = hid; kids.style.display = hid ? "none" : ""; }; sync(); watch(p, sync);
+      pagesSec.appendChild(grp); pagesSec.appendChild(kids);
     });
+    // which section of this page is showing
+    const isOn = el => !!el && (el.getAttribute("aria-selected") === "true" || el.getAttribute("aria-pressed") === "true");
+    function markKids() {
+      kidState.forEach(([a, k, kp]) => {
+        let cur = false;
+        if (kp.match.test(here)) {
+          if (k.page) cur = true;
+          else if (k.sel) cur = isOn(document.querySelector(k.sel));
+          else { const h = location.hash.slice(1), hs = kidState.filter(([, x, y]) => y === kp && !x.sel && !x.page).map(([, x]) => x.hash); cur = hs.includes(h) ? h === k.hash : k.hash === ""; }
+        }
+        cur ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
+      });
+    }
+    function goSection(k) {
+      if (k.sel) {
+        const el = document.querySelector(k.sel); if (!el) return;
+        el.click();
+        const r = el.getBoundingClientRect(); if (r.top < 0 || r.top > innerHeight * .6) el.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
+      } else if (k.hash) { const t = document.getElementById(k.hash); if (t && t.tagName === "DETAILS") t.open = true; t?.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" }); }
+      else scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    }
+    // arriving with #section: open that section once the page has loaded it (pages that don't handle the hash themselves)
+    (function fromHash() {
+      const h = location.hash.slice(1); if (!h) return;
+      const hit = kidState.find(([, k, kp]) => !k.page && kp.match.test(here) && k.hash === h);
+      if (!hit) return;
+      if (!hit[1].sel) {   // a place on the page: go there again once charts have filled in above it
+        const t = document.getElementById(h); if (t && t.tagName === "DETAILS") t.open = true;
+        setTimeout(() => t?.scrollIntoView({ block: "start" }), 1200); return;
+      }
+      const t0 = Date.now();
+      (function tryIt() {
+        const el = document.querySelector(hit[1].sel);
+        if (el && !el.closest("[hidden]") && !el.disabled) { if (!isOn(el)) el.click(); markKids(); return; }
+        if (Date.now() - t0 < 15000) setTimeout(tryIt, 150);
+      })();
+    })();
+    markKids();
+    document.addEventListener("click", e => { if (e.target.closest(PAGES.flatMap(p => p.kids || []).filter(k => k.sel).map(k => k.sel).join(","))) setTimeout(markKids, 30); });
+    addEventListener("hashchange", markKids);
 
     // theme
     const themes = sb.querySelector(".sb-themes"), cycle = sb.querySelector(".sb-cycle");
@@ -201,10 +313,10 @@
     const openBtn = document.createElement("button"); openBtn.type = "button"; openBtn.className = "sb-iconbtn sb-open-btn";
     openBtn.innerHTML = BARS; openBtn.title = "Menu"; openBtn.setAttribute("aria-label", "Open the menu"); openBtn.setAttribute("aria-controls", "siteNav");
     const tb = document.querySelector(".topbar"); if (tb) tb.prepend(openBtn);
-    const drawer = v => { body.classList.toggle("sb-drawer", v); x.hidden = !v; openBtn.setAttribute("aria-expanded", String(v)); if (v) (sb.querySelector('[aria-current="page"]') || x).focus(); };
+    const drawer = v => { body.classList.toggle("sb-drawer", v); x.hidden = !v; openBtn.setAttribute("aria-expanded", String(v)); if (v) (sb.querySelector('.sb-kid[aria-current="page"]') || sb.querySelector('[aria-current="page"]') || x).focus(); };
     openBtn.onclick = () => drawer(true); x.onclick = () => { drawer(false); openBtn.focus(); }; scrim.onclick = () => drawer(false);
     document.addEventListener("keydown", e => { if (e.key === "Escape" && body.classList.contains("sb-drawer")) { drawer(false); openBtn.focus(); } });
-    sb.addEventListener("click", e => { if (e.target.closest(".sb-body .sb-item, .sb-body [data-menu]") && body.classList.contains("sb-drawer")) setTimeout(() => drawer(false), 0); });
+    sb.addEventListener("click", e => { if (e.target.closest(".sb-body .sb-item:not(.sb-grp), .sb-body [data-menu]") && body.classList.contains("sb-drawer")) setTimeout(() => drawer(false), 0); });
     matchMedia("(min-width: 900px)").addEventListener?.("change", e => { if (e.matches) drawer(false); });
 
     // move the page's officer and upload controls in
