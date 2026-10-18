@@ -242,6 +242,19 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .rq-pl select.pledge{width:auto;min-width:200px;max-width:100%;padding:6px 8px;font-size:13px}
 .rq-pl .done{font-size:12px;font-weight:600;color:var(--good-ink)}
 @media (max-width:600px){.rq-pl select.pledge{min-width:0;width:100%}.rq-lbl{min-width:0;width:100%}}
+/* toon lookup */
+.toonpick{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 14px}
+.toonpick label{font:600 11px var(--f-head);letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.toonpick input{width:auto;flex:0 1 200px}.toonpick select{width:auto;flex:1 1 280px;max-width:480px}
+.tn-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:10px}
+.tn-head h3{margin:0;font-size:20px}
+.tn-lv{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.tn-sec{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+.tn-sec h4{margin:0 0 8px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.tn-sec h4 span{text-transform:none;letter-spacing:0;font-weight:400;opacity:.8;font-size:12.5px}
+.tn-sec.near h4{color:var(--warn-ink)}.tn-sec.dep h4{color:var(--saber)}
+.tn-ops td.off{opacity:.55}
+.tn-names{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px}.tn-names small{opacity:.7}
 /* simulate */
 .simph{margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
 .simph h3{margin:0 0 8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
@@ -423,7 +436,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
 
   <details class="planets" id="planetSum" hidden open><summary id="planetSumTitle">Planets this guild is filling</summary><div id="planetSumBody"></div></details>
   <div class="savebar" id="savedInfo" hidden=""></div>
-  <div class="row" id="mainbar" hidden="" style="margin-bottom:12px"><button class="btn" id="assignBtn" aria-pressed="true">Assignments</button><button class="btn" id="summaryBtn" aria-pressed="false">Summary</button><button class="btn" id="reqBtn" aria-pressed="false">Requirements</button><button class="btn" id="missingBtn" aria-pressed="false">Missing platoons</button><button class="btn" id="simBtn" aria-pressed="false">Simulate</button></div>
+  <div class="row" id="mainbar" hidden="" style="margin-bottom:12px"><button class="btn" id="assignBtn" aria-pressed="true">Assignments</button><button class="btn" id="summaryBtn" aria-pressed="false">Summary</button><button class="btn" id="reqBtn" aria-pressed="false">Requirements</button><button class="btn" id="missingBtn" aria-pressed="false">Missing platoons</button><button class="btn" id="simBtn" aria-pressed="false">Simulate</button><button class="btn" id="toonBtn" aria-pressed="false">Toon lookup</button></div>
 
   <section class="panel" id="req" hidden="">
     <h2>Requirements</h2>
@@ -446,6 +459,13 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
     <div id="sumMsg"></div>
     <p class="note">Tap a column heading to sort.</p>
     <div class="scroll" id="sumView"></div>
+  </section>
+
+  <section class="panel" id="toon" hidden="">
+    <h2>Toon lookup</h2>
+    <p class="note">Pick a character or ship to see every operation it's needed in, and who in the guild has it: ready, one level away, marked for deployment in the plan, and further below.</p>
+    <div class="toonpick"><label for="toonSel">Character</label><input type="search" id="toonQ" placeholder="Filter the list…" aria-label="Filter the list"><select id="toonSel"></select></div>
+    <div id="toonView"></div>
   </section>
 
   <section class="panel" id="sim" hidden="">
@@ -1061,9 +1081,9 @@ const lvlText=u=>u.ship?`${u.stars??'?'}★`:u.gear!=null&&u.gear<13?`G${u.gear}
 let MODE='assign';
 function setMode(m,scroll=true){
   MODE=m;MISSING=m==='missing';
-  $('#assignBtn').setAttribute('aria-pressed',m==='assign');$('#missingBtn').setAttribute('aria-pressed',m==='missing');$('#summaryBtn').setAttribute('aria-pressed',m==='summary');$('#reqBtn').setAttribute('aria-pressed',m==='req');$('#simBtn').setAttribute('aria-pressed',m==='sim');$('#sim').hidden=m!=='sim';
+  $('#assignBtn').setAttribute('aria-pressed',m==='assign');$('#missingBtn').setAttribute('aria-pressed',m==='missing');$('#summaryBtn').setAttribute('aria-pressed',m==='summary');$('#reqBtn').setAttribute('aria-pressed',m==='req');$('#simBtn').setAttribute('aria-pressed',m==='sim');$('#sim').hidden=m!=='sim';$('#toonBtn').setAttribute('aria-pressed',m==='toon');$('#toon').hidden=m!=='toon';
   $('#missing').hidden=m!=='missing';$('#summary').hidden=m!=='summary';$('#req').hidden=m!=='req';$('#results').hidden=m!=='assign';
-  if(m==='missing')renderMissing();if(m==='summary')renderSummary();if(m==='req')renderReq();if(m==='sim')renderSim();
+  if(m==='missing')renderMissing();if(m==='summary')renderSummary();if(m==='req')renderReq();if(m==='sim')renderSim();if(m==='toon')renderToon();
   if(scroll)$('#'+(m==='assign'?'results':m)).scrollIntoView({behavior:'smooth'});
 }
 function showMissing(on){setMode(on?'missing':'assign')}
@@ -1307,6 +1327,69 @@ function renderSim(){
   $('#simApply').hidden=!unlocked||!done;
 }
 $('#simBtn').addEventListener('click',()=>setMode('sim'));
+/* ---------- Toon lookup ---------- */
+let TOON='',TOONLV=null;
+const slotLevel=s=>{const ship=s.ship||RESULT.players.some(p=>unitOf(RESULT.roster,p,s)?.ship);return ship?{ship:true,n:s.minStars??RESULT.o.minStars,t:`${s.minStars??RESULT.o.minStars}★`}:{ship:false,n:s.minRelic??RESULT.o.relic[s.zone??s.phase]??0,t:`R${s.minRelic??RESULT.o.relic[s.zone??s.phase]??0}`}};
+function toonList(){
+  const chosen=new Set(RESULT.slots.map(s=>s.key)),m=new Map();
+  RESULT.plan.slots.forEach(s=>{if(!m.has(s.key))m.set(s.key,{key:s.key,unit:s.unit,on:chosen.has(s.key)})});
+  return[...m.values()].sort((a,b)=>a.unit.localeCompare(b.unit,'en',{sensitivity:'base'}));
+}
+function fillToonSel(){
+  const q=$('#toonQ').value.trim().toLowerCase(),L=toonList().filter(t=>!q||t.unit.toLowerCase().includes(q)||t.key.includes(q.replace(/[^a-z0-9]/g,'')));
+  const opt=t=>`<option value="${esc(t.key)}" ${t.key===TOON?'selected':''}>${esc(t.unit)}</option>`;
+  const on=L.filter(t=>t.on),off=L.filter(t=>!t.on);
+  $('#toonSel').innerHTML=`<option value="">— choose a character (${L.length}) —</option>`+(on.length?`<optgroup label="In the chosen operations">${on.map(opt).join('')}</optgroup>`:'')+(off.length?`<optgroup label="Other operations">${off.map(opt).join('')}</optgroup>`:'');
+}
+function renderToon(){
+  if(!RESULT)return;
+  fillToonSel();
+  if(!TOON){$('#toonView').innerHTML='<p class="note">Choose a character above.</p>';return}
+  const R=RESULT,all=R.plan.slots.filter(s=>s.key===TOON);if(!all.length){$('#toonView').innerHTML='';return}
+  const name=all[0].unit,gl=glKeys(R.o.gl).has(TOON)||glKeys(R.o.gl).has(all[0].nameKey);
+  // operations it is in (every planet in the plan; chosen ones show the phase they're filled in)
+  const ops=new Map();
+  all.forEach(s=>{const zone=s.phase,k=`${zone}|${s.planet}|${s.op}`;const d=deployOf({zone,planet:s.planet,op:s.op});
+    if(!ops.has(k))ops.set(k,{zone,planet:s.planet,op:s.op,count:0,rows:[],deploy:d,lvl:slotLevel({...s,zone})});const o=ops.get(k);o.count++;if(s.row!=null)o.rows.push(s.row)});
+  const opList=[...ops.values()].sort((a,b)=>a.zone-b.zone||a.planet.localeCompare(b.planet)||cmpOp(a.op,b.op));
+  const chosen=opList.filter(o=>o.deploy>0);
+  // the level to check members against: the levels it's needed at, highest first (chosen operations first)
+  const lvls=[...new Map((chosen.length?chosen:opList).map(o=>[o.lvl.t,o.lvl])).values()].sort((a,b)=>b.n-a.n);
+  if(!TOONLV||!lvls.some(l=>l.t===TOONLV))TOONLV=lvls[0].t;
+  const L=lvls.find(l=>l.t===TOONLV);
+  const probe={key:TOON,nameKey:all[0].nameKey,ship:L.ship,...(L.ship?{minStars:L.n}:{minRelic:L.n}),zone:1,phase:1};
+  const owners=[];R.players.forEach(p=>{const u=unitOf(R.roster,p,probe);if(u&&u.stars!==0)owners.push({p,u,ok:qualifies(u,probe,R.o)})});
+  const lvlN=u=>u.ship?(u.stars||0):(u.relic||0)*20+(u.gear||0);
+  const ok=owners.filter(o=>o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
+  const isNear=u=>L.ship?(u.stars||0)===L.n-1:u.gear!=null&&u.gear<13?false:(u.relic??0)===L.n-1;
+  const below=owners.filter(o=>!o.ok).sort((a,b)=>lvlN(b.u)-lvlN(a.u)||a.p.localeCompare(b.p));
+  const near=below.filter(o=>isNear(o.u)),far=below.filter(o=>!isNear(o.u));
+  // marked for deployment in the plan
+  const dep=R.slots.filter(s=>s.player&&s.key===TOON).sort((a,b)=>a.phase-b.phase||slotSort(a,b)||a.player.localeCompare(b.player));
+  const depBy=new Map();dep.forEach(s=>{if(!depBy.has(s.player))depBy.set(s.player,[]);depBy.get(s.player).push(s)});
+  const unfilled=R.slots.filter(s=>!s.player&&s.key===TOON).length;
+  const needPh=new Map();R.slots.filter(s=>s.key===TOON).forEach(s=>needPh.set(s.phase,(needPh.get(s.phase)||0)+1));
+  const tag=s=>`<span class="wh">P${s.phase} · ${esc(s.planet)} op ${esc(s.op)}${s.row!=null?` <small>row ${s.row}</small>`:''}</span>`;
+  const names=l=>l.length?`<div class="tn-names">${l.map(o=>`<span>${esc(o.p)} <small>${esc(unitLvl(o.u))}</small></span>`).join('')}</div>`:'<p class="note">Nobody.</p>';
+  let h=`<div class="tn-head"><h3>${esc(name)}</h3>${gl?'<span class="gl">GL</span>':''}<span class="note" style="margin:0">${L.ship?'Ship':'Character'} · ${R.players.length-owners.length} of ${R.players.length} members don't have it unlocked</span></div>
+    <div class="stats"><div class="stat"><b>${opList.length}</b><span>operations it's in</span></div>
+      <div class="stat"><b>${R.slots.filter(s=>s.key===TOON).length}</b><span>slots in the chosen operations</span></div>
+      <div class="stat"><b>${dep.length}</b><span>slots marked for deployment</span></div>
+      <div class="stat"><b${unfilled?' style="color:var(--bad)"':''}>${unfilled}</b><span>slots nobody can fill</span></div>
+      <div class="stat"><b>${ok.length}</b><span>members at ${esc(L.t)}+</span></div></div>`;
+  if(lvls.length>1)h+=`<div class="tn-lv" role="group" aria-label="Check members against">${lvls.map(l=>`<button class="phchip" data-lv="${esc(l.t)}" aria-pressed="${l.t===TOONLV}">Needed at ${esc(l.t)}</button>`).join('')}</div>`;
+  h+=`<div class="tn-sec"><h4>Operations and planets <span>${chosen.length} of ${opList.length} chosen${needPh.size?` · needed ${[...needPh].sort((a,b)=>a[0]-b[0]).map(([p,n])=>`${n}× in phase ${p}`).join(', ')}`:''}</span></h4>
+    <div class="scroll"><table class="tn-ops"><thead><tr><th>Planet</th><th>Operation</th><th>Copies</th><th>Level</th><th>Filled in</th></tr></thead><tbody>${opList.map(o=>`<tr><td class="${o.deploy?'':'off'}">${esc(o.planet)} <small>(phase ${o.zone})</small></td><td class="${o.deploy?'':'off'}">${esc(o.op)}${o.rows.length?` <small>row ${[...new Set(o.rows)].join(', ')}</small>`:''}</td><td>${o.count}</td><td>${esc(o.lvl.t)}</td><td>${o.deploy?`Phase ${o.deploy}`:'<span class="note">not chosen</span>'}</td></tr>`).join('')}</tbody></table></div></div>`;
+  h+=`<div class="tn-sec"><h4>Ready <span>${ok.length} member${ok.length===1?'':'s'} at ${esc(L.t)} or above</span></h4>${ok.length?`<div class="scroll"><table class="wctable"><thead><tr><th>Member</th><th>Level</th><th>Marked for deployment</th></tr></thead><tbody>${ok.map(o=>`<tr><td>${esc(o.p)}</td><td><b>${esc(unitLvl(o.u))}</b></td><td>${(depBy.get(o.p)||[]).map(tag).join('')||'<span class="wh free">Not placing it</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="note">Nobody has it at this level yet.</p>'}</div>`;
+  h+=`<div class="tn-sec near"><h4>One level away <span>${near.length} member${near.length===1?'':'s'} ${L.ship?'one star short':'one relic level short'}</span></h4>${near.length?`<div class="scroll"><table class="wctable"><thead><tr><th>Member</th><th>Level</th><th>Needs</th></tr></thead><tbody>${near.map(o=>`<tr><td>${esc(o.p)}</td><td><b>${esc(unitLvl(o.u))}</b></td><td>${L.ship?'1 more star':`1 relic level (to ${esc(L.t)})`}</td></tr>`).join('')}</tbody></table></div>`:'<p class="note">Nobody is one level away.</p>'}</div>`;
+  h+=`<div class="tn-sec dep"><h4>Marked for deployment <span>${depBy.size} member${depBy.size===1?'':'s'} placing it in the plan · ${dep.length} slot${dep.length===1?'':'s'}</span></h4>${dep.length?`<div class="scroll"><table class="wctable"><thead><tr><th>Phase</th><th>Planet</th><th>Operation</th><th>Member</th></tr></thead><tbody>${dep.map(s=>`<tr><td>P${s.phase}</td><td>${esc(s.planet)}${carry(s)}</td><td>${esc(s.op)}${s.row!=null?` <small>row ${s.row}</small>`:''}</td><td>${esc(s.player)}${tags(s)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="note">Nobody is placing it in the current plan.</p>'}</div>`;
+  h+=`<div class="tn-sec"><h4>Further below <span>${far.length} member${far.length===1?'':'s'} more than one level below ${esc(L.t)}</span></h4>${names(far)}</div>`;
+  $('#toonView').innerHTML=h;
+  $('#toonView').querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{TOONLV=b.dataset.lv;renderToon()});
+}
+$('#toonBtn').addEventListener('click',()=>setMode('toon'));
+$('#toonSel').addEventListener('change',e=>{TOON=e.target.value;TOONLV=null;renderToon()});
+$('#toonQ').addEventListener('input',()=>{fillToonSel();const opts=[...$('#toonSel').options].filter(o=>o.value);if(opts.length===1&&TOON!==opts[0].value){TOON=opts[0].value;TOONLV=null;renderToon()}});
 $('#simRun').addEventListener('click',()=>{
   const b=$('#simRun');b.disabled=true;b.textContent='Simulating…';showMsg('#simMsg','','');
   setTimeout(()=>{try{SIM=simulate();renderSim()}catch(e){showMsg('#simMsg','err','The simulation failed: '+esc(e.message))}finally{b.disabled=false;b.textContent='Run the simulation again'}},30);
