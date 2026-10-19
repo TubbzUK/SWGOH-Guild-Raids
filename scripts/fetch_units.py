@@ -121,6 +121,8 @@ def main() -> int:
             entry["ship"] = True
         if "galactic_legend" in [str(c).lower() for c in u.get("categoryId") or []] and not entry.get("ship"):
             entry["gl"] = True
+        if any("conquest" in str(c).lower() for c in u.get("categoryId") or []) and not entry.get("ship"):
+            entry["conquest"] = True
         side = SIDES.get(str(u.get("forceAlignment")))
         if side:
             entry["side"] = side

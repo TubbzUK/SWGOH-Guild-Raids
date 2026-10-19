@@ -658,7 +658,15 @@ def unit_names() -> dict[str, str]:
 
 # Galactic Legends, in case the unit list from the game hasn't got its flags yet
 KNOWN_GLS = {"GLREY", "SUPREMELEADERKYLOREN", "GRANDMASTERLUKE", "SITHPALPATINE", "JEDIMASTERKENOBI", "LORDVADER",
-             "JABBATHEHUTT", "GLLEIA"}
+             "JABBATHEHUTT", "GLLEIA", "GLAHSOKATANO", "GLHONDO"}
+
+
+def conquest_units() -> set[str]:
+    f = Path(__file__).resolve().parent / "conquest-units.txt"
+    try:
+        return {ln.split("#")[0].strip().upper() for ln in f.read_text(encoding="utf-8").splitlines() if ln.split("#")[0].strip()}
+    except OSError:
+        return set()
 
 
 def full_roster(path: Path, names: dict[str, str]) -> dict | None:
@@ -679,6 +687,7 @@ def full_roster(path: Path, names: dict[str, str]) -> dict | None:
     ival = lambda v: (int(n) if (n := to_number(v)) is not None else None)  # noqa: E731
     units, uidx, players = [], {}, {}
     max_rel = -1
+    cq = conquest_units()
     for _, r in df.iterrows():
         nm = cell(r[name_c])
         base = cell(r[base_c]).upper()
@@ -691,7 +700,8 @@ def full_roster(path: Path, names: dict[str, str]) -> dict | None:
             side = (cell(r[side_c])[:1].upper() if side_c else "") or info.get("side", "")
             units.append({"id": base, "name": names.get(base) or base.replace("_", " ").title(), "ship": ship,
                           **({"side": side} if side in ("L", "D", "N") else {}), **({"img": info["img"]} if info.get("img") else {}),
-                          **({"gl": True} if not ship and (info.get("gl") or base in KNOWN_GLS) else {})})
+                          **({"gl": True} if not ship and (info.get("gl") or base in KNOWN_GLS) else {}),
+                          **({"cq": True} if not ship and (info.get("conquest") or base in cq) else {})})
         p = players.setdefault(nm, {"name": nm, "gp": 0, "power": 0, "u": {}})
         relic = None if ship or not relic_c else ival(r[relic_c])
         if relic is not None:
@@ -939,7 +949,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
             shutil.copy2(gdir / name, out_dir / name)
     if (gdir / "platoon-settings.json").exists():
         shutil.copy2(gdir / "platoon-settings.json", out_dir / "platoon-settings.json")
-    if (gdir / "profiles.json").exists():                 # GA, mods and datacrons from the game, for the Guild overview
+    if (gdir / "profiles.json").exists():                 # GA and mods from the game, for the Guild overview
         shutil.copy2(gdir / "profiles.json", out_dir / "profiles.json")
     if (gdir / "platoon-pledges.json").exists():           # who has signed up to fill missing platoon units
         shutil.copy2(gdir / "platoon-pledges.json", out_dir / "platoon-pledges.json")

@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
 <style>
-/* Every current member side by side, one section at a time: Stats, Roster, Abilities, Datacrons.
+/* Every current member side by side, one section at a time: Stats, Roster, Abilities.
    Members run down the left; each section's columns sort with a click. Colours and fonts come from theme.css. */
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
 .card { padding: 16px 18px; min-width: 0; }
@@ -84,7 +84,6 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
     <button role="tab" aria-selected="true" data-tab="stats">Stats</button>
     <button role="tab" aria-selected="false" data-tab="roster">Roster</button>
     <button role="tab" aria-selected="false" data-tab="abilities">Abilities</button>
-    <button role="tab" aria-selected="false" data-tab="datacrons">Datacrons</button>
   </nav>
 
   <div id="notice"></div>
@@ -140,13 +139,15 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
   Object.entries(skills || {}).forEach(([id, s]) => { if (s.mode) MODE[id] = s.mode; });
   const prof = new Map((profiles?.players || []).map(p => [norm(p.name), p]));
   const REL = [1, 5, 7, 8, 9, 10];
+  const CQ = U.filter(u => u.cq).map(u => u.name).sort();
   const members = rosters.players.map(p => {
-    const r = { name: p.name, id: norm(p.name), gp: p.gp || null, gl: 0, g13: 0, rel: Array(11).fill(0), gear: 0, zetas: 0, omis: 0, tw: 0, tb: 0, gac: 0, chars: 0 };
+    const r = { name: p.name, id: norm(p.name), gp: p.gp || null, gl: 0, g13: 0, cq: 0, rel: Array(11).fill(0), gear: 0, zetas: 0, omis: 0, tw: 0, tb: 0, gac: 0, chars: 0 };
     p.u.forEach(row => {
       const u = U[row[0]] || {}, gear = row[2] || 0, relic = row[3];
       if (!u.ship) {
         r.chars++;
         if (u.gl && (row[1] || 0) >= 7) r.gl++;
+        if (u.cq) r.cq++;
         if (gear >= 13) { r.g13++; if (relic != null && relic >= 0) r.rel[Math.min(10, relic)]++; }
         r.gear += gear >= 13 ? 2 + Math.max(0, relic || 0) : gear === 12 ? 1 : 0;
       }
@@ -159,13 +160,10 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
       const cgp = pr.gp_char || r.gp;
       r.mod = pr.mods && cgp ? pr.mods.s15 / (cgp / 100000) : null;
       r.s15 = pr.mods?.s15 ?? null; r.s20 = pr.mods?.s20 ?? null; r.six = pr.mods?.six ?? null;
-      const d = pr.datacrons || [];
-      r.dc = d.reduce((a, b) => a + b, 0); r.dc13 = (d[1] || 0) + (d[2] || 0) + (d[3] || 0); r.dc45 = (d[4] || 0) + (d[5] || 0);
-      r.dc68 = (d[6] || 0) + (d[7] || 0) + (d[8] || 0); r.dc9 = d[9] || 0;
     }
     return r;
   });
-  const hasProf = members.some(m => m.skill != null || m.dc != null);
+  const hasProf = members.some(m => m.skill != null || m.mod != null);
   // total score: how each member ranks in the guild on GP, GA skill rating, mod score and gear score (0-100)
   const pct = k => {   // 0 = lowest in the guild, 100 = highest (ties share the middle)
     const v = members.map(m => m[k]).filter(x => x != null);
@@ -191,9 +189,10 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
       kpis: () => [["Members", members.length], ["Guild GP", fmtGP(sum("gp"))], ["Average GA skill", avgOf("skill", int)], ["Average mod score", avgOf("mod", v => dec(v))], ["Kyber players", members.filter(m => m.league === "Kyber").length]] },
     roster: { cols: [
       { k: "gl", l: "GL", v: m => m.gl, f: int, sum: true, tip: "Galactic Legends (characters)" },
+      { k: "cq", l: "Conquest", v: m => m.cq, f: int, sum: true, tip: "Conquest characters unlocked" },
       { k: "g13", l: "G13", v: m => m.g13, f: int, sum: true, tip: "Characters at gear 13" },
       ...REL.map(n => ({ k: "r" + n, l: () => relMode === "exact" ? "R" + n : "R" + n + "+", v: m => relN(m, n), f: int, sum: true, tip: () => relMode === "exact" ? `Characters at exactly relic ${n}` : `Characters at relic ${n} or higher` }))],
-      kpis: () => [["Galactic Legends", sum("gl")], ["G13 characters", int(sum("g13"))], ["R7 and up", int(members.reduce((a, m) => a + m.rel.slice(7).reduce((x, y) => x + y, 0), 0))], ["R9 and up", int(members.reduce((a, m) => a + m.rel.slice(9).reduce((x, y) => x + y, 0), 0))]] },
+      kpis: () => [["Galactic Legends", sum("gl")], ["Conquest characters", int(sum("cq"))], ["G13 characters", int(sum("g13"))], ["R7 and up", int(members.reduce((a, m) => a + m.rel.slice(7).reduce((x, y) => x + y, 0), 0))], ["R9 and up", int(members.reduce((a, m) => a + m.rel.slice(9).reduce((x, y) => x + y, 0), 0))]] },
     abilities: { cols: [
       { k: "zetas", l: "Zetas", v: m => m.zetas, f: int, sum: true, tip: "Zeta abilities applied" },
       { k: "omis", l: "Omicrons", v: m => m.omis, f: int, sum: true, tip: "Omicron abilities applied" },
@@ -201,13 +200,6 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
       { k: "tb", l: "TB omis", v: m => m.tb, f: int, sum: true, tip: "Omicrons that work in Territory Battles" },
       { k: "gac", l: "GAC omis", v: m => m.gac, f: int, sum: true, tip: "Omicrons that work in Grand Arena (3v3 and 5v5)" }],
       kpis: () => [["Zetas", int(sum("zetas"))], ["Omicrons", int(sum("omis"))], ["TW omicrons", int(sum("tw"))], ["TB omicrons", int(sum("tb"))], ["GAC omicrons", int(sum("gac"))]] },
-    datacrons: { cols: [
-      { k: "dc", l: "Datacrons", v: m => m.dc, f: int, sum: true, tip: "Datacrons owned" },
-      { k: "dc13", l: "Level 1-3", v: m => m.dc13, f: int, sum: true },
-      { k: "dc45", l: "Level 4-5", v: m => m.dc45, f: int, sum: true },
-      { k: "dc68", l: "Level 6-8", v: m => m.dc68, f: int, sum: true },
-      { k: "dc9", l: "Level 9", v: m => m.dc9, f: int, sum: true }],
-      kpis: () => [["Datacrons", int(sum("dc"))], ["Level 9", int(sum("dc9"))], ["Level 6-8", int(sum("dc68"))], ["Average per member", avgOf("dc", v => dec(v, 1))]] },
   };
   const sum = k => members.reduce((a, m) => a + (m[k] || 0), 0);
   const avgOf = (k, f) => { const v = members.map(m => m[k]).filter(x => x != null); return v.length ? f(v.reduce((a, b) => a + b, 0) / v.length) : "–"; };
@@ -220,13 +212,12 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
     "<b>Gear score</b>: every character adds G12 = 1, G13 = 2, plus 1 for each relic level (so R9 = 11).",
     "<b>Total score</b> (0-100): where the member ranks in this guild on GP, GA skill, mod score and gear score, averaged. 50 is the middle of the guild.",
     "HotUtils doesn't publish how its own scores are worked out, so these are the site's own, explained here.",
-    "<b>Roster</b> counts characters only. GL needs the Galactic Legend at 7 stars. Switch <i>At least / Exactly</i> to count R5 as \"R5 or higher\" or \"exactly R5\".",
+    `<b>Roster</b> counts characters only. GL needs the Galactic Legend at 7 stars. <b>Conquest</b> counts the Conquest characters unlocked (${esc(CQ.join(", ")) || "none listed"}). Switch <i>At least / Exactly</i> to count R5 as "R5 or higher" or "exactly R5".`,
     "<b>Omicrons</b> by mode use the game's ability list: TW, TB, and GAC (3v3 and 5v5).",
-    "<b>Datacrons</b>: a datacron's level is how many of its 9 levels have been rolled. They come from the game, for connected guilds.",
   ];
   $("#howList").innerHTML = HOW.map(h => `<li>${h}</li>`).join("");
 
-  let tab = "stats", sortK = { stats: "gp", roster: "g13", abilities: "omis", datacrons: "dc" }, sortD = -1, selected = params.player ? norm(params.player) : null;
+  let tab = "stats", sortK = { stats: "gp", roster: "g13", abilities: "omis" }, sortD = -1, selected = params.player ? norm(params.player) : null;
   const tabs = [...document.querySelectorAll("nav.tabs button")];
   const setTab = t => { tab = SECTIONS[t] ? t : "stats"; tabs.forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab)); render(); };
   tabs.forEach(b => b.onclick = () => { setTab(b.dataset.tab); try { history.replaceState(null, "", location.pathname + location.search + "#" + tab); } catch (e) {} });
@@ -238,8 +229,8 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
     const S = SECTIONS[tab], cols = S.cols, q = norm($("#q").value);
     $("#relMode").hidden = tab !== "roster";
     document.querySelectorAll("#relMode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === relMode));
-    const needsGame = (tab === "datacrons" || tab === "stats") && !hasProf;
-    $("#notice").innerHTML = needsGame ? `<div class="notice">${tab === "datacrons" ? "Datacrons" : "GA league, GA skill and mod score"} come from the game. Connect ${esc(guild.name)} with an ally code (side menu → Upload → Connect a guild to the game) and they'll appear after the next pull.</div>` : "";
+    const needsGame = tab === "stats" && !hasProf;
+    $("#notice").innerHTML = needsGame ? `<div class="notice">GA league, GA skill and mod score come from the game. ${guild.game ? `They appear after the next pull from the game (every 4 hours, or straight away with side menu → Officers → Pull from the game now).` : `Connect ${esc(guild.name)} with an ally code (side menu → Upload → Connect a guild to the game) and they'll appear after the next pull.`}</div>` : "";
     $("#kpis").innerHTML = S.kpis().map(([l, v]) => `<div class="card kpi"><div class="label">${esc(l)}</div><div class="value">${v}</div></div>`).join("");
     const k = sortK[tab] === "name" || cols.some(c => c.k === sortK[tab]) ? sortK[tab] : cols[0].k;
     const col = k === "name" ? { v: m => m.name } : cols.find(c => c.k === k);

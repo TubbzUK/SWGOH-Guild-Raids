@@ -28,7 +28,7 @@ Every page has a menu down the left-hand side with everything in one place:
   straight to it (the page you're on starts open, with the section you're on highlighted):
   - Raids → Overview, Players, Readiness
   - Player status
-  - Guild overview → Stats, Roster, Abilities, Datacrons
+  - Guild overview → Stats, Roster, Abilities
   - Territory battles → Overview, Members, Phases, Player, TB contribution
   - Territory wars → Overview, Members
   - Guild effectiveness → Overview, Raids vs TBs, Ranking, Members, How it's worked out
@@ -273,13 +273,13 @@ one section at a time. Members run down the left (click a name for their Player 
 column heading to sort, and the bottom row shows the guild total or average.
 
 - **Stats** – GP, GA league and division, GA skill rating, Total score, Mod score, Gear score
-- **Roster** – Galactic Legends, G13, and R1 / R5 / R7 / R8 / R9 / R10 (switch between *at least*
-  and *exactly* that relic)
+- **Roster** – Galactic Legends, Conquest characters, G13, and R1 / R5 / R7 / R8 / R9 / R10 (switch
+  between *at least* and *exactly* that relic). Conquest characters are listed in
+  `scripts/conquest-units.txt` - add each new one there (one unit ID per line).
 - **Abilities** – zetas, omicrons, and omicrons for TW, TB and GAC
-- **Datacrons** – how many, and how many at level 1-3, 4-5, 6-8 and 9
 
-The roster and abilities come from the roster (uploaded or pulled from the game). GA, mods and
-datacrons only come from the game, so they appear for guilds connected with an ally code; they're
+The roster and abilities come from the roster (uploaded or pulled from the game). GA and mods only
+come from the game, so they appear for guilds connected with an ally code; they're
 saved in `guilds/<guild>/profiles.json` (no ally codes) on the daily roster pull.
 
 HotUtils doesn't publish how its scores are worked out, so the site uses its own (also explained on the page):

@@ -1,0 +1,20 @@
+# Conquest reward characters, counted on the Guild overview page (Roster → Conquest).
+# One game unit ID per line (the ID swgoh.gg shows in a character's address, in capitals).
+# Add each new Conquest character here when it arrives.
+COMMANDERAHSOKA
+MAULS7
+BOBAFETTSCION
+DARTHMALGUS
+BENSOLO
+TRENCH
+TARONMALICOS
+MOFFGIDEONS3
+DARTHBANE
+QUEENAMIDALA
+LUTHENRAEL
+EZRAEXILE
+DARKREY
+JOCASTANU
+SM33
+MAZKANATA
+EMBOANDKEIBU

@@ -95,8 +95,7 @@
     { key: "overview", id: "overviewLink", file: "guild.html", match: /guild\.html$/, ic: "▦", label: "Guild overview", kids: [
       { label: "Stats", hash: "stats", sel: tab("stats") },
       { label: "Roster", hash: "roster", sel: tab("roster") },
-      { label: "Abilities", hash: "abilities", sel: tab("abilities") },
-      { label: "Datacrons", hash: "datacrons", sel: tab("datacrons") }] },
+      { label: "Abilities", hash: "abilities", sel: tab("abilities") }] },
     { key: "tb", ...TB, ic: "◈", label: "Territory battles", kids: [
       { label: "Overview", hash: "overview", sel: tab("overview") },
       { label: "Members", hash: "members", sel: tab("members") },

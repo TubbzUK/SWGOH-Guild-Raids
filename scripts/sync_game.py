@@ -124,7 +124,7 @@ DIVISIONS = {"25": 1, "20": 2, "15": 3, "10": 4, "5": 5}
 
 
 def profile_of(p: dict, member: dict) -> dict:
-    """GP, GA league and skill rating, speed mods and datacrons for the Guild overview page (no ally codes)."""
+    """GP, GA league and skill rating and speed mods for the Guild overview page (no ally codes)."""
     out: dict = {"name": p.get("name") or member.get("playerName") or "?"}
     stats = {str(x.get("nameKey") or ""): num(x.get("value")) for x in p.get("profileStat") or [] if isinstance(x, dict)}
     out["gp"] = int(stats.get("STAT_GALACTIC_POWER_ACQUIRED_NAME") or num(member.get("galacticPower")) or 0)
@@ -161,11 +161,6 @@ def profile_of(p: dict, member: dict) -> dict:
                     if v >= t:
                         m[k] += 1
     out["mods"] = m
-    # datacrons: the level is how many affixes it has (0-9)
-    lv = [0] * 10
-    for d in p.get("datacron") or []:
-        lv[min(9, len(d.get("affix") or []))] += 1
-    out["datacrons"] = lv
     return out
 
 
@@ -264,7 +259,7 @@ class Guild:
         except (OSError, ValueError):
             prof_old = {}
         if todays and prof_old.get("date") != today:
-            forced = True    # the Guild overview stats (GA, mods, datacrons) haven't been read today
+            forced = True    # the Guild overview stats (GA, mods) haven't been read today
         if todays and not forced:
             try:
                 with open(todays[0], encoding="utf-8-sig", newline="") as fh:
