@@ -21,6 +21,7 @@ Chrome that GitHub's runners already have. If that can't be done, it posts the t
 import functools
 import http.server
 import json
+import time
 import os
 import re
 import sys
@@ -254,7 +255,7 @@ def main():
         if not slug or not (ROOT / "guilds" / slug).is_dir():
             print(f"::warning::Post request for an unknown guild ({slug}) - skipped")
             continue
-        channel = {"platoons": "platoons", "effectiveness": "officers"}.get(kind, "main")
+        channel = {"platoons": "platoons", "platoons-all": "platoons", "effectiveness": "officers"}.get(kind, "main")
         secret, hook = webhook_for(slug, channel)
         if not hook:
             print(f"::warning::{slug}: no GitHub secret called {secret} - can't post the {kind} panel. "
@@ -276,6 +277,8 @@ def main():
                 post_effectiveness(slug, hook)
             elif kind == "platoons":
                 post_platoons(slug, it, hook)
+            elif kind == "platoons-all":
+                post_platoons_all(slug, it, hook)
             else:
                 print(f"::warning::{slug}: unknown post type {kind!r} - skipped")
         except Exception as e:  # one post failing shouldn't stop the others
@@ -368,6 +371,35 @@ def post_platoons(slug, it, hook):
     post_panel(hook, slug, f"platoons-p{phase}", f"{guild_name(slug)} · RotE phase {phase} platoons" + (f" · {who}" if who else ""),
                "Who places what this phase.", link, shots,
                [{"name": "Assignments", "value": "The pictures couldn't be made this time - open the planner for this phase's lists.", "inline": False}])
+
+def post_platoons_all(slug, it, hook):
+    """Every member's platoon assignments for every phase, as text (split into as many messages as it needs)."""
+    text = str(it.get("text") or "").strip()
+    if not text:
+        print(f"{slug}: no platoon assignments in the request - nothing to post")
+        return
+    link = site_link(f"platoons.html?guild={slug}")
+    blocks = [b.strip() for b in re.split(r"\n\s*\n", text) if b.strip()]
+    head = blocks.pop(0) if blocks and not blocks[0].startswith("**") else ""
+    chunks, cur = [], ""
+    for b in blocks:
+        b = clip(b, 3900)
+        if cur and len(cur) + len(b) + 2 > 3900:
+            chunks.append(cur)
+            cur = ""
+        cur = (cur + "\n\n" + b) if cur else b
+    if cur:
+        chunks.append(cur)
+    title = f"{guild_name(slug)} · RotE platoon assignments"
+    for i, c in enumerate(chunks or [head or "No assignments."]):
+        embed = {"title": title + (f" ({i + 1}/{len(chunks)})" if len(chunks) > 1 else ""), "color": 0x2A78D6,
+                 "description": ((head + "\n\n") if head and i == 0 else "") + c}
+        if link and i == len(chunks) - 1:
+            embed["description"] += f"\n\n[Open the planner]({link})"
+        send(hook, {"embeds": [embed], "allowed_mentions": {"parse": []}}, None)
+        time.sleep(1)
+    print(f"{slug}: posted platoon assignments for the whole guild ({len(chunks)} message{'s' if len(chunks) != 1 else ''})")
+
 
 def post_readiness(slug, raid, hook):
     if not raid:

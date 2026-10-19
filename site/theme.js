@@ -60,6 +60,32 @@
   const EFF = { id: "effLink", file: "effectiveness.html", match: /effectiveness\.html$/ };
   const PLAT = { id: "platoonLink", file: "platoons.html", match: /platoons\.html$/ };
   const tab = t => `nav button[data-tab="${t}"]`;
+  // officer tools, grouped; each lives on one page and can be started from any page (it opens that page and runs it)
+  // sel = a button on that page; fn = the label the page registers with RaidTheme.menuItem("officer", ...)
+  const OFFICER = [
+    { key: "post", ic: "📣", label: "Post to Discord", kids: [
+      { id: "post-raid", label: "Raid results", page: RAID, sel: "#postBtn" },
+      { id: "post-ready", label: "Raid readiness", page: RAID, sel: "#postReadyBtn" },
+      { id: "post-tb", label: "TB stats", page: TB, sel: "#postBtn" },
+      { id: "post-tw", label: "TW stats", page: TW, sel: "#postBtn" },
+      { id: "post-eff", label: "Guild effectiveness (officers)", page: EFF, sel: "#postBtn" },
+      { id: "post-plat", label: "Platoons: one phase", page: PLAT, sel: "#postDiscord" },
+      { id: "post-plat-all", label: "Platoons: whole guild", page: PLAT, sel: "#postAll" }] },
+    { key: "otb", ic: "◈", label: "Territory battles", kids: [
+      { id: "tb-manage", label: "Manage TB uploads", page: TB, fn: "Manage TB uploads" },
+      { id: "tb-stars", label: "Set TB stars", page: TB, fn: "Set TB stars" },
+      { id: "tb-contrib", label: "Contribution settings", page: RANK, fn: "Contribution settings" }] },
+    { key: "otw", ic: "✦", label: "Territory wars", kids: [
+      { id: "tw-result", label: "Set the TW result", page: TW, sel: "#resultBtn" }] },
+    { key: "oeff", ic: "◎", label: "Guild effectiveness", kids: [
+      { id: "eff-weights", label: "Effectiveness weighting", page: EFF, fn: "Effectiveness weighting" }] },
+    { key: "oplat", ic: "⚑", label: "RotE platoons", kids: [
+      { id: "plat-data", label: "Planner data", page: PLAT, fn: "Platoon planner: data" },
+      { id: "plat-ops", label: "Operations to fill", page: PLAT, fn: "Platoon planner: operations to fill" },
+      { id: "plat-rules", label: "Rules", page: PLAT, fn: "Platoon planner: rules" }] },
+  ];
+  const OFF_FN = new Set(OFFICER.flatMap(g => g.kids).filter(k => k.fn).map(k => k.fn));
+  const offReg = {};   // fn label -> the page's action
   const PAGES = [
     { key: "raids", ...RAID, ic: "⚔", label: "Raids", kids: [
       { label: "Overview", hash: "overview", sel: tab("overview") },
@@ -122,9 +148,9 @@
   .sb .sb-grp.here { color: var(--accent) !important; }
   .sb .sb-kids { position: relative; margin: 0 0 4px 21px; padding-left: 10px; border-left: 1px solid var(--border); }
   .sb .sb-kids[hidden] { display: none; }
-  .sb a.sb-item.sb-kid { min-height: 32px; padding: 6px 10px !important; font: 500 13px var(--font-ui) !important; color: var(--text-2) !important; }
-  .sb a.sb-item.sb-kid[aria-current="page"]::before { left: -11px; top: 6px; bottom: 6px; }
-  .sb a.sb-item.sb-kid[aria-current="page"] { color: var(--accent) !important; font-weight: 650 !important; }
+  .sb .sb-item.sb-kid { min-height: 32px; padding: 6px 10px !important; font: 500 13px var(--font-ui) !important; color: var(--text-2) !important; }
+  .sb .sb-item.sb-kid[aria-current="page"]::before { left: -11px; top: 6px; bottom: 6px; }
+  .sb .sb-item.sb-kid[aria-current="page"] { color: var(--accent) !important; font-weight: 650 !important; }
   body.sb-min .sb .sb-kids, body.sb-min .sb .car { display: none !important; }
   .sb .ic { flex: none; width: 24px; text-align: center; font-size: 15px; line-height: 1; }
   .sb .tx { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -248,6 +274,52 @@
       const sync = () => { const hid = ownHidden(p); grp.hidden = hid; kids.style.display = hid ? "none" : ""; }; sync(); watch(p, sync);
       pagesSec.appendChild(grp); pagesSec.appendChild(kids);
     });
+    // officer tools as a tree
+    const offSec = sb.querySelector('[data-sec="officer"]');
+    const holder = document.createElement("div"); holder.hidden = true; holder.className = "sb-holder"; body.appendChild(holder);
+    const kidHere = k => k.page.match.test(here);
+    const runKid = k => {
+      if (!kidHere(k)) { const h = pageHref(k.page); location.href = h + (h.includes("?") ? "&" : "?") + "do=" + encodeURIComponent(k.id); return; }
+      if (k.fn) { const f = offReg[k.fn]; f ? f() : alertish("That isn't ready yet - try again in a moment."); return; }
+      const el = document.querySelector(k.sel);
+      if (!el || el.hidden) { alertish("There's nothing to post here for this guild yet."); return; }
+      el.click();
+    };
+    OFFICER.forEach(gp => {
+      const grp = document.createElement("button"); grp.type = "button"; grp.className = "sb-item sb-grp";
+      iconise(grp, `${gp.ic} ${gp.label}`); grp.insertAdjacentHTML("beforeend", CARET);
+      const kids = document.createElement("div"); kids.className = "sb-kids"; kids.id = "sbo-" + gp.key; grp.setAttribute("aria-controls", kids.id);
+      const setOpen = v => { kids.hidden = !v; grp.setAttribute("aria-expanded", String(v)); }; setOpen(false);
+      grp.onclick = () => {
+        if (body.classList.contains("sb-min") && matchMedia("(min-width: 900px)").matches) { body.classList.remove("sb-min"); ls.set(SB_KEY, null); flipLabel(); setOpen(true); return; }
+        setOpen(kids.hidden);
+      };
+      const btns = gp.kids.map(k => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "sb-item sb-kid"; b.textContent = k.label; b.title = k.label + (kidHere(k) ? "" : " (opens " + (k.page === RANK ? "TB contribution" : PAGES.find(p => p.id === k.page.id)?.label || "that page") + ")");
+        b.onclick = () => runKid(k); kids.appendChild(b); return [b, k];
+      });
+      const sync = () => { let any = false; btns.forEach(([b, k]) => { b.hidden = ownHidden(k.page); any = any || !b.hidden; }); grp.hidden = !any; kids.style.display = any ? "" : "none"; };
+      sync(); [...new Set(gp.kids.map(k => k.page))].forEach(p => watch(p, sync));
+      offSec.appendChild(grp); offSec.appendChild(kids);
+    });
+    // arriving with ?do=<tool>: run it once the page has it ready
+    (function fromDo() {
+      const m = /[?&]do=([^&#]*)/.exec(location.search); if (!m) return;
+      const id = decodeURIComponent(m[1]), k = OFFICER.flatMap(g => g.kids).find(x => x.id === id);
+      const strip = () => { try { history.replaceState(null, "", location.pathname + location.search.replace(/([?&])do=[^&#]*&?/, "$1").replace(/[?&]$/, "") + location.hash); } catch (e) {} };
+      if (id === "pull") { strip(); const t0 = Date.now(); (function w() { if (window.Officer) pullNow(); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
+      if (!k || !kidHere(k)) { strip(); return; }
+      const t0 = Date.now();
+      (function tryIt() {
+        let ok = false;
+        if (k.fn) ok = !!offReg[k.fn] && !!window.Officer;
+        else { const el = document.querySelector(k.sel); ok = !!el && !el.hidden && !(el.closest("[hidden]") && !holder.contains(el)) && !!window.Officer; }
+        if (ok) { strip(); runKid(k); return; }
+        if (Date.now() - t0 < 15000) return setTimeout(tryIt, 200);
+        strip(); runKid(k);
+      })();
+    })();
+
     // which section of this page is showing
     const isOn = el => !!el && (el.getAttribute("aria-selected") === "true" || el.getAttribute("aria-pressed") === "true");
     function markKids() {
@@ -320,14 +392,21 @@
     matchMedia("(min-width: 900px)").addEventListener?.("change", e => { if (e.matches) drawer(false); });
 
     // move the page's officer and upload controls in
-    document.querySelectorAll("[data-menu]").forEach(n => { const sec = sb.querySelector(`[data-sec="${n.dataset.menu}"]`); if (sec) { iconise(n); sec.appendChild(n); } });
+    const claimed = OFFICER.flatMap(g => g.kids).filter(k => k.sel && kidHere(k)).map(k => document.querySelector(k.sel));
+    document.querySelectorAll("[data-menu]").forEach(n => {
+      if (n.dataset.menu === "officer" && claimed.includes(n)) { holder.appendChild(n); return; }   // started from the officer tree
+      const sec = sb.querySelector(`[data-sec="${n.dataset.menu}"]`); if (sec) { iconise(n); sec.appendChild(n); }
+    });
     if (!sb.querySelector('[data-sec="upload"] [data-menu]')) {
       const g = guildNow(), up = menuItem("upload", "⬆ Upload a WookieeBot file", "upload.html" + (g ? "?guild=" + encodeURIComponent(g) : ""));
       if (/upload\.html$/.test(here)) up.setAttribute("aria-current", "page");
     }
     menuItem("upload", "＋ Add a new guild", "upload.html#newguild");
     menuItem("upload", "🔗 Connect a guild to the game", "upload.html" + (guildNow() ? "?guild=" + encodeURIComponent(guildNow()) : "") + "#connect");
-    if (document.querySelector('script[src*="officer.js"]')) menuItem("officer", "🔄 Pull from the game now", pullNow);
+    menuItem("officer", "🔄 Pull from the game now", () => {
+      if (window.Officer) return pullNow();
+      const g = guildNow(); location.href = "./?" + (g ? "guild=" + encodeURIComponent(g) + "&" : "") + "do=pull";
+    });
     menuItem("officer", "🔒 Forget my officer login", () => {
       try { localStorage.removeItem("raidTrackerPassword"); localStorage.removeItem("raidTrackerToken"); } catch (e) {}
       alertish("Officer login forgotten on this device.");
@@ -360,6 +439,10 @@
   }
   /** Add an item to the side menu: section "officer" or "upload"; action is a URL or a function. */
   function menuItem(section, label, action, last) {
+    if (section === "officer" && typeof action === "function") {
+      const t = String(label).trim().replace(/^[^\p{L}\p{N}\s]+\s*/u, "");
+      if (OFF_FN.has(t)) { offReg[t] = action; return null; }   // shown in the officer tree instead
+    }
     if (!menuPanel) { if (!root.classList.contains("cardmode")) pending.push([section, label, action, last]); return null; }
     const sec = menuPanel.querySelector(`[data-sec="${section}"]`); if (!sec) return null;
     const it = typeof action === "string" ? Object.assign(document.createElement("a"), { href: action }) : Object.assign(document.createElement("button"), { type: "button", onclick: action });

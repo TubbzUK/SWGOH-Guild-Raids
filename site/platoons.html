@@ -494,6 +494,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
     <div class="stats" id="stats"></div>
     <div class="toolbar">
       <button class="btn primary" id="postDiscord">📣 Post phase to Discord</button>
+      <button class="btn" id="postAll" title="Every member's platoons for every phase, as one list per member">📣 Post whole guild to Discord</button>
       <button class="btn" id="copyDiscord">Copy phase for Discord</button>
       <button class="btn" id="dlCsv">Download all as CSV</button>
       <button class="btn" id="copyTsv">Copy all for Sheets</button>
@@ -1526,6 +1527,22 @@ $('#copyDiscord').addEventListener('click',()=>copy(discordText(),WHO?'Copied '+
     if(DIRTY){showMsg('#toolMsg','err','Save and share these assignments first, so the post matches what members see.');return null}
     if(TOKEN)Officer.setToken(TOKEN);
     return{guild:GUILD,kind:'platoons',phase:PHASE,who:WHO||'',text:discordText(),label:`${guildName()} RotE phase ${PHASE} platoons${WHO?' for '+WHO:''}`}})})();
+// every member's assignments for every phase that has any, one block per member
+function allText(){
+  const phs=[1,2,3,4,5,6].filter(p=>RESULT&&phaseSlots(p).some(s=>s.player));
+  const by=new Map();
+  phs.forEach(p=>phaseSlots(p).filter(s=>s.player).sort(slotSort).forEach(s=>{if(!by.has(s.player))by.set(s.player,new Map());const m=by.get(s.player);if(!m.has(p))m.set(p,[]);m.get(p).push(s)}));
+  let t=`Platoon assignments for phase${phs.length>1?'s':''} ${phs.join(', ')} · ${by.size} members. Find your name and place these in each phase.\n\n`;
+  for(const[p,m]of [...by].sort((x,y)=>x[0].localeCompare(y[0]))){
+    const n=[...m.values()].reduce((a,x)=>a+x.length,0);
+    t+=`**${p}** (${n})\n`+[...m].map(([ph,a])=>{const ops=new Map();a.forEach(s=>{const k=`${s.planet} op ${s.op}`;if(!ops.has(k))ops.set(k,[]);ops.get(k).push(s.unit)});return `P${ph}: `+[...ops].map(([k,u])=>`${k} – ${u.join(', ')}`).join(' · ')}).join('\n')+'\n\n'}
+  return t.trim()}
+(function hookAll(){if(!window.Officer)return setTimeout(hookAll,50);
+  Officer.postButton($('#postAll'),()=>{
+    if(DIRTY){showMsg('#toolMsg','err','Save and share these assignments first, so the post matches what members see.');return null}
+    if(!RESULT||!RESULT.slots.some(s=>s.player)){showMsg('#toolMsg','err','No assignments yet - run Assign platoons first.');return null}
+    if(TOKEN)Officer.setToken(TOKEN);
+    return{guild:GUILD,kind:'platoons-all',text:allText(),label:`${guildName()} platoon assignments for the whole guild`}})})();
 $('#copyTsv').addEventListener('click',()=>copy(table('\t'),'Copied. Paste into cell A1 of a new tab.'));
 let downloads=null;
 (async()=>{try{if(window.claude&&claude.use)downloads=await claude.use('downloads')}catch(e){}})();

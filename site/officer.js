@@ -2,7 +2,7 @@
    and ask GitHub to post a results panel to Discord.
 
    Officer.postButton(button, () => ({ guild, kind, label, ...extra }))
-     kind: "raid" (with raid), "tb" (with tb), "effectiveness", "platoons" (with phase, text)
+     kind: "raid" (with raid), "tb" (with tb), "effectiveness", "platoons" (with phase, text), "platoons-all" (with text)
    A click asks for the officer password if needed, confirms, then saves a small request file
    (guilds/<guild>/posts/<time>-<kind>.json). The site update that follows posts it to Discord
    and removes the request. */
@@ -99,7 +99,7 @@
     if (!TOKEN) TOKEN = await remembered();
     const s = await loadSite();
     d.classList.remove("wide"); $("#offTitle").textContent = "Post to Discord"; $("#offGo").textContent = "Post";
-    $("#offText").innerHTML = `Post <b>${esc(req.label)}</b> to the guild's ${req.kind === "platoons" ? "platoons" : req.kind === "effectiveness" ? "officers'" : "Discord"} channel? It appears about 3 minutes from now, once the site has updated.`
+    $("#offText").innerHTML = `Post <b>${esc(req.label)}</b> to the guild's ${String(req.kind).startsWith("platoons") ? "platoons" : req.kind === "effectiveness" ? "officers'" : "Discord"} channel? It appears about 3 minutes from now, once the site has updated.`
       + (TOKEN ? "" : `<br><br>${s.key ? "Enter the officer password (the same one as the upload page)." : "No officer password is set up yet: enter a GitHub access token."}`);
     $("#offPw").hidden = !!TOKEN; $("#offPass").value = ""; msg(); $("#offGo").disabled = false;
     $("#offForm").onsubmit = async e => {

@@ -36,9 +36,17 @@ Every page has a menu down the left-hand side with everything in one place:
   Sections have their own links that can be shared (e.g. `…/platoons.html?guild=oanr#toon`,
   `…/tb.html?guild=oanr#members`), and links keep the guild you're looking at. In the folded icon
   strip, clicking a page's icon just opens that page.
-- **Officers**: the page's officer tools. Post this page to Discord, set a TW result, Contribution
-  settings, Effectiveness weighting, the Platoon planner, and *Forget my officer login* for a shared
-  computer. They all ask for the officer password.
+- **Officers**, as a tree that's the same on every page. Pick a tool from anywhere: if it lives on
+  another page, that page opens and the tool starts straight away.
+  - 📣 Post to Discord → Raid results, Raid readiness, TB stats, TW stats, Guild effectiveness
+    (officers' channel), Platoons: one phase, Platoons: whole guild
+  - Territory battles → Manage TB uploads, Set TB stars, Contribution settings
+  - Territory wars → Set the TW result
+  - Guild effectiveness → Effectiveness weighting
+  - RotE platoons → Planner data, Operations to fill, Rules
+  - Pull from the game now, and *Forget my officer login* for a shared computer
+
+  They all ask for the officer password.
 - **Upload**: upload a WookieeBot file (for the page you're on) and *Add a new guild*.
 - **Theme**: System, Light or Dark, at the bottom.
 
@@ -381,8 +389,10 @@ Each post is the whole page as pictures (cut between sections so they stay reada
 - Officers can post any time from **side menu → Officers → 📣 Post … to Discord**: on the raid page *Post raid results* (overview and players for the raid shown) and *Post raid readiness* (readiness on its own - handy for showing progress towards the next raid, e.g. Droid Destruction while you're still running Order 66),
   the Territory Battles page (the TB shown), the Effectiveness page, and the platoon planner
   (**📣 Post phase N to Discord** next to "Copy phase for Discord": the phase's planets, totals and
-  every member's assignments). The button asks for the officer password, then the post appears about
-  3 minutes later.
+  every member's assignments). **Platoons: whole guild** (or **📣 Post whole guild to Discord** in the
+  planner) posts one list per member covering every phase - e.g. "P1: Corellia op 2 – Darth Malgus ·
+  …" - split over as many messages as it needs, to the platoons channel. Save and share the
+  assignments first. The button asks for the officer password, then the post appears about 3 minutes later.
 
 Webhooks are GitHub secrets (Settings → Secrets and variables → Actions):
 
