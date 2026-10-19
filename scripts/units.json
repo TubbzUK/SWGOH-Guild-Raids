@@ -1,5 +1,6 @@
 {
-"_fetched": "2026-10-15T22:05:08+00:00",
+"_fetched": "2026-10-19T21:10:25+00:00",
+"_v": 2,
 "4LOM": {
 "name": "4-LOM",
 "img": "textures/tex.charui_4lom.png",
@@ -175,6 +176,7 @@
 "BENSOLO": {
 "name": "Ben Solo",
 "img": "textures/tex.charui_bensolo.png",
+"conquest": true,
 "side": "L"
 },
 "BIGGSDARKLIGHTER": {
@@ -206,6 +208,7 @@
 "BOBAFETTSCION": {
 "name": "Boba Fett, Scion of Jango",
 "img": "textures/tex.charui_bobafettold.png",
+"conquest": true,
 "side": "D"
 },
 "BODHIROOK": {
@@ -448,6 +451,7 @@
 "COBBVANTH": {
 "name": "Cobb Vanth",
 "img": "textures/tex.charui_cobbvanth.png",
+"conquest": true,
 "side": "L"
 },
 "COLONELSTARCK": {
@@ -464,6 +468,7 @@
 "COMMANDERAHSOKA": {
 "name": "Commander Ahsoka Tano",
 "img": "textures/tex.charui_commanderahsokatano.png",
+"conquest": true,
 "side": "L"
 },
 "COMMANDERLUKESKYWALKER": {
@@ -515,6 +520,7 @@
 "DARKREY": {
 "name": "Rey (Dark Side Vision)",
 "img": "textures/tex.charui_darkrey.png",
+"conquest": true,
 "side": "D"
 },
 "DARKTROOPER": {
@@ -525,6 +531,7 @@
 "DARTHBANE": {
 "name": "Darth Bane",
 "img": "textures/tex.charui_darthbane.png",
+"conquest": true,
 "side": "D"
 },
 "DARTHJARJAR": {
@@ -540,6 +547,7 @@
 "DARTHMALGUS": {
 "name": "Darth Malgus",
 "img": "textures/tex.charui_darthmalgus.png",
+"conquest": true,
 "side": "D"
 },
 "DARTHNIHILUS": {
@@ -651,6 +659,7 @@
 "EMBOANDKEIBU": {
 "name": "Embo & Keibu",
 "img": "textures/tex.charui_emboandkeibu.png",
+"conquest": true,
 "side": "D"
 },
 "EMPERORPALPATINE": {
@@ -697,6 +706,7 @@
 "EZRAEXILE": {
 "name": "Ezra Bridger (Exile)",
 "img": "textures/tex.charui_ezraexile.png",
+"conquest": true,
 "side": "L"
 },
 "FENNECSHAND": {
@@ -839,21 +849,25 @@
 "GLAHSOKATANO": {
 "name": "Ahsoka Tano",
 "img": "textures/tex.charui_ahsokatanogray.png",
+"gl": true,
 "side": "L"
 },
 "GLHONDO": {
 "name": "Pirate King Hondo Ohnaka",
 "img": "textures/tex.charui_glhondo.png",
+"gl": true,
 "side": "D"
 },
 "GLLEIA": {
 "name": "Leia Organa",
 "img": "textures/tex.charui_leiaendor.png",
+"gl": true,
 "side": "L"
 },
 "GLREY": {
 "name": "Rey",
 "img": "textures/tex.charui_rey_tros.png",
+"gl": true,
 "side": "L"
 },
 "GOPHERANTS": {
@@ -874,6 +888,7 @@
 "GRANDMASTERLUKE": {
 "name": "Jedi Master Luke Skywalker",
 "img": "textures/tex.charui_luke_jml.png",
+"gl": true,
 "side": "L"
 },
 "GRANDMASTERYODA": {
@@ -1047,6 +1062,7 @@
 "JABBATHEHUTT": {
 "name": "Jabba the Hutt",
 "img": "textures/tex.charui_jabbathehutt.png",
+"gl": true,
 "side": "D"
 },
 "JANGOFETT": {
@@ -1107,6 +1123,7 @@
 "JEDIMASTERKENOBI": {
 "name": "Jedi Master Kenobi",
 "img": "textures/tex.charui_globiwan.png",
+"gl": true,
 "side": "L"
 },
 "JEDIMASTERMACEWINDU": {
@@ -1135,6 +1152,7 @@
 "JOCASTANU": {
 "name": "Jocasta Nu",
 "img": "textures/tex.charui_jocastanu_blaster.png",
+"conquest": true,
 "side": "L"
 },
 "JOLEEBINDO": {
@@ -1225,6 +1243,7 @@
 "LEIAJEDITRAINING": {
 "name": "Leia (Jedi Training)",
 "img": "textures/tex.charui_leiajeditraining.png",
+"conquest": true,
 "side": "L"
 },
 "LOBOT": {
@@ -1240,6 +1259,7 @@
 "LORDVADER": {
 "name": "Lord Vader",
 "img": "textures/tex.charui_lordvader.png",
+"gl": true,
 "side": "D"
 },
 "LUKESKYWALKER": {
@@ -1260,6 +1280,7 @@
 "LUTHENRAEL": {
 "name": "Luthen Rael",
 "img": "textures/tex.charui_luthenrael.png",
+"conquest": true,
 "side": "L"
 },
 "MACEWINDU": {
@@ -1326,11 +1347,13 @@
 "MAULS7": {
 "name": "Maul",
 "img": "textures/tex.charui_maul_cyborg.png",
+"conquest": true,
 "side": "D"
 },
 "MAZKANATA": {
 "name": "Maz Kanata",
 "img": "textures/tex.charui_mazkanata.png",
+"conquest": true,
 "side": "L"
 },
 "MERRIN": {
@@ -1375,6 +1398,7 @@
 "MOFFGIDEONS3": {
 "name": "Dark Trooper Moff Gideon",
 "img": "textures/tex.charui_moffgideons3.png",
+"conquest": true,
 "side": "D"
 },
 "MONMOTHMA": {
@@ -1528,6 +1552,7 @@
 "QUEENAMIDALA": {
 "name": "Queen Amidala",
 "img": "textures/tex.charui_queenamidala.png",
+"conquest": true,
 "side": "L"
 },
 "QUIGGOLD": {
@@ -1631,6 +1656,7 @@
 "SATELESHAN": {
 "name": "Satele Shan",
 "img": "textures/tex.charui_sateleshan.png",
+"conquest": true,
 "side": "L"
 },
 "SAVAGEOPRESS": {
@@ -1720,6 +1746,7 @@
 "SITHPALPATINE": {
 "name": "Sith Eternal Emperor",
 "img": "textures/tex.charui_espalpatine_pre.png",
+"gl": true,
 "side": "D"
 },
 "SITHSUPREMACYCLASS": {
@@ -1742,6 +1769,7 @@
 "SM33": {
 "name": "SM-33",
 "img": "textures/tex.charui_sm33.png",
+"conquest": true,
 "side": "D"
 },
 "SMUGGLERCHEWBACCA": {
@@ -1792,6 +1820,7 @@
 "STRANGER": {
 "name": "The Stranger",
 "img": "textures/tex.charui_stranger.png",
+"conquest": true,
 "side": "D"
 },
 "SUNFAC": {
@@ -1802,6 +1831,7 @@
 "SUPREMELEADERKYLOREN": {
 "name": "Supreme Leader Kylo Ren",
 "img": "textures/tex.charui_kyloren_tros.png",
+"gl": true,
 "side": "D"
 },
 "T3_M4": {
@@ -1822,6 +1852,7 @@
 "TARONMALICOS": {
 "name": "Taron Malicos",
 "img": "textures/tex.charui_taronmalicos.png",
+"conquest": true,
 "side": "D"
 },
 "TEEBO": {
@@ -1917,6 +1948,7 @@
 "TRENCH": {
 "name": "Admiral Trench",
 "img": "textures/tex.charui_admiraltrench.png",
+"conquest": true,
 "side": "D"
 },
 "TRIPLEZERO": {
