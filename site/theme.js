@@ -423,7 +423,7 @@
     let g = guildNow();
     if (!g) { try { g = ((await (await fetch("guilds.json", { cache: "no-store" })).json())[0] || {}).slug; } catch (e) {} }
     if (!g) { alertish("No guild found."); return; }
-    Officer.form({ title: "Pull from the game now",
+    Officer.form({ title: "Pull from the game now", trackLabel: "Pulling from the game",
       html: `Fetch the latest roster, raid scores and territory war results for this guild from the game now, instead of waiting for the next 4-hourly check. The site updates in about 3 minutes.<br><br>The guild needs an ally code set (Upload → Connect a guild to the game).`,
       button: "Pull now",
       run: async ({ putFile }) => {
@@ -674,7 +674,136 @@
     document.body.dataset.cardw = w;
     document.body.dataset.ready = "1";
   }
-  window.RaidTheme = { banner, isDark, emblem, cardReady, menuItem, mountToggle };
+  // ---------------- site update progress ----------------
+  // After an upload or "Pull from the game now", follow GitHub's site update with a progress bar,
+  // then reload (or open the results) once the new site is live. Survives moving between pages.
+  const UP_KEY = "gsUpdate";
+  const UP_CSS = `
+  .gs-up-line { position: fixed; left: 0; top: 0; height: 3px; z-index: 10001; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width .6s ease; }
+  .gs-up { position: fixed; right: 18px; bottom: 18px; z-index: 10000; width: min(360px, calc(100vw - 32px)); background: var(--surface-solid); color: var(--text);
+    border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 14px 40px rgba(0,0,0,.45); padding: 12px 14px; font: 13.5px/1.45 var(--font-ui); }
+  .gs-up .h { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .gs-up .h span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gs-up .h b { font: 700 13px var(--font-display); color: var(--accent); }
+  .gs-up .x { border: 0; background: none; color: var(--text-2); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; }
+  .gs-up .st { color: var(--text-2); font-size: 12.5px; margin: 4px 0 8px; }
+  .gs-up .bar { height: 8px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+  .gs-up .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #fff)); border-radius: 6px; transition: width .6s ease; }
+  .gs-up.done .bar i { background: var(--good, #2fbf71); } .gs-up.fail .bar i { background: var(--bad, #e5484d); }
+  .gs-up a { color: var(--accent); }
+  html.cardmode .gs-up, html.cardmode .gs-up-line { display: none !important; }
+  @media (max-width: 600px) { .gs-up { right: 16px; left: 16px; bottom: 12px; width: auto; } }`;
+  const STEP_NAMES = [[/checkout|setup-python|pip install/i, "Getting ready"], [/what changed/i, "Checking what changed"], [/pull from the game/i, "Pulling from the game"],
+    [/comlink|unit names/i, "Connecting to the game"], [/file uploads/i, "Filing the upload"], [/build/i, "Working out the stats"], [/configure-pages|upload-pages/i, "Packing up the site"],
+    [/deploy-pages/i, "Publishing the site"]];
+  const friendly = n => (STEP_NAMES.find(([re]) => re.test(n || "")) || [null, "Updating"])[1];
+  let upTimer = null, upToken = null, upRepo = null;
+  async function upRepoName() {
+    if (upRepo) return upRepo;
+    try { const c = await (await fetch("upload-config.json", { cache: "no-store" })).json(); upRepo = c && c.repository; } catch (e) {}
+    if (!upRepo && /\.github\.io$/i.test(location.hostname)) upRepo = location.hostname.split(".")[0] + "/" + (location.pathname.split("/").filter(Boolean)[0] || "");
+    return upRepo;
+  }
+  function upBox() {
+    let box = document.getElementById("gsUp");
+    if (box) return box;
+    if (!document.getElementById("gsUpCss")) { const st = document.createElement("style"); st.id = "gsUpCss"; st.textContent = UP_CSS; document.head.appendChild(st); }
+    const line = document.createElement("div"); line.className = "gs-up-line"; line.id = "gsUpLine"; line.style.width = "0";
+    box = document.createElement("div"); box.className = "gs-up"; box.id = "gsUp"; box.setAttribute("role", "status"); box.setAttribute("aria-live", "polite");
+    box.innerHTML = `<div class="h"><span id="gsUpT"></span><b id="gsUpP"></b><button class="x" type="button" title="Hide (the page still refreshes when it's done)" aria-label="Hide">×</button></div><div class="st" id="gsUpS"></div><div class="bar"><i id="gsUpB"></i></div>`;
+    box.querySelector(".x").onclick = () => { box.hidden = true; };
+    document.body.appendChild(line); document.body.appendChild(box);
+    return box;
+  }
+  function upShow(job, pct, text, cls) {
+    const box = upBox();
+    box.classList.toggle("done", cls === "done"); box.classList.toggle("fail", cls === "fail");
+    document.getElementById("gsUpT").textContent = job.label || "Updating the site";
+    document.getElementById("gsUpP").textContent = pct == null ? "" : Math.round(pct) + "%";
+    document.getElementById("gsUpS").innerHTML = text;
+    document.getElementById("gsUpB").style.width = (pct ?? 0) + "%";
+    document.getElementById("gsUpLine").style.width = cls ? "0" : (pct ?? 0) + "%";
+  }
+  const upSave = job => { try { job ? localStorage.setItem(UP_KEY, JSON.stringify(job)) : localStorage.removeItem(UP_KEY); } catch (e) {} };
+  /** Follow the site update started by commit `sha`. opts: { sha, label, then (URL to open when done; default: reload), token, onDone, onFail } */
+  function track(opts) {
+    const job = { sha: opts.sha, label: opts.label || "Updating the site", then: opts.then || null, t0: Date.now(), runId: null };
+    if (opts.token) upToken = opts.token;
+    upSave(job); follow(job, opts);
+  }
+  async function follow(job, cb = {}) {
+    clearTimeout(upTimer);
+    const repo = await upRepoName();
+    if (!repo || !job.sha) { upSave(null); return; }
+    if (!upToken && window.Officer && Officer.authToken) { try { upToken = await Officer.authToken(); } catch (e) {} }
+    const api = async p => { const r = await fetch("https://api.github.com/repos/" + repo + p, { cache: "no-store", headers: { Accept: "application/vnd.github+json", ...(upToken ? { Authorization: "Bearer " + upToken } : {}) } }); if (!r.ok) { const e = new Error(String(r.status)); e.status = r.status; throw e; } return r.json(); };
+    const runsUrl = `https://github.com/${repo}/actions`;
+    const elapsed = () => (Date.now() - job.t0) / 1000;
+    const finish = () => {
+      upSave(null); upShow(job, 100, "Done - the site is updated. Refreshing…", "done");
+      if (cb.onDone) cb.onDone();
+      setTimeout(() => { if (job.then) location.href = job.then; else location.reload(); }, 2500);
+    };
+    const fail = (html) => { upSave(null); upShow(job, 100, html, "fail"); if (cb.onFail) cb.onFail(html); };
+    const tick = async () => {
+      if (elapsed() > 20 * 60) { fail(`This is taking longer than usual. <a href="${runsUrl}" target="_blank" rel="noopener">Check on GitHub</a>.`); return; }
+      try {
+        if (!job.runId) {
+          const r = await api(`/actions/runs?head_sha=${job.sha}&per_page=5`);
+          const run = (r.workflow_runs || [])[0];
+          if (!run) {
+            if (elapsed() > 75) {   // GitHub never started an update: the upload didn't change anything
+              let empty = false; try { empty = !((await api(`/commits/${job.sha}`)).files || []).length; } catch (e) {}
+              if (empty) { upSave(null); upShow(job, 100, "Nothing to update - that was the same as what's already saved.", "done"); setTimeout(() => { const b = document.getElementById("gsUp"); if (b) b.hidden = true; }, 6000); return; }
+            }
+            upShow(job, Math.min(8, 2 + elapsed() / 10), "Sent. Waiting for GitHub to start the update…");
+            upTimer = setTimeout(tick, 6000); return;
+          }
+          job.runId = run.id; upSave(job);
+        }
+        const run = await api(`/actions/runs/${job.runId}`);
+        if (run.status === "completed" && run.conclusion === "cancelled") {   // replaced by a newer update that includes this one
+          const r = await api(`/actions/runs?branch=${encodeURIComponent(run.head_branch || "main")}&per_page=1`);
+          const nr = (r.workflow_runs || [])[0];
+          if (nr && nr.id !== job.runId) { job.runId = nr.id; upSave(job); upTimer = setTimeout(tick, 3000); return; }
+          fail(`GitHub cancelled the update. <a href="${runsUrl}" target="_blank" rel="noopener">Check on GitHub</a>.`); return;
+        }
+        if (run.status === "queued" || run.status === "waiting" || run.status === "pending" || run.status === "requested") {
+          upShow(job, 10, "Waiting for an earlier update to finish first…"); upTimer = setTimeout(tick, 8000); return;
+        }
+        const jobs = (await api(`/actions/runs/${job.runId}/jobs`)).jobs || [];
+        const steps = (jobs[0] && jobs[0].steps) || [];
+        const dep = steps.findIndex(s => /deploy-pages/i.test(s.name));
+        const last = dep >= 0 ? dep : steps.length - 1;
+        if (dep >= 0 && steps[dep].status === "completed" && steps[dep].conclusion === "success") { finish(); return; }
+        if (steps.some((s, i) => i <= last && s.conclusion === "failure") || (run.status === "completed" && run.conclusion !== "success")) {
+          if (run.status === "completed" && run.conclusion === "success") { finish(); return; }
+          fail(`The site update failed. <a href="${esc(run.html_url || runsUrl)}" target="_blank" rel="noopener">See what went wrong on GitHub</a>.`); return;
+        }
+        if (run.status === "completed") { finish(); return; }
+        const doneN = steps.slice(0, last + 1).filter(s => s.status === "completed").length, cur = steps.find(s => s.status === "in_progress");
+        const pct = 12 + (last > 0 ? doneN / (last + 1) * 85 : Math.min(85, elapsed() / 2));
+        upShow(job, Math.min(97, pct), (cur ? friendly(cur.name) : "Updating the site") + "…");
+      } catch (e) {
+        if (e.status === 403 || e.status === 429) {   // GitHub's limit for checking without a login: estimate instead
+          const pct = Math.min(95, 5 + elapsed() / 180 * 90);
+          upShow(job, pct, "Updating the site (about 3 minutes)…");
+          if (elapsed() > 240) { finish(); return; }
+        }
+      }
+      upTimer = setTimeout(tick, 7000);
+    };
+    upShow(job, 3, "Sent. Waiting for GitHub to start the update…");
+    tick();
+  }
+  function resumeTrack() {
+    let job = null; try { job = JSON.parse(localStorage.getItem(UP_KEY) || "null"); } catch (e) {}
+    if (!job || !job.sha) return;
+    if (Date.now() - job.t0 > 25 * 60 * 1000) { upSave(null); return; }
+    follow(job);
+  }
+
+  window.RaidTheme = { banner, isDark, emblem, cardReady, menuItem, mountToggle, track };
   // card mode: no chart animations, and a small footer with the site address
   const cardMode = document.documentElement.classList.contains("cardmode");
   if (cardMode && window.Chart) Chart.defaults.animation = false;
@@ -685,6 +814,6 @@
     f.innerHTML = `<span class="wordmark"><span data-emblem></span>Guild Statistics</span><span>${site.replace(/^https?:\/\//, "").replace(/\?.*$/, "").replace(/[<>&"]/g, "")}</span>`;
     document.body.appendChild(f);
   }
-  const ready = () => { cardFoot(); mountSky(); document.querySelectorAll("[data-theme-toggle], [data-site-menu]").forEach(mountMenu); pending.splice(0).forEach(a => menuItem(...a)); if (window.MutationObserver && menuPanel) new MutationObserver(tidy).observe(menuPanel, { subtree: true, attributes: true, attributeFilter: ["hidden"] }); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
+  const ready = () => { if (!root.classList.contains("cardmode")) resumeTrack(); cardFoot(); mountSky(); document.querySelectorAll("[data-theme-toggle], [data-site-menu]").forEach(mountMenu); pending.splice(0).forEach(a => menuItem(...a)); if (window.MutationObserver && menuPanel) new MutationObserver(tidy).observe(menuPanel, { subtree: true, attributes: true, attributeFilter: ["hidden"] }); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
 })();

@@ -591,48 +591,13 @@ a { color: var(--accent); }
         if (ex.ok) { const dr = await gh(op, token, { method: "DELETE", body: JSON.stringify({ message: `Replace ${tbOld} with the newer upload`, sha: (await ex.json()).sha, branch }) }); if (dr.ok) sha = (await dr.json()).commit.sha; }
       }
       list[0] = ["done", `Uploaded ${esc(what)}`];
-      list[1] = ["run", "Updating the site (usually about 2 minutes)…"];
+      list[1] = ["run", "Updating the site (usually 2-3 minutes) - the progress bar shows how far it's got…"];
+      list[2] = ["todo", "The results open by themselves when it's done"];
       progress(list);
-
-      const runsUrl = `https://github.com/${repo}/actions`;
-      let run = null;
-      for (let i = 0; i < 45; i++) {          // up to ~6 minutes
-        await sleep(i ? 8000 : 4000);
-        const r = await gh(`/repos/${repo}/actions/runs?head_sha=${sha}&per_page=1`, token);
-        if (r.status === 403 || r.status === 404) {
-          list[1] = ["done", `Upload finished. This token can't follow the update, so <a href="${runsUrl}" target="_blank" rel="noopener">check progress on GitHub</a> (or give the token Actions: Read-only).`];
-          list[2] = ["todo", "Refresh the results in about 2 minutes"]; progress(list); break;
-        }
-        if (!r.ok) continue;
-        run = (await r.json()).workflow_runs?.[0];
-        if (!run && i === 9) {   // ~75 seconds and GitHub still hasn't started an update: check whether the upload changed anything
-          const c = await gh(`/repos/${repo}/commits/${sha}`, token);
-          if (c.ok && !((await c.json()).files || []).length) {
-            list[1] = ["done", "Nothing to update: the file was identical to the one already saved, so GitHub didn't need to rebuild the site."];
-            list[2] = ["done", `<a href="${viewUrl}">View the results</a>`]; progress(list); break;
-          }
-        }
-        if (!run) continue;
-        if (run.status === "completed") {
-          if (run.conclusion === "success") {
-            list[1] = ["done", "Site updated"];
-            list[2] = ["done", `Done. <a href="${viewUrl}">View the results</a>${isRaid ? " · a summary has been posted to Discord if a webhook is set up" : ""}.`];
-          } else if (run.conclusion === "cancelled") {
-            list[1] = ["done", `Upload saved. GitHub replaced this update with a newer one that includes this file, so the site will update when that one finishes. <a href="${runsUrl}" target="_blank" rel="noopener">Check on GitHub</a>.`];
-            list[2] = ["todo", "Refresh the results in a few minutes"];
-          } else {
-            list[1] = ["fail", `The site update failed. <a href="${esc(run.html_url)}" target="_blank" rel="noopener">See what went wrong on GitHub</a>.`];
-          }
-          progress(list); break;
-        }
-        list[1] = ["run", run.status === "queued" ? "Waiting for GitHub to start the update…" : "Updating the site…"]; progress(list);
-      }
-      if (!run && list[1][0] === "run") {
-        list[1] = ["done", `Upload finished, but GitHub hasn't started the update yet. <a href="${runsUrl}" target="_blank" rel="noopener">Check on GitHub</a>.`]; progress(list);
-      }
-      if (run && run.status !== "completed") {
-        list[1] = ["done", `Upload saved, but the site update is still ${run.status === "in_progress" ? "running" : "waiting its turn"} on GitHub. If it's still waiting after 15 minutes, an earlier update may be stuck: open <a href="${runsUrl}" target="_blank" rel="noopener">Actions on GitHub</a>, open the run marked Waiting and press <b>Cancel workflow</b>.`]; progress(list);
-      }
+      // the progress bar follows GitHub's update (on any page of the site) and opens the results once they're live
+      window.RaidTheme.track({ sha, label: `Updating the site: ${what.replace(/<[^>]+>/g, "")}`, then: viewUrl, token,
+        onDone: () => { list[1] = ["done", "Site updated"]; list[2] = ["done", `Done. Opening <a href="${viewUrl}">the results</a>…`]; progress(list); },
+        onFail: html => { list[1] = ["fail", html]; progress(list); } });
     } catch (err) {
       list[0] = ["fail", `Couldn't reach GitHub (${esc(err.message)}). Check your connection and try again.`]; progress(list);
     }

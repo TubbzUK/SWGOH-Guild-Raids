@@ -83,7 +83,9 @@
       if (res.status === 403 || res.status === 404) throw new Error("the GitHub token isn't allowed to save to this repository");
       throw new Error(`GitHub said ${res.status}`);
     }
+    try { return lastSha = (await res.json()).commit.sha; } catch (e) { return null; }
   }
+  let lastSha = null;
 
   async function requestPost(req) {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
@@ -136,10 +138,11 @@
     const bytes = te.encode(text); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
     const res = await gh(`/repos/${st.repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`, { method: "PUT", body: JSON.stringify({ message, content: btoa(bin), branch: st.branch, ...(sha ? { sha } : {}) }) });
     if (!res.ok) throw new Error(res.status === 401 ? "GitHub didn't accept the login" : res.status === 409 ? "someone else saved at the same time - try again" : `GitHub said ${res.status}`);
+    try { return lastSha = (await res.json()).commit.sha; } catch (e) { return null; }
   }
 
   /** A general officer form: title, body HTML, a button label, and run() which saves (after the password). */
-  async function form({ title, html, button, run, done, wide, ready }) {
+  async function form({ title, html, button, run, done, wide, ready, trackLabel }) {
     mount();
     const d = $("#offDlg");
     d.classList.toggle("wide", !!wide);
@@ -161,7 +164,14 @@
         if ($("#offRemember").checked) store.set(r.kind === "pw" ? "raidTrackerPassword" : "raidTrackerToken", secret);
       }
       msg("info", "Saving…");
-      try { await run({ getJSONFile, putFile: putFileSha }); d.close(); if (done) toast(done); }
+      try {
+        lastSha = null;
+        await run({ getJSONFile, putFile: putFileSha });
+        d.close();
+        // follow the site update with a progress bar, then refresh the page once it's live
+        if (lastSha && window.RaidTheme && RaidTheme.track) RaidTheme.track({ sha: lastSha, label: trackLabel || title, token: TOKEN });
+        else if (done) toast(done);
+      }
       catch (err) { msg("err", `Couldn't save: ${esc(err.message)}.`); $("#offGo").disabled = false; }
     };
     d.showModal ? d.showModal() : d.setAttribute("open", "");
@@ -173,5 +183,5 @@
     btn.addEventListener("click", () => { const r = getReq(); if (r) post(r); });
   }
 
-  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; } };
+  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; }, authToken: async () => TOKEN || await remembered() };
 })();

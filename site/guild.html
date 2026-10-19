@@ -10,6 +10,7 @@
 <script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <link rel="stylesheet" href="theme.css">
 <script src="theme.js" defer></script>
+<script src="officer.js" defer></script>
 <style>
 /* Every current member side by side, one section at a time: Stats, Roster, Abilities.
    Members run down the left; each section's columns sort with a click. Colours and fonts come from theme.css. */
@@ -208,7 +209,7 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
   const HOW = [
     "<b>Members</b> are everyone in the latest roster. Click a name for their Player status page.",
     "<b>GP</b>, <b>GA league</b> and <b>GA skill</b> come from the game when the guild is connected (pulled once a day).",
-    "<b>Mod score</b>: mods with +15 speed or more, divided by character GP in 100,000s - the same idea as swgoh.gg's mod quality. Around 1 is decent, 1.5+ is very good.",
+    "<b>Mod score</b>: mods with +15 speed or more, divided by character GP in 100,000s - the same idea as swgoh.gg's mod quality. Higher is better; compare members against the guild average at the bottom.",
     "<b>Gear score</b>: every character adds G12 = 1, G13 = 2, plus 1 for each relic level (so R9 = 11).",
     "<b>Total score</b> (0-100): where the member ranks in this guild on GP, GA skill, mod score and gear score, averaged. 50 is the middle of the guild.",
     "HotUtils doesn't publish how its own scores are worked out, so these are the site's own, explained here.",

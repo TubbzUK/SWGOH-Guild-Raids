@@ -275,7 +275,8 @@ column heading to sort, and the bottom row shows the guild total or average.
 - **Stats** – GP, GA league and division, GA skill rating, Total score, Mod score, Gear score
 - **Roster** – Galactic Legends, Conquest characters, G13, and R1 / R5 / R7 / R8 / R9 / R10 (switch
   between *at least* and *exactly* that relic). Conquest characters are listed in
-  `scripts/conquest-units.txt` - add each new one there (one unit ID per line).
+  `scripts/conquest-units.txt`, plus any the game itself marks as Conquest units - add a new one
+  to the file if it's missing (one unit ID per line).
 - **Abilities** – zetas, omicrons, and omicrons for TW, TB and GAC
 
 The roster and abilities come from the roster (uploaded or pulled from the game). GA and mods only
@@ -431,6 +432,15 @@ Webhooks are GitHub secrets (Settings → Secrets and variables → Actions):
 (A guild's `config.yml` can name different secrets with `discord_secret`, `discord_platoons_secret` and `discord_officer_secret`.)
 How it works: the button saves a small request in `guilds/<guild>/posts/`; the next site update posts it
 and removes the request.
+
+## Site update progress
+
+Uploading a file, **Pull from the game now**, and the officer tools that save something (TB stars,
+Manage TB uploads, settings…) show a progress bar in the bottom corner while GitHub updates the site:
+waiting to start → getting ready → pulling from the game → working out the stats → publishing.
+When the new site is live the page refreshes by itself (after an upload it opens the results). You
+can move to another page meanwhile - the bar carries on there. If GitHub didn't need to rebuild
+(the file was the same as before) or the update failed, it says so, with a link to GitHub.
 
 ## Look and feel
 
