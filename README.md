@@ -28,6 +28,7 @@ Every page has a menu down the left-hand side with everything in one place:
   straight to it (the page you're on starts open, with the section you're on highlighted):
   - Raids → Overview, Players, Readiness
   - Player status
+  - Guild overview → Stats, Roster, Abilities, Datacrons
   - Territory battles → Overview, Members, Phases, Player, TB contribution
   - Territory wars → Overview, Members
   - Guild effectiveness → Overview, Raids vs TBs, Ranking, Members, How it's worked out
@@ -264,6 +265,28 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   **Save and share** also saves the choices the assignments were made with.
 - The page shows which planets each guild is filling in each phase, and flags it when the choices
   have changed since the assignments were last made.
+
+## Guild overview
+
+The **▦ Guild overview** page (`…/guild.html?guild=oanr`) shows every current member side by side,
+one section at a time. Members run down the left (click a name for their Player status); click any
+column heading to sort, and the bottom row shows the guild total or average.
+
+- **Stats** – GP, GA league and division, GA skill rating, Total score, Mod score, Gear score
+- **Roster** – Galactic Legends, G13, and R1 / R5 / R7 / R8 / R9 / R10 (switch between *at least*
+  and *exactly* that relic)
+- **Abilities** – zetas, omicrons, and omicrons for TW, TB and GAC
+- **Datacrons** – how many, and how many at level 1-3, 4-5, 6-8 and 9
+
+The roster and abilities come from the roster (uploaded or pulled from the game). GA, mods and
+datacrons only come from the game, so they appear for guilds connected with an ally code; they're
+saved in `guilds/<guild>/profiles.json` (no ally codes) on the daily roster pull.
+
+HotUtils doesn't publish how its scores are worked out, so the site uses its own (also explained on the page):
+- **Mod score** – mods with +15 speed or more ÷ (character GP ÷ 100,000), like swgoh.gg's mod quality.
+- **Gear score** – each character adds G12 = 1, G13 = 2, plus 1 per relic level; added up.
+- **Total score** – 0-100: where the member ranks in the guild on GP, GA skill, mod score and gear
+  score, averaged (50 = middle of the guild).
 
 ## Territory battles
 

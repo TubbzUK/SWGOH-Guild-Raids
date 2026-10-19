@@ -656,6 +656,11 @@ def unit_names() -> dict[str, str]:
     return names
 
 
+# Galactic Legends, in case the unit list from the game hasn't got its flags yet
+KNOWN_GLS = {"GLREY", "SUPREMELEADERKYLOREN", "GRANDMASTERLUKE", "SITHPALPATINE", "JEDIMASTERKENOBI", "LORDVADER",
+             "JABBATHEHUTT", "GLLEIA"}
+
+
 def full_roster(path: Path, names: dict[str, str]) -> dict | None:
     """Every member's whole roster (characters and ships) for the Player status page."""
     raw = read_raw(path)
@@ -685,7 +690,8 @@ def full_roster(path: Path, names: dict[str, str]) -> dict | None:
             uidx[base] = len(units)
             side = (cell(r[side_c])[:1].upper() if side_c else "") or info.get("side", "")
             units.append({"id": base, "name": names.get(base) or base.replace("_", " ").title(), "ship": ship,
-                          **({"side": side} if side in ("L", "D", "N") else {}), **({"img": info["img"]} if info.get("img") else {})})
+                          **({"side": side} if side in ("L", "D", "N") else {}), **({"img": info["img"]} if info.get("img") else {}),
+                          **({"gl": True} if not ship and (info.get("gl") or base in KNOWN_GLS) else {})})
         p = players.setdefault(nm, {"name": nm, "gp": 0, "power": 0, "u": {}})
         relic = None if ship or not relic_c else ival(r[relic_c])
         if relic is not None:
@@ -933,6 +939,8 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
             shutil.copy2(gdir / name, out_dir / name)
     if (gdir / "platoon-settings.json").exists():
         shutil.copy2(gdir / "platoon-settings.json", out_dir / "platoon-settings.json")
+    if (gdir / "profiles.json").exists():                 # GA, mods and datacrons from the game, for the Guild overview
+        shutil.copy2(gdir / "profiles.json", out_dir / "profiles.json")
     if (gdir / "platoon-pledges.json").exists():           # who has signed up to fill missing platoon units
         shutil.copy2(gdir / "platoon-pledges.json", out_dir / "platoon-pledges.json")
     saved = gdir / "platoons.json"

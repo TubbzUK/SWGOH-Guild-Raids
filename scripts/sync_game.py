@@ -119,6 +119,56 @@ def when(obj: dict) -> dt.date | None:
     return None
 
 
+LEAGUES = {"100": "Kyber", "80": "Aurodium", "60": "Chromium", "40": "Bronzium", "20": "Carbonite"}
+DIVISIONS = {"25": 1, "20": 2, "15": 3, "10": 4, "5": 5}
+
+
+def profile_of(p: dict, member: dict) -> dict:
+    """GP, GA league and skill rating, speed mods and datacrons for the Guild overview page (no ally codes)."""
+    out: dict = {"name": p.get("name") or member.get("playerName") or "?"}
+    stats = {str(x.get("nameKey") or ""): num(x.get("value")) for x in p.get("profileStat") or [] if isinstance(x, dict)}
+    out["gp"] = int(stats.get("STAT_GALACTIC_POWER_ACQUIRED_NAME") or num(member.get("galacticPower")) or 0)
+    if stats.get("STAT_CHARACTER_GALACTIC_POWER_ACQUIRED_NAME"):
+        out["gp_char"] = int(stats["STAT_CHARACTER_GALACTIC_POWER_ACQUIRED_NAME"])
+    if stats.get("STAT_SHIP_GALACTIC_POWER_ACQUIRED_NAME"):
+        out["gp_ship"] = int(stats["STAT_SHIP_GALACTIC_POWER_ACQUIRED_NAME"])
+    pr = p.get("playerRating") or {}
+    skill = num(((pr.get("playerSkillRating") or {}).get("skillRating")))
+    if skill is not None:
+        out["skill"] = int(skill)
+    rank = pr.get("playerRankStatus") or {}
+    lg, dv = str(rank.get("leagueId") or "").strip(), str(rank.get("divisionId") or "").strip()
+    if lg and lg != "0":
+        out["league"] = LEAGUES.get(lg, lg.title())
+    if dv and dv != "0":
+        out["division"] = DIVISIONS.get(dv) or (int(dv) if dv.isdigit() and int(dv) <= 5 else None)
+    # speed secondaries on equipped mods, and 6-dot mods
+    m = {"s10": 0, "s15": 0, "s20": 0, "s25": 0, "six": 0, "mods": 0}
+    for u in p.get("rosterUnit") or []:
+        for mod in u.get("equippedStatMod") or []:
+            m["mods"] += 1
+            if str(mod.get("definitionId") or "")[1:2] == "6":
+                m["six"] += 1
+            for sec in mod.get("secondaryStat") or []:
+                st = sec.get("stat") or {}
+                if str(st.get("unitStatId")) not in ("5", "UNITSTATSPEED"):
+                    continue
+                v = num(st.get("unscaledDecimalValue")) or num(st.get("statValueDecimal")) or 0
+                while v > 100:
+                    v /= 10000
+                v = int(v + 1e-6)
+                for k, t in (("s10", 10), ("s15", 15), ("s20", 20), ("s25", 25)):
+                    if v >= t:
+                        m[k] += 1
+    out["mods"] = m
+    # datacrons: the level is how many affixes it has (0-9)
+    lv = [0] * 10
+    for d in p.get("datacron") or []:
+        lv[min(9, len(d.get("affix") or []))] += 1
+    out["datacrons"] = lv
+    return out
+
+
 def ally_of(v) -> str:
     return re.sub(r"\D", "", str(v or ""))
 
@@ -208,6 +258,13 @@ class Guild:
         skills = load_skills()
         todays = [p for p in existing if p.name.startswith(today)]
         forced = any(self.gdir.glob("sync-now-*.json"))
+        prof_file = self.gdir / "profiles.json"
+        try:
+            prof_old = json.loads(prof_file.read_text(encoding="utf-8")) if prof_file.exists() else {}
+        except (OSError, ValueError):
+            prof_old = {}
+        if todays and prof_old.get("date") != today:
+            forced = True    # the Guild overview stats (GA, mods, datacrons) haven't been read today
         if todays and not forced:
             try:
                 with open(todays[0], encoding="utf-8-sig", newline="") as fh:
@@ -230,12 +287,16 @@ class Guild:
                 print("  roster: already have today's and the members are the same")
                 return
         elif todays:
-            print("  roster: pulling it again (Pull from the game now)")
-        rows = []
+            print("  roster: pulling it again (Pull from the game now, or the Guild overview stats are due)")
+        rows, profiles = [], []
         for m in members:
             p = self.player(m.get("playerId"))
             if not p:
                 continue
+            try:
+                profiles.append(profile_of(p, m))
+            except Exception as e:   # the overview is extra - never lose the roster over it
+                print(f"::warning::  overview stats for a member couldn't be read: {e}")
             name, ally = p.get("name") or m.get("playerName"), ally_of(p.get("allyCode"))
             gp = num(m.get("galacticPower")) or 0
             first = True
@@ -268,6 +329,9 @@ class Guild:
         for old in existing:
             if old != out:
                 old.unlink()
+        if profiles:
+            prof_file.write_text(json.dumps({"date": today, "players": sorted(profiles, key=lambda x: x["name"].lower())},
+                                            indent=0, ensure_ascii=False), encoding="utf-8")
         self.changed = True
         self.log.append(f"{self.gdir.name}: roster from the game ({len(members)} members, {len(rows)} units)")
 

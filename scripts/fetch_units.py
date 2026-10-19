@@ -70,6 +70,8 @@ def needed(force: bool) -> str | None:
         cur = json.loads(OUT.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return "the saved list couldn't be read"
+    if cur.get("_v", 1) < 2:
+        return "the list needs the Galactic Legend flags"
     when = cur.get("_fetched")
     if not when or (dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(when)).days >= 7:
         return "the list is over a week old"
@@ -117,6 +119,8 @@ def main() -> int:
             entry["img"] = f"textures/{thumb}.png"
         if str(u.get("combatType")) in ("2", "SHIP"):
             entry["ship"] = True
+        if "galactic_legend" in [str(c).lower() for c in u.get("categoryId") or []] and not entry.get("ship"):
+            entry["gl"] = True
         side = SIDES.get(str(u.get("forceAlignment")))
         if side:
             entry["side"] = side
@@ -156,7 +160,7 @@ def main() -> int:
     if skills:
         SKILLS_OUT.write_text(json.dumps(dict(sorted(skills.items())), indent=0, ensure_ascii=False), encoding="utf-8")
         print(f"Zeta/omicron abilities saved: {len(skills)} ({sum('omicron' in v for v in skills.values())} with omicrons)")
-    out = {"_fetched": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), **dict(sorted(units.items()))}
+    out = {"_fetched": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "_v": 2, **dict(sorted(units.items()))}
     OUT.write_text(json.dumps(out, indent=0, ensure_ascii=False), encoding="utf-8")
     print(f"Unit list saved: {len(units)} units, {sum('img' in v for v in units.values())} with pictures")
     return 0

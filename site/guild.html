@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guild overview · Guild Statistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Exo+2:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem("raidTheme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js" defer></script>
+<style>
+/* Every current member side by side, one section at a time: Stats, Roster, Abilities, Datacrons.
+   Members run down the left; each section's columns sort with a click. Colours and fonts come from theme.css. */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
+.card { padding: 16px 18px; min-width: 0; }
+h2 { font: 700 13px var(--font-display); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 4px; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+nav.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); padding: 4px; border-radius: 12px; margin: 0 0 14px; width: fit-content; max-width: 100%; overflow-x: auto; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+nav.tabs button { border: 0; background: transparent; color: var(--text-2); font: 700 11.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.kpi { padding: 12px 14px; }
+.kpi .label { font: 700 10px var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); }
+.kpi .value { font: 700 22px var(--font-display); margin-top: 4px; }
+.kpi .note { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 10px; }
+input[type=search] { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); flex: 1 1 200px; max-width: 300px; min-width: 0; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--text-2); font: 600 12.5px var(--font-ui); padding: 7px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.count { color: var(--muted); font-size: 12.5px; margin-left: auto; }
+.tablewrap { overflow: auto; max-height: 76vh; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--glow); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 12px; white-space: nowrap; text-align: right; }
+th { position: sticky; top: 0; z-index: 2; font: 700 10.5px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); background: var(--surface-solid); user-select: none; cursor: pointer; border-bottom: 1px solid var(--border); }
+th::after { content: " \2195"; color: var(--muted); } th.asc::after { content: " \2191"; color: var(--text); } th.desc::after { content: " \2193"; color: var(--text); }
+th:first-child, td:first-child { position: sticky; left: 0; text-align: left; background: var(--surface-solid); z-index: 1; border-right: 1px solid var(--border); }
+th:first-child { z-index: 3; }
+tbody td { border-top: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+tbody td:not(:first-child) { background-color: transparent; }
+tbody tr:hover td { background: var(--surface-2); }
+tbody tr.sel td { background: color-mix(in srgb, var(--accent) 14%, var(--surface-solid)); }
+td.mem { font-weight: 600; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+td.mem a { color: inherit; text-decoration: none; } td.mem a:hover { color: var(--accent); text-decoration: underline; }
+td.mem .rk { color: var(--muted); font-weight: 500; display: inline-block; min-width: 24px; font-size: 12px; }
+td .cell { position: relative; display: inline-block; min-width: 46px; }
+td.bar { background-image: linear-gradient(color-mix(in srgb, var(--accent) 55%, transparent), color-mix(in srgb, var(--accent) 55%, transparent)); background-repeat: no-repeat; background-size: calc(var(--w) * .8) 2px; background-position: right 12px bottom 3px; }
+td.bar { background-color: transparent; }
+td.none { color: var(--muted); }
+tfoot td { position: sticky; bottom: 0; background: var(--surface-solid); font-weight: 700; border-top: 2px solid var(--border); z-index: 1; }
+tfoot td:first-child { z-index: 2; }
+.lg { display: inline-flex; align-items: center; gap: 6px; }
+.lg i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: var(--muted); }
+.lg.kyber i { background: #b16cff; } .lg.aurodium i { background: #f5c542; } .lg.chromium i { background: #9fb3c8; } .lg.bronzium i { background: #c98a4b; } .lg.carbonite i { background: #6b7280; }
+details.how { margin-top: 12px; }
+details.how summary { cursor: pointer; font-weight: 600; }
+details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); font-size: 13px; line-height: 1.55; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+.notice { padding: 10px 14px; margin: 0 0 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 13px; }
+@media (max-width: 600px) { nav.tabs button { padding: 9px 9px; letter-spacing: .05em; font-size: 11px; } th, td { padding: 7px 8px; } td.mem { max-width: 130px; } .kpi .value { font-size: 18px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="wordmark" href="./"><span data-emblem></span>Guild Statistics</a>
+    <div class="top-actions"><span data-theme-toggle></span></div>
+  </div>
+  <header class="banner">
+    <div class="art" id="bannerArt"></div>
+    <div>
+      <div class="eyebrow" id="eyebrow">Guild overview</div>
+      <h1 id="title">Guild overview</h1>
+      <div class="sub" id="updated"></div>
+    </div>
+    <div class="banner-switch">
+      <div class="pills" id="guildSwitch" role="group" aria-label="Guild" hidden></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Section">
+    <button role="tab" aria-selected="true" data-tab="stats">Stats</button>
+    <button role="tab" aria-selected="false" data-tab="roster">Roster</button>
+    <button role="tab" aria-selected="false" data-tab="abilities">Abilities</button>
+    <button role="tab" aria-selected="false" data-tab="datacrons">Datacrons</button>
+  </nav>
+
+  <div id="notice"></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search members…" aria-label="Search members">
+    <div class="seg" id="relMode" role="group" aria-label="Count relics" hidden>
+      <button type="button" data-m="atleast" aria-pressed="true" title="R5 counts every character at relic 5 or higher">At least</button>
+      <button type="button" data-m="exact" aria-pressed="false" title="R5 counts characters at exactly relic 5">Exactly</button>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="tablewrap"><table id="grid"></table></div>
+  <details class="card how" id="how"><summary>How these are worked out</summary><ul id="howList"></ul></details>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+(async function () {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = s => String(s ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const dfmt = s => new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const getJSON = u => fetch(u, { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const fmtGP = n => n == null ? "–" : n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? (n / 1e3).toFixed(0) + "K" : String(Math.round(n));
+  const int = n => n == null ? "–" : Math.round(n).toLocaleString("en-GB");
+  const dec = (n, d = 2) => n == null ? "–" : n.toFixed(d);
+
+  (function art() { if (!window.RaidTheme) return setTimeout(art, 30); RaidTheme.banner($("#bannerArt"), { slug: "player" }); })();
+  const index = await getJSON("guilds.json");
+  let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+  const guilds = index || [];
+  if (!guilds.length) { $("#updated").textContent = "No guilds yet."; return; }
+  const guild = guilds.find(g => g.slug === params.guild) || guilds[0];
+  const enc = encodeURIComponent, G = enc(guild.slug);
+  document.title = guild.name + " · Guild overview";
+  $("#eyebrow").textContent = "Guild overview"; $("#title").textContent = guild.name;
+  const gp = $("#guildSwitch"); gp.hidden = guilds.length < 2;
+  gp.innerHTML = guilds.map(g => `<button type="button" aria-pressed="${g.slug === guild.slug}" data-id="${esc(g.slug)}">${esc(g.name)}</button>`).join("");
+  gp.querySelectorAll("button").forEach(b => b.onclick = () => { if (b.dataset.id !== guild.slug) location.search = "?guild=" + enc(b.dataset.id) + location.hash; });
+
+  const [rosters, profiles, skills] = await Promise.all([getJSON(`data/${G}/rosters.json`), getJSON(`data/${G}/profiles.json`), getJSON("data/skills.json")]);
+  if (!rosters || !rosters.players?.length) {
+    $("#updated").textContent = "";
+    $("#grid").innerHTML = `<tbody><tr><td class="empty">No roster for ${esc(guild.name)} yet. Upload a roster export, or connect the guild to the game (side menu → Upload → Connect a guild to the game).</td></tr></tbody>`;
+    return;
+  }
+  $("#updated").textContent = `${rosters.players.length} members · roster of ${rosters.updated ? dfmt(rosters.updated) : "the latest upload"}` + (profiles?.date ? ` · game stats of ${dfmt(profiles.date)}` : "");
+
+  // ---------- one record per current member ----------
+  const U = rosters.units, MODE = {};
+  Object.entries(skills || {}).forEach(([id, s]) => { if (s.mode) MODE[id] = s.mode; });
+  const prof = new Map((profiles?.players || []).map(p => [norm(p.name), p]));
+  const REL = [1, 5, 7, 8, 9, 10];
+  const members = rosters.players.map(p => {
+    const r = { name: p.name, id: norm(p.name), gp: p.gp || null, gl: 0, g13: 0, rel: Array(11).fill(0), gear: 0, zetas: 0, omis: 0, tw: 0, tb: 0, gac: 0, chars: 0 };
+    p.u.forEach(row => {
+      const u = U[row[0]] || {}, gear = row[2] || 0, relic = row[3];
+      if (!u.ship) {
+        r.chars++;
+        if (u.gl && (row[1] || 0) >= 7) r.gl++;
+        if (gear >= 13) { r.g13++; if (relic != null && relic >= 0) r.rel[Math.min(10, relic)]++; }
+        r.gear += gear >= 13 ? 2 + Math.max(0, relic || 0) : gear === 12 ? 1 : 0;
+      }
+      r.zetas += row[6] || 0; r.omis += row[7] || 0;
+      (row[9] || []).forEach(sid => { const m = MODE[sid] || ""; if (m === "TW") r.tw++; else if (m === "TB") r.tb++; else if (/^GAC/.test(m)) r.gac++; });
+    });
+    const pr = prof.get(r.id);
+    if (pr) {
+      r.gp = pr.gp || r.gp; r.skill = pr.skill ?? null; r.league = pr.league || null; r.division = pr.division || null;
+      const cgp = pr.gp_char || r.gp;
+      r.mod = pr.mods && cgp ? pr.mods.s15 / (cgp / 100000) : null;
+      r.s15 = pr.mods?.s15 ?? null; r.s20 = pr.mods?.s20 ?? null; r.six = pr.mods?.six ?? null;
+      const d = pr.datacrons || [];
+      r.dc = d.reduce((a, b) => a + b, 0); r.dc13 = (d[1] || 0) + (d[2] || 0) + (d[3] || 0); r.dc45 = (d[4] || 0) + (d[5] || 0);
+      r.dc68 = (d[6] || 0) + (d[7] || 0) + (d[8] || 0); r.dc9 = d[9] || 0;
+    }
+    return r;
+  });
+  const hasProf = members.some(m => m.skill != null || m.dc != null);
+  // total score: how each member ranks in the guild on GP, GA skill rating, mod score and gear score (0-100)
+  const pct = k => {   // 0 = lowest in the guild, 100 = highest (ties share the middle)
+    const v = members.map(m => m[k]).filter(x => x != null);
+    return x => x == null || v.length < 2 ? null : (v.filter(y => y < x).length + (v.filter(y => y === x).length - 1) / 2) / (v.length - 1) * 100;
+  };
+  const P = { gp: pct("gp"), skill: pct("skill"), mod: pct("mod"), gear: pct("gear") };
+  members.forEach(m => { const parts = ["gp", "skill", "mod", "gear"].map(k => P[k](m[k])).filter(x => x != null); m.total = parts.length ? Math.min(100, parts.reduce((a, b) => a + b, 0) / parts.length) : null; });
+  const LEAGUE_RANK = { Carbonite: 1, Bronzium: 2, Chromium: 3, Aurodium: 4, Kyber: 5 };
+  members.forEach(m => { m.lgSort = m.league ? (LEAGUE_RANK[m.league] || 0) * 10 + (6 - (m.division || 5)) : null; });
+
+  // ---------- sections ----------
+  let relMode = store.get("gsRelMode") === "exact" ? "exact" : "atleast";
+  const relN = (m, n) => relMode === "exact" ? m.rel[n] : m.rel.slice(n).reduce((a, b) => a + b, 0);
+  const lg = m => m.league ? `<span class="lg ${m.league.toLowerCase()}"><i></i>${esc(m.league)}${m.division ? " " + m.division : ""}</span>` : "–";
+  const SECTIONS = {
+    stats: { cols: [
+      { k: "gp", l: "GP", v: m => m.gp, f: fmtGP, sum: true, tip: "Galactic power" },
+      { k: "lgSort", l: "GA league", v: m => m.lgSort, f: (v, m) => lg(m), noBar: true, tip: "Grand Arena league and division" },
+      { k: "skill", l: "GA skill", v: m => m.skill, f: int, tip: "Grand Arena skill rating" },
+      { k: "total", l: "Total score", v: m => m.total, f: v => v == null ? "–" : Math.round(v), tip: "0-100: where the member ranks in this guild on GP, GA skill, mod score and gear score, averaged" },
+      { k: "mod", l: "Mod score", v: m => m.mod, f: v => dec(v), tip: "Mods with +15 speed or more, per 100,000 character GP" },
+      { k: "gear", l: "Gear score", v: m => m.gear, f: int, tip: "Each character: G12 = 1, G13 = 2, plus 1 per relic level (R9 = 11). Added up." }],
+      kpis: () => [["Members", members.length], ["Guild GP", fmtGP(sum("gp"))], ["Average GA skill", avgOf("skill", int)], ["Average mod score", avgOf("mod", v => dec(v))], ["Kyber players", members.filter(m => m.league === "Kyber").length]] },
+    roster: { cols: [
+      { k: "gl", l: "GL", v: m => m.gl, f: int, sum: true, tip: "Galactic Legends (characters)" },
+      { k: "g13", l: "G13", v: m => m.g13, f: int, sum: true, tip: "Characters at gear 13" },
+      ...REL.map(n => ({ k: "r" + n, l: () => relMode === "exact" ? "R" + n : "R" + n + "+", v: m => relN(m, n), f: int, sum: true, tip: () => relMode === "exact" ? `Characters at exactly relic ${n}` : `Characters at relic ${n} or higher` }))],
+      kpis: () => [["Galactic Legends", sum("gl")], ["G13 characters", int(sum("g13"))], ["R7 and up", int(members.reduce((a, m) => a + m.rel.slice(7).reduce((x, y) => x + y, 0), 0))], ["R9 and up", int(members.reduce((a, m) => a + m.rel.slice(9).reduce((x, y) => x + y, 0), 0))]] },
+    abilities: { cols: [
+      { k: "zetas", l: "Zetas", v: m => m.zetas, f: int, sum: true, tip: "Zeta abilities applied" },
+      { k: "omis", l: "Omicrons", v: m => m.omis, f: int, sum: true, tip: "Omicron abilities applied" },
+      { k: "tw", l: "TW omis", v: m => m.tw, f: int, sum: true, tip: "Omicrons that work in Territory Wars" },
+      { k: "tb", l: "TB omis", v: m => m.tb, f: int, sum: true, tip: "Omicrons that work in Territory Battles" },
+      { k: "gac", l: "GAC omis", v: m => m.gac, f: int, sum: true, tip: "Omicrons that work in Grand Arena (3v3 and 5v5)" }],
+      kpis: () => [["Zetas", int(sum("zetas"))], ["Omicrons", int(sum("omis"))], ["TW omicrons", int(sum("tw"))], ["TB omicrons", int(sum("tb"))], ["GAC omicrons", int(sum("gac"))]] },
+    datacrons: { cols: [
+      { k: "dc", l: "Datacrons", v: m => m.dc, f: int, sum: true, tip: "Datacrons owned" },
+      { k: "dc13", l: "Level 1-3", v: m => m.dc13, f: int, sum: true },
+      { k: "dc45", l: "Level 4-5", v: m => m.dc45, f: int, sum: true },
+      { k: "dc68", l: "Level 6-8", v: m => m.dc68, f: int, sum: true },
+      { k: "dc9", l: "Level 9", v: m => m.dc9, f: int, sum: true }],
+      kpis: () => [["Datacrons", int(sum("dc"))], ["Level 9", int(sum("dc9"))], ["Level 6-8", int(sum("dc68"))], ["Average per member", avgOf("dc", v => dec(v, 1))]] },
+  };
+  const sum = k => members.reduce((a, m) => a + (m[k] || 0), 0);
+  const avgOf = (k, f) => { const v = members.map(m => m[k]).filter(x => x != null); return v.length ? f(v.reduce((a, b) => a + b, 0) / v.length) : "–"; };
+  const lab = x => typeof x === "function" ? x() : x;
+
+  const HOW = [
+    "<b>Members</b> are everyone in the latest roster. Click a name for their Player status page.",
+    "<b>GP</b>, <b>GA league</b> and <b>GA skill</b> come from the game when the guild is connected (pulled once a day).",
+    "<b>Mod score</b>: mods with +15 speed or more, divided by character GP in 100,000s - the same idea as swgoh.gg's mod quality. Around 1 is decent, 1.5+ is very good.",
+    "<b>Gear score</b>: every character adds G12 = 1, G13 = 2, plus 1 for each relic level (so R9 = 11).",
+    "<b>Total score</b> (0-100): where the member ranks in this guild on GP, GA skill, mod score and gear score, averaged. 50 is the middle of the guild.",
+    "HotUtils doesn't publish how its own scores are worked out, so these are the site's own, explained here.",
+    "<b>Roster</b> counts characters only. GL needs the Galactic Legend at 7 stars. Switch <i>At least / Exactly</i> to count R5 as \"R5 or higher\" or \"exactly R5\".",
+    "<b>Omicrons</b> by mode use the game's ability list: TW, TB, and GAC (3v3 and 5v5).",
+    "<b>Datacrons</b>: a datacron's level is how many of its 9 levels have been rolled. They come from the game, for connected guilds.",
+  ];
+  $("#howList").innerHTML = HOW.map(h => `<li>${h}</li>`).join("");
+
+  let tab = "stats", sortK = { stats: "gp", roster: "g13", abilities: "omis", datacrons: "dc" }, sortD = -1, selected = params.player ? norm(params.player) : null;
+  const tabs = [...document.querySelectorAll("nav.tabs button")];
+  const setTab = t => { tab = SECTIONS[t] ? t : "stats"; tabs.forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab)); render(); };
+  tabs.forEach(b => b.onclick = () => { setTab(b.dataset.tab); try { history.replaceState(null, "", location.pathname + location.search + "#" + tab); } catch (e) {} });
+  addEventListener("hashchange", () => { const h = location.hash.slice(1); if (SECTIONS[h] && h !== tab) setTab(h); });
+  $("#q").oninput = render;
+  document.querySelectorAll("#relMode button").forEach(b => b.onclick = () => { relMode = b.dataset.m; store.set("gsRelMode", relMode); render(); });
+
+  function render() {
+    const S = SECTIONS[tab], cols = S.cols, q = norm($("#q").value);
+    $("#relMode").hidden = tab !== "roster";
+    document.querySelectorAll("#relMode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === relMode));
+    const needsGame = (tab === "datacrons" || tab === "stats") && !hasProf;
+    $("#notice").innerHTML = needsGame ? `<div class="notice">${tab === "datacrons" ? "Datacrons" : "GA league, GA skill and mod score"} come from the game. Connect ${esc(guild.name)} with an ally code (side menu → Upload → Connect a guild to the game) and they'll appear after the next pull.</div>` : "";
+    $("#kpis").innerHTML = S.kpis().map(([l, v]) => `<div class="card kpi"><div class="label">${esc(l)}</div><div class="value">${v}</div></div>`).join("");
+    const k = sortK[tab] === "name" || cols.some(c => c.k === sortK[tab]) ? sortK[tab] : cols[0].k;
+    const col = k === "name" ? { v: m => m.name } : cols.find(c => c.k === k);
+    const rows = members.filter(m => !q || m.id.includes(q)).map(m => ({ m, vals: cols.map(c => c.v(m)) }));
+    rows.sort((a, b) => { if (k === "name") return a.m.name.localeCompare(b.m.name) * sortD; const x = col.v(a.m), y = col.v(b.m); if (x == null && y == null) return a.m.name.localeCompare(b.m.name); if (x == null) return 1; if (y == null) return -1; return (x - y) * sortD || a.m.name.localeCompare(b.m.name); });
+    const max = cols.map((c, i) => Math.max(0, ...members.map(m => c.v(m) || 0)));
+    const head = `<thead><tr><th data-k="name" class="${k === "name" ? (sortD > 0 ? "asc" : "desc") : ""}">Member</th>${cols.map(c => `<th data-k="${c.k}" title="${esc(lab(c.tip) || "")}" class="${c.k === k ? (sortD > 0 ? "asc" : "desc") : ""}">${esc(lab(c.l))}</th>`).join("")}</tr></thead>`;
+    const body = rows.map(({ m, vals }, i) => `<tr class="${m.id === selected ? "sel" : ""}" data-id="${esc(m.id)}"><td class="mem"><span class="rk">${i + 1}</span><a href="player.html?guild=${G}&player=${enc(m.name)}" title="Open ${esc(m.name)}'s Player status">${esc(m.name)}</a></td>${cols.map((c, j) => { const v = vals[j]; const w = !c.noBar && v != null && max[j] ? Math.round(v / max[j] * 100) : 0; return `<td class="${v == null ? "none" : ""} ${w ? "bar" : ""}" style="${w ? `--w:${w}%` : ""}">${c.f(v, m)}</td>`; }).join("")}</tr>`).join("");
+    const foot = rows.length ? `<tfoot><tr><td>${q ? "Shown" : "Guild"} ${cols.some(c => c.sum) ? "total" : ""}</td>${cols.map(c => { if (!c.sum) { const v = rows.map(r => c.v(r.m)).filter(x => x != null); return `<td>${c.k === "lgSort" ? "" : v.length ? "avg " + c.f(v.reduce((a, b) => a + b, 0) / v.length) : "–"}</td>`; } return `<td>${c.f(rows.reduce((a, r) => a + (c.v(r.m) || 0), 0))}</td>`; }).join("")}</tr></tfoot>` : "";
+    $("#grid").innerHTML = head + `<tbody>${body || `<tr><td class="empty" colspan="${cols.length + 1}">No members match</td></tr>`}</tbody>` + foot;
+    $("#count").textContent = q ? `${rows.length} of ${members.length} members` : `${members.length} members`;
+    $("#grid").querySelectorAll("th").forEach(th => th.onclick = () => { const nk = th.dataset.k; sortD = sortK[tab] === nk ? -sortD : (nk === "name" ? 1 : -1); sortK[tab] = nk; render(); });
+    $("#grid").querySelectorAll("tbody tr[data-id]").forEach(tr => tr.onclick = e => { if (e.target.closest("a")) return; selected = selected === tr.dataset.id ? null : tr.dataset.id; $("#grid").querySelectorAll("tbody tr").forEach(x => x.classList.toggle("sel", x.dataset.id === selected)); });
+  }
+  const h0 = location.hash.slice(1);
+  setTab(SECTIONS[h0] ? h0 : "stats");
+  if (selected) setTimeout(() => $(`#grid tr[data-id="${CSS.escape(selected)}"]`)?.scrollIntoView({ block: "center" }), 50);
+  $("#foot").innerHTML = "";
+})();
+</script>
+</body>
+</html>
