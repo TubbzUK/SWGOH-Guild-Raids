@@ -68,7 +68,7 @@ Give a guild any member's ally code and the site fetches its data from the game 
 through SWGoH Comlink (a free community tool that reads the game's public data; it runs inside the
 GitHub Action, so there's nothing to host):
 
-- **Roster** - every member's units, stars, gear and relics, plus GP (once a day). Readiness and the
+- **Roster** - every member's units, stars, gear and relics, plus GP (once a day, again within 4 hours whenever someone joins or leaves, and straight away with *Pull from the game now*). Readiness and the
   platoon planner stay current without roster uploads.
 - **Raid scores** - each member's score in the guild's latest finished raid of each type, added as a
   new raid (and posted to Discord like an upload). The game only shows the latest raid, which is why it
@@ -178,7 +178,7 @@ results yet (Droid Destruction for now) opens straight on this tab.
 | **Trend** | the line of best fit through a player's last 5 scores in that raid, as % change per raid. +3% or more = **Improving**, −3% or less = **Declining**, otherwise **Level**. Fewer than 3 scores = **New**. Set in the guild's `config.yml`. |
 | **Avg (last 5)** | average of their last 5 raids where they scored above zero. |
 | **Readiness %** | sum of relic levels across the raid's characters ÷ (characters × 10). Not unlocked or not relicked counts as 0. Ready / Close / Building bands are set in the raid's `.yml`. |
-| **Current members** | whoever is in the newest WookieeBot file for that guild (any raid, or the roster if that's newer). Anyone else shows as "left". |
+| **Current members** | whoever is in the newest file for that guild (any raid, or the roster if it is as new or newer - for a guild connected to the game that is the roster pulled from the game). Anyone else shows as "left". |
 
 ## One-time setup (about 10 minutes)
 

@@ -504,6 +504,12 @@ a { color: var(--accent); }
   });
   const toBase64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(r.error); r.readAsDataURL(f); });
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // the id GitHub gives a file's contents, so an upload identical to a saved file can be spotted before sending it
+  const blobSha = async f => {
+    const body = new Uint8Array(await f.arrayBuffer()), head = new TextEncoder().encode(`blob ${body.length}\0`);
+    const all = new Uint8Array(head.length + body.length); all.set(head); all.set(body, head.length);
+    return [...new Uint8Array(await crypto.subtle.digest("SHA-1", all))].map(b => b.toString(16).padStart(2, "0")).join("");
+  };
   const explain = async (res) => {
     let m = ""; try { m = (await res.json()).message || ""; } catch (e) {}
     if (res.status === 401) return mode === "password"
@@ -541,7 +547,25 @@ a { color: var(--accent); }
       const content = await toBase64(file);
       const api = `/repos/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
       let sha0;   // replacing a file with the same name (a TB re-uploaded for the same date)
-      if (isTb || isTw) { const ex = await gh(`${api}?ref=${encodeURIComponent(branch)}`, token); if (ex.ok) sha0 = (await ex.json()).sha; }
+      if (isTb || isTw) { const ex = await gh(`${api}?ref=${encodeURIComponent(branch)}`, token, { cache: "no-store" }); if (ex.ok) sha0 = (await ex.json()).sha; }
+      // the exact same file is already saved: GitHub wouldn't start a site update for it, so say so instead of waiting
+      if (isTb || isTw) {
+        let mine = null; try { mine = crypto.subtle ? await blobSha(file) : null; } catch (e) {}
+        if (mine) {
+          let same = mine === sha0 ? path.split("/").pop() : null;
+          if (!same && isTb) {
+            const d = await gh(`/repos/${repo}/contents/${["guilds", g, "tb"].map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(branch)}`, token, { cache: "no-store" });
+            if (d.ok) { const hit = (await d.json()).find(x => x.sha === mine); if (hit) same = hit.name; }
+          }
+          if (same) {
+            const sd = (/^(\d{4}-\d{2}-\d{2})/.exec(same) || [])[1];
+            list[0] = ["done", `Nothing to update: this file is exactly the same as the one already saved${sd ? ` for ${fmtDate(sd)}` : ""} (${esc(same)}).`
+              + (isTb ? " If the TB has moved on, download a fresh export from WookieeBot and upload that one." : "")];
+            list[1] = ["todo", "The site already has this data"]; list.length = 2; progress(list);
+            $("#go").disabled = false; file = null; $("#file").value = ""; pick(null); return;
+          }
+        }
+      }
       // a TW result (not in the export) goes into guilds/<guild>/tw/results.json first
       const twRes = isTw ? document.querySelector('input[name="twres"]:checked').value : "";
       if (isTw && twDate && twRes) {
@@ -581,6 +605,13 @@ a { color: var(--accent); }
         }
         if (!r.ok) continue;
         run = (await r.json()).workflow_runs?.[0];
+        if (!run && i === 9) {   // ~75 seconds and GitHub still hasn't started an update: check whether the upload changed anything
+          const c = await gh(`/repos/${repo}/commits/${sha}`, token);
+          if (c.ok && !((await c.json()).files || []).length) {
+            list[1] = ["done", "Nothing to update: the file was identical to the one already saved, so GitHub didn't need to rebuild the site."];
+            list[2] = ["done", `<a href="${viewUrl}">View the results</a>`]; progress(list); break;
+          }
+        }
         if (!run) continue;
         if (run.status === "completed") {
           if (run.conclusion === "success") {

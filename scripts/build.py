@@ -876,7 +876,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
     # Current members: from whichever is newer - the latest raid export (any raid type;
     # WookieeBot lists the whole guild) or the roster export.
     latest = max((r for rs in loaded.values() for r in rs), key=lambda r: r["date"], default=None)
-    if roster and (latest is None or (roster_date and roster_date > latest["date"])):
+    if roster and (latest is None or (roster_date and roster_date >= latest["date"])):   # same day: the roster (often pulled from the game, so up to date)
         current = set(roster)
     else:
         current = set(latest["scores"]) if latest else set()

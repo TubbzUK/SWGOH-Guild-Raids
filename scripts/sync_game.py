@@ -200,22 +200,37 @@ class Guild:
         self.tw(g)
         self.tb_stars(g)
 
-    # roster, once a day
+    # roster: once a day, and again whenever someone joins or leaves, or an officer pressed "Pull from the game now"
     def roster(self, members: list[dict]) -> None:
         rdir = self.gdir / "roster"
         today = dt.datetime.now(dt.timezone.utc).date().isoformat()
         existing = B.data_files(rdir)
         skills = load_skills()
         todays = [p for p in existing if p.name.startswith(today)]
-        if todays:
+        forced = any(self.gdir.glob("sync-now-*.json"))
+        if todays and not forced:
             try:
-                head = todays[0].read_text(encoding="utf-8-sig").split("\n", 1)[0]
+                with open(todays[0], encoding="utf-8-sig", newline="") as fh:
+                    rd = csv.DictReader(fh)
+                    head = ",".join(rd.fieldnames or [])
+                    have = {(r.get("Name") or "").strip() for r in rd}
             except OSError:
-                head = ""
-            if not (skills and "Zetas" not in head and "ZetaCount" not in head):
-                print("  roster: already have today's")
+                head, have = "", set()
+            now = {str(m.get("playerName") or "").strip() for m in members}
+            if skills and "Zetas" not in head and "ZetaCount" not in head:
+                print("  roster: today's has no zetas/omicrons yet - pulling it again")
+            elif now and now != have:
+                joined, left = sorted(now - have), sorted(have - now)
+                print(f"  roster: members changed since this morning ({len(joined)} joined, {len(left)} left) - pulling it again")
+                if joined:
+                    self.log.append(f"{self.gdir.name}: joined - {', '.join(joined)}")
+                if left:
+                    self.log.append(f"{self.gdir.name}: left - {', '.join(left)}")
+            else:
+                print("  roster: already have today's and the members are the same")
                 return
-            print("  roster: today's has no zetas/omicrons yet - pulling it again")
+        elif todays:
+            print("  roster: pulling it again (Pull from the game now)")
         rows = []
         for m in members:
             p = self.player(m.get("playerId"))
