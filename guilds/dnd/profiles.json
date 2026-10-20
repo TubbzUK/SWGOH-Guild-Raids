@@ -1,5 +1,5 @@
 {
-"date": "2026-10-19",
+"date": "2026-10-20",
 "players": [
 {
 "name": "2legend2",
@@ -224,8 +224,8 @@
 },
 {
 "name": "Esonax",
-"gp": 14404860,
-"gp_char": 9276903,
+"gp": 14407140,
+"gp_char": 9279183,
 "gp_ship": 5127957,
 "skill": 2909,
 "league": "Aurodium",
@@ -377,8 +377,8 @@
 },
 {
 "name": "Little Kid",
-"gp": 13530210,
-"gp_char": 8594774,
+"gp": 13530717,
+"gp_char": 8595281,
 "gp_ship": 4935436,
 "skill": 2651,
 "league": "Aurodium",
@@ -479,8 +479,8 @@
 },
 {
 "name": "MINI Syfo Diaz",
-"gp": 14771720,
-"gp_char": 9724749,
+"gp": 14773238,
+"gp_char": 9726267,
 "gp_ship": 5046971,
 "skill": 2973,
 "league": "Kyber",
@@ -530,8 +530,8 @@
 },
 {
 "name": "MVST3R",
-"gp": 14669214,
-"gp_char": 9675684,
+"gp": 14669721,
+"gp_char": 9676191,
 "gp_ship": 4993530,
 "skill": 3370,
 "league": "Kyber",
@@ -547,8 +547,8 @@
 },
 {
 "name": "Nema Ghyron",
-"gp": 15232727,
-"gp_char": 9998584,
+"gp": 15234532,
+"gp_char": 10000389,
 "gp_ship": 5234143,
 "skill": 3264,
 "league": "Kyber",
@@ -556,7 +556,7 @@
 "mods": {
 "s10": 1308,
 "s15": 820,
-"s20": 523,
+"s20": 524,
 "s25": 141,
 "six": 1328,
 "mods": 1870
@@ -564,8 +564,8 @@
 },
 {
 "name": "Patsymax",
-"gp": 14571526,
-"gp_char": 9643306,
+"gp": 14572666,
+"gp_char": 9644446,
 "gp_ship": 4928220,
 "skill": 3257,
 "league": "Kyber",
@@ -632,8 +632,8 @@
 },
 {
 "name": "Ren Baleton",
-"gp": 13754345,
-"gp_char": 8898918,
+"gp": 13755863,
+"gp_char": 8900436,
 "gp_ship": 4855427,
 "skill": 3156,
 "league": "Kyber",
@@ -700,8 +700,8 @@
 },
 {
 "name": "Sabersmith",
-"gp": 14600664,
-"gp_char": 9603583,
+"gp": 14601804,
+"gp_char": 9604723,
 "gp_ship": 4997081,
 "skill": 2535,
 "league": "Bronzium",
@@ -734,8 +734,8 @@
 },
 {
 "name": "Squall",
-"gp": 14966555,
-"gp_char": 9903790,
+"gp": 14967695,
+"gp_char": 9904930,
 "gp_ship": 5062765,
 "skill": 3304,
 "league": "Kyber",
@@ -836,18 +836,18 @@
 },
 {
 "name": "мαясzєяѳ",
-"gp": 14774087,
-"gp_char": 9738894,
-"gp_ship": 5035193,
+"gp": 14780763,
+"gp_char": 9740948,
+"gp_ship": 5039815,
 "skill": 3179,
 "league": "Kyber",
 "division": 3,
 "mods": {
 "s10": 1643,
-"s15": 826,
-"s20": 710,
+"s15": 827,
+"s20": 711,
 "s25": 258,
-"six": 918,
+"six": 920,
 "mods": 1992
 }
 }
