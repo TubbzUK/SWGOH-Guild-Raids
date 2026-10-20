@@ -57,7 +57,7 @@
 "gp": 14381188,
 "gp_char": 9453482,
 "gp_ship": 4927706,
-"skill": 3066,
+"skill": 3030,
 "league": "Aurodium",
 "division": 1,
 "mods": {
@@ -248,18 +248,18 @@
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 1007,
+"s10": 1009,
 "s15": 480,
 "s20": 118,
 "s25": 15,
-"six": 713,
+"six": 715,
 "mods": 2039
 }
 },
 {
 "name": "Dulce Periculum",
-"gp": 15247101,
-"gp_char": 10208892,
+"gp": 15255300,
+"gp_char": 10217091,
 "gp_ship": 5038209,
 "skill": 3139,
 "league": "Kyber",
@@ -496,8 +496,8 @@
 },
 {
 "name": "Lannavo",
-"gp": 13887340,
-"gp_char": 9009100,
+"gp": 13905076,
+"gp_char": 9026836,
 "gp_ship": 4878240,
 "skill": 2858,
 "league": "Aurodium",
@@ -507,7 +507,7 @@
 "s15": 362,
 "s20": 129,
 "s25": 28,
-"six": 683,
+"six": 685,
 "mods": 1744
 }
 },
