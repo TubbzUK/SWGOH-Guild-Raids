@@ -110,6 +110,9 @@ td.empty{color:var(--bad);font-weight:500}
 .oprow .pl small{color:var(--text-2);font-weight:400}
 .opb{font:inherit;font-size:13px;font-weight:600;width:34px;height:30px;border-radius:4px;border:1px solid var(--line);background:var(--bg);color:var(--text-2);cursor:pointer}
 .opb[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#1A1406}
+.opb.two{outline:2px dashed var(--accent);outline-offset:1px}
+.twopass{font:inherit;font-size:12.5px;font-weight:600;border:1px dashed var(--line);background:var(--bg);color:var(--text-2);border-radius:999px;padding:5px 12px;cursor:pointer;margin-left:6px}
+.twopass[aria-pressed="true"]{border-style:solid;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--ink)}
 .opsbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
@@ -664,6 +667,10 @@ let OFF=new Set(JSON.parse(store.get(K('rote-off'))||'[]'));
 // DEPLOY: operation id -> TB phase it is filled in (0 = not filled). Missing ids default to the planet's own phase.
 let DEPLOY=new Map(Object.entries(JSON.parse(store.get(K('rote-deploy'))||'{}')).map(([k,v])=>[k,+v]));
 const deployOf=s=>{const k=opId(s);if(DEPLOY.has(k))return DEPLOY.get(k);return OFF.has(k)?0:(s.zone??s.phase)};
+// SPLIT: operation id -> a later phase that finishes it (two passes: fill what we can, then the rest after the roster refreshes)
+let SPLIT=new Map(Object.entries(JSON.parse(store.get(K('rote-split'))||'{}')).map(([k,v])=>[k,+v]));
+const splitOf=s=>{const d=deployOf(s),n=SPLIT.get(opId(s));return d>0&&n>d?n:0};
+const saveSplit=()=>store.set(K('rote-split'),JSON.stringify(Object.fromEntries(SPLIT)));
 
 /* ---------- CSV ---------- */
 function parseCSV(text){
@@ -840,10 +847,12 @@ function assign(roster,plan,o,includeOff=false){
   const tiers=o.tierMode?tiersOf(roster):null;
   const tier=p=>tiers?tiers.get(p)||4:1,W=p=>tiers?TIER_W[tier(p)]:1;
   const total=new Map(players.map(p=>[p,0]));
-  const slots=plan.slots.map((s,i)=>{const d=deployOf(s);return{...s,pi:i,zone:s.phase,phase:d>0?d:(includeOff?s.phase:0)}}).filter(s=>s.phase>0);
-  const phases=[...new Set(slots.map(s=>s.phase))].sort((a,b)=>a-b);
+  const slots=plan.slots.map((s,i)=>{const d=deployOf(s);return{...s,pi:i,zone:s.phase,phase:d>0?d:(includeOff?s.phase:0),split:d>0?splitOf(s):0}}).filter(s=>s.phase>0);
+  const phases=[...new Set([...slots.map(s=>s.phase),...slots.map(s=>s.split).filter(Boolean)])].sort((a,b)=>a-b);
   const unit=(p,s)=>{const m=roster.players.get(p);return m.get(s.key)||m.get(s.nameKey)};
   for(const ph of phases){
+    // two-pass operations: slots left empty in the first pass are filled again now, once everyone's roster has refreshed
+    slots.filter(s=>s.split===ph&&!s.player&&s.phase<ph).forEach(s=>{s.carried=s.phase;s.phase=ph;s.reason=undefined});
     const ps=slots.filter(s=>s.phase===ph);
     const load=new Map(players.map(p=>[p,0])),used=new Map(players.map(p=>[p,new Set()])),glc=new Map(players.map(p=>[p,0]));
     // squads: 2 = this member places the squad's lead this phase, 1 = they place another unit of it
@@ -942,29 +951,39 @@ function renderOps(){
     const n=pls.reduce((a,p)=>a+p.ops.filter(op=>dOf(p.zone,p.planet,op)===ph).length,0);
     return`<button class="phchip" data-ph="${ph}" aria-pressed="${ph===OPSPH}">Phase ${ph}<b>${n}</b></button>`}).join('');
   const avail=pls.filter(p=>p.zone<=OPSPH).sort((a,b)=>b.zone-a.zone||a.planet.localeCompare(b.planet));
+  const spOf=(p,op)=>splitOf({zone:p.zone,planet:p.planet,op});
   const row=p=>{
     const here=p.ops.filter(op=>dOf(p.zone,p.planet,op)===OPSPH).length;
-    return`<div class="oprow"><button class="pl" data-planet="${esc(p.zone+'|'+p.planet)}">${esc(p.planet)} <small>${here}/${p.ops.length}</small></button>`+
-      p.ops.map(op=>{const d=dOf(p.zone,p.planet,op);const id=`${p.zone}|${p.planet}|${op}`;
-        const lab=d===OPSPH?`in phase ${OPSPH}`:d?`done in phase ${d}`:'not filled';
-        return`<button class="opb${d&&d!==OPSPH?' else':''}" data-op="${esc(id)}" aria-pressed="${d===OPSPH}" aria-label="${esc(p.planet)} operation ${esc(op)}, ${lab}" title="${esc(lab)}">${esc(op)}${d&&d!==OPSPH?`<small>P${d}</small>`:''}</button>`}).join('')+'</div>'};
+    const mine=p.ops.filter(op=>dOf(p.zone,p.planet,op)===OPSPH),twoNow=mine.length&&mine.every(op=>spOf(p,op)===OPSPH+1);
+    const fin=p.ops.filter(op=>spOf(p,op)===OPSPH);
+    return`<div class="oprow"><button class="pl" data-planet="${esc(p.zone+'|'+p.planet)}">${esc(p.planet)} <small>${here}/${p.ops.length}${fin.length?` · finishing ${fin.length} from P${dOf(p.zone,p.planet,fin[0])}`:''}</small></button>`+
+      p.ops.map(op=>{const d=dOf(p.zone,p.planet,op),sp=spOf(p,op);const id=`${p.zone}|${p.planet}|${op}`;
+        const lab=d===OPSPH?`in phase ${OPSPH}${sp?`, finished in phase ${sp}`:''}`:sp===OPSPH?`started in phase ${d}, finished in phase ${OPSPH}`:d?`done in phase ${d}${sp?` and ${sp}`:''}`:'not filled';
+        return`<button class="opb${d&&d!==OPSPH?' else':''}${sp?' two':''}" data-op="${esc(id)}" aria-pressed="${d===OPSPH}" aria-label="${esc(p.planet)} operation ${esc(op)}, ${lab}" title="${esc(lab)}">${esc(op)}${d&&d!==OPSPH?`<small>P${d}${sp?'+'+sp:''}</small>`:sp?`<small>+P${sp}</small>`:''}</button>`}).join('')+
+      (mine.length&&OPSPH<6?`<button class="twopass" data-two="${esc(p.zone+'|'+p.planet)}" aria-pressed="${!!twoNow}" title="Fill what the guild can in phase ${OPSPH}, then the rest of the same operations in phase ${OPSPH+1} (everyone's roster refreshes, so the same members can place the same units again)">⇄ Two passes: P${OPSPH} + P${OPSPH+1}</button>`:'')+'</div>'};
   const fresh=avail.filter(p=>p.zone===OPSPH),old=avail.filter(p=>p.zone<OPSPH);
   let html='';
   if(fresh.length)html+=`<div class="opsph"><h3>Unlocked in phase ${OPSPH}</h3>${fresh.map(row).join('')}</div>`;
   if(old.length)html+=`<div class="opsph"><h3>Carried over from earlier phases</h3>${old.map(row).join('')}</div>`;
   if(!html)html='<p class="note">No planets are open in this phase.</p>';
   $('#ops').innerHTML=html;
-  $('#opsHint').textContent='Gold operations are filled in this phase. Ones marked P1 to P6 are filled in that other phase; tap one to move it here. Tap a planet name to add or remove all of its operations.';
+  $('#opsHint').textContent='Gold operations are filled in this phase. Ones marked P1 to P6 are filled in that other phase; tap one to move it here. Tap a planet name to add or remove all of its operations. "Two passes" fills what the guild can now and the rest of the same operations in the next phase, when everyone can place the same units again (e.g. reach Malachor in phase 5, finish it in phase 6).';
   $('#opsPanel').hidden=false;$('#opsEmpty').hidden=true;
 }
 let SELDIRTY=false,SELSAVED=null;   // SELSAVED: when this guild's selections were last saved to the site
-function saveDeploy(){store.set(K('rote-deploy'),JSON.stringify(Object.fromEntries(DEPLOY)));SELDIRTY=true;renderOps();renderSel();renderPlanets()}
-function setD(id,ph){DEPLOY.set(id,ph);OFF.delete(id)}
+function saveDeploy(){store.set(K('rote-deploy'),JSON.stringify(Object.fromEntries(DEPLOY)));saveSplit();SELDIRTY=true;renderOps();renderSel();renderPlanets()}
+function setD(id,ph){DEPLOY.set(id,ph);OFF.delete(id);SPLIT.delete(id)}
 $('#opsPh').addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(b){OPSPH=+b.dataset.ph;renderOps()}});
 $('#ops').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.op){const k=b.dataset.op;const[z,pl,op]=[+k.split('|')[0],k.split('|').slice(1,-1).join('|'),k.split('|').pop()];
     setD(k,dOf(z,pl,op)===OPSPH?0:OPSPH);saveDeploy();return}
+  if(b.dataset.two){
+    const[z,...rest]=b.dataset.two.split('|');const pl=rest.join('|');
+    const p=planets(opsPlan()).find(x=>x.zone===+z&&x.planet===pl);if(!p)return;
+    const mine=p.ops.filter(op=>dOf(+z,pl,op)===OPSPH).map(op=>`${z}|${pl}|${op}`);
+    const on=mine.every(id=>SPLIT.get(id)===OPSPH+1);
+    mine.forEach(id=>on?SPLIT.delete(id):SPLIT.set(id,OPSPH+1));saveDeploy();return}
   if(b.dataset.planet){
     const[z,...rest]=b.dataset.planet.split('|');const pl=rest.join('|');
     const p=planets(opsPlan()).find(x=>x.zone===+z&&x.planet===pl);if(!p)return;
@@ -991,7 +1010,7 @@ function run(){OK=false;
   if(!roster.players.size){showMsg('#runMsg','err','Roster: no members found.');return}
   const o=opts();const res=assign(roster,plan,o);
   if(!res.slots.length){showMsg('#runMsg','err','No operations are chosen. Pick some under “Operations to fill”.');return}
-  RESULT=res;Object.assign(RESULT,{roster,plan,o,all:null,off:[...OFF],deploy:Object.fromEntries(DEPLOY),seed:SEED,settings:curSettings()});
+  RESULT=res;Object.assign(RESULT,{roster,plan,o,all:null,off:[...OFF],deploy:Object.fromEntries(DEPLOY),split:Object.fromEntries(SPLIT),seed:SEED,settings:curSettings()});
   DIRTY=true;showResult();
 }
 function showResult(){
@@ -1028,7 +1047,7 @@ function renderTrack(){
 }
 const slotSort=(a,b)=>a.planet.localeCompare(b.planet)||cmpOp(a.op,b.op)||(a.row??0)-(b.row??0)||(a.slot??0)-(b.slot??0);
 const tierBadge=p=>RESULT&&RESULT.tiers&&RESULT.tiers.get(p)?`<span class="tier">T${RESULT.tiers.get(p)}</span>`:'';
-const tags=s=>(s.overCap?'<span class="tag">over limit</span>':'')+(s.extraGL?'<span class="tag">2nd GL</span>':'')+(s.squad?`<span class="tag" title="Kept with their ${esc(s.squad)} - that squad is already placed">with ${esc(s.squad)}</span>`:'');
+const tags=s=>(s.carried?`<span class="tier" title="Part of a two-pass operation: started in phase ${s.carried}, finished now">2nd pass</span>`:'')+(s.split&&!s.carried?`<span class="tier" title="Two-pass operation: whatever isn't placed now is placed in phase ${s.split}">1st pass</span>`:'')+(s.overCap?'<span class="tag">over limit</span>':'')+(s.extraGL?'<span class="tag">2nd GL</span>':'')+(s.squad?`<span class="tag" title="Kept with their ${esc(s.squad)} - that squad is already placed">with ${esc(s.squad)}</span>`:'');
 const carry=s=>s.zone&&s.zone!==s.phase?`<span class="carry">phase ${s.zone} planet</span>`:'';
 const where=s=>`${s.planet}, op ${s.op}${s.row!=null?`, row ${s.row}`:''}`;
 function capFor(p){const c=+$('#cap').value||Infinity;const t=RESULT&&RESULT.tiers&&RESULT.tiers.get(p);return t?Math.max(1,Math.round(c*TIER_W[t])):c}
@@ -1660,19 +1679,19 @@ function packState(){
   const roster=players.map(p=>{const m={};R.roster.players.get(p).forEach((l,k)=>{if(keys.has(k)||names.has(k))m[k]=l});return m});
   const plan=R.plan.slots.map(s=>[s.phase,s.planet,s.op,s.row,s.slot,s.unit,s.key,s.nameKey,s.minRelic,s.minStars,s.ship?1:0]);
   const pIdx=new Map(players.map((p,i)=>[p,i]));
-  const res=R.slots.map(s=>[s.pi,s.player!=null?pIdx.get(s.player):-1,(s.overCap?1:0)|(s.extraGL?2:0)|(s.gl?4:0),s.player?0:(s.reason||''),s.phase,s.squad||0]);
+  const res=R.slots.map(s=>[s.pi,s.player!=null?pIdx.get(s.player):-1,(s.overCap?1:0)|(s.extraGL?2:0)|(s.gl?4:0),s.player?0:(s.reason||''),s.phase,s.squad||0,s.carried||0,s.split||0]);
   const gp=players.map(p=>Math.round(R.roster.gp?.get(p)||0));
-  return{v:1,savedAt:new Date().toISOString(),settings:R.settings,off:R.off,deploy:R.deploy||{},seed:R.seed,raw:!!R.roster.raw,players,roster,plan,res,gp};
+  return{v:1,savedAt:new Date().toISOString(),settings:R.settings,off:R.off,deploy:R.deploy||{},split:R.split||{},seed:R.seed,raw:!!R.roster.raw,players,roster,plan,res,gp};
 }
 function unpackState(st){
   const roster={players:new Map(st.players.map((p,i)=>[p,new Map(Object.entries(st.roster[i]||{}))])),names:new Map(),raw:st.raw,gp:new Map(st.players.map((p,i)=>[p,(st.gp||[])[i]||0]))};
   const plan={slots:st.plan.map(a=>({phase:a[0],planet:a[1],op:a[2],row:a[3],slot:a[4],unit:a[5],key:a[6],nameKey:a[7],minRelic:a[8],minStars:a[9],ship:!!a[10]})),names:new Map()};
-  const slots=st.res.map(([i,pi,f,r,d,sq])=>({squad:sq||null,...plan.slots[i],pi:i,zone:plan.slots[i].phase,phase:d||plan.slots[i].phase,player:pi>=0?st.players[pi]:null,overCap:!!(f&1),extraGL:!!(f&2),gl:!!(f&4),reason:r||undefined}));
+  const slots=st.res.map(([i,pi,f,r,d,sq,ca,sp])=>({squad:sq||null,carried:ca||0,split:sp||0,...plan.slots[i],pi:i,zone:plan.slots[i].phase,phase:d||plan.slots[i].phase,player:pi>=0?st.players[pi]:null,overCap:!!(f&1),extraGL:!!(f&2),gl:!!(f&4),reason:r||undefined}));
   return{roster,plan,slots};
 }
 function applySharedSettings(st){
   for(const f of SETTINGS_SHARED){const v=st.settings[f];if(v==null)continue;const el=$('#'+f);if(el.type==='checkbox')el.checked=v;else el.value=v}
-  OFF=new Set(st.off||[]);DEPLOY=new Map(Object.entries(st.deploy||{}).map(([k,v])=>[k,+v]));SEED=st.seed||1;
+  OFF=new Set(st.off||[]);DEPLOY=new Map(Object.entries(st.deploy||{}).map(([k,v])=>[k,+v]));SPLIT=new Map(Object.entries(st.split||{}).map(([k,v])=>[k,+v]));SEED=st.seed||1;
 }
 function renderSaved(){
   const el=$('#savedInfo');
@@ -1736,6 +1755,7 @@ function describePlan(){
   // per-guild settings, now that the guild is known
   OFF=new Set(JSON.parse(store.get(K('rote-off'))||'[]'));
   DEPLOY=new Map(Object.entries(JSON.parse(store.get(K('rote-deploy'))||'{}')).map(([k,v])=>[k,+v]));
+  SPLIT=new Map(Object.entries(JSON.parse(store.get(K('rote-split'))||'{}')).map(([k,v])=>[k,+v]));
   restore();
   $('#guildSel').innerHTML=SITE.guilds.map(g=>`<option value="${esc(g.slug)}"${g.slug===GUILD?' selected':''}>${esc(g.name)}</option>`).join('');
   $('#guildSel').hidden=true;
@@ -1766,7 +1786,7 @@ function describePlan(){
     applySharedSettings(SHARED);
     const u=unpackState(SHARED);SHARED.roster=u.roster;SHARED.plan=u.plan;
     const phases=[...new Set(u.slots.map(s=>s.phase))].sort((a,b)=>a-b);
-    RESULT={slots:u.slots,phases,players:SHARED.players,roster:u.roster,plan:u.plan,o:opts(),all:null,tiers:SHARED.settings.tierMode?tiersOf(u.roster):null,off:[...OFF],deploy:Object.fromEntries(DEPLOY),seed:SEED,settings:SHARED.settings};
+    RESULT={slots:u.slots,phases,players:SHARED.players,roster:u.roster,plan:u.plan,o:opts(),all:null,tiers:SHARED.settings.tierMode?tiersOf(u.roster):null,off:[...OFF],deploy:Object.fromEntries(DEPLOY),split:Object.fromEntries(SPLIT),seed:SEED,settings:SHARED.settings};
     SELSAVED=SHARED.savedAt;
   }else SHARED=null;
   // Selections saved on their own (without new assignments) win when they are newer
@@ -1793,9 +1813,11 @@ function renderPlanets(){
   const box=$('#planetSum');let plan;try{plan=opsPlan()}catch(e){box.hidden=true;return}
   const byPh=new Map();
   planets(plan).forEach(p=>p.ops.forEach(op=>{const d=dOf(p.zone,p.planet,op);if(!d)return;
-    if(!byPh.has(d))byPh.set(d,new Map());const m=byPh.get(d),k=p.planet+'\u0000'+p.zone;if(!m.has(k))m.set(k,{planet:p.planet,zone:p.zone,n:0,of:p.ops.length});m.get(k).n++}));
+    if(!byPh.has(d))byPh.set(d,new Map());const m=byPh.get(d),k=p.planet+'\u0000'+p.zone;if(!m.has(k))m.set(k,{planet:p.planet,zone:p.zone,n:0,of:p.ops.length});m.get(k).n++;
+    const sp=splitOf({zone:p.zone,planet:p.planet,op});if(sp){m.get(k).two=sp;if(!byPh.has(sp))byPh.set(sp,new Map());const m2=byPh.get(sp),k2=k+'\u0000fin';if(!m2.has(k2))m2.set(k2,{planet:p.planet,zone:p.zone,n:0,of:p.ops.length,fin:d});m2.get(k2).n++}}));
   const phases=[...byPh.keys()].sort((a,b)=>a-b);
-  let html=phases.map(ph=>`<div class="prow"><b>Phase ${ph}</b><span>${[...byPh.get(ph).values()].sort((a,b)=>a.planet.localeCompare(b.planet)).map(x=>`<span class="pp">${esc(x.planet)} <small>${x.n===x.of?'all '+x.of+' ops':x.n+' of '+x.of+' ops'}${x.zone!==ph?`, phase ${x.zone} planet`:''}</small></span>`).join('')}</span></div>`).join('')||'<p class="note">No operations chosen yet.</p>';
+  const ppTxt=(x,ph)=>x.fin?`2nd pass of ${x.n} op${x.n>1?'s':''} started in phase ${x.fin}`:(x.n===x.of?'all '+x.of+' ops':x.n+' of '+x.of+' ops')+(x.zone!==ph?`, phase ${x.zone} planet`:'')+(x.two?`, rest in phase ${x.two}`:'');
+  let html=phases.map(ph=>`<div class="prow"><b>Phase ${ph}</b><span>${[...byPh.get(ph).values()].sort((a,b)=>a.planet.localeCompare(b.planet)||(a.fin?1:0)-(b.fin?1:0)).map(x=>`<span class="pp">${esc(x.planet)} <small>${ppTxt(x,ph)}</small></span>`).join('')}</span></div>`).join('')||'<p class="note">No operations chosen yet.</p>';
   if((SELNEWER||SELDIRTY)&&SHARED)html+=`<p class="stale">These selections were changed after the assignments below were made. Officers: run Assign platoons, then Save and share, to update them.</p>`;
   $('#planetSumBody').innerHTML=html;box.hidden=false;
 }
@@ -1803,7 +1825,7 @@ $('#selSave').addEventListener('click',async()=>{
   if(!unlocked||!TOKEN){openMenu('ops');return}
   const b=$('#selSave');b.disabled=true;b.textContent='Saving…';
   try{
-    const st={v:1,savedAt:new Date().toISOString(),settings:curSettings(),off:[...OFF],deploy:Object.fromEntries(DEPLOY),seed:SEED};
+    const st={v:1,savedAt:new Date().toISOString(),settings:curSettings(),off:[...OFF],deploy:Object.fromEntries(DEPLOY),split:Object.fromEntries(SPLIT),seed:SEED};
     await putFile(`guilds/${GUILD}/platoon-settings.json`,JSON.stringify(st,null,1),`Save ${guildName()} platoon selections from the planner`);
     SELSAVED=st.savedAt;SELDIRTY=false;SELNEWER=!!SHARED;renderSel();renderPlanets();
     $('#selStatus').textContent=`Saved for ${guildName()}. The site updates in about two minutes.`;

@@ -263,6 +263,13 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   to fill and press **Save selections** (saved to `guilds/<guild>/platoon-settings.json`). The rules
   (relic minimums, per-member limit, GL rules, tier balancing) are saved there too, per guild.
   **Save and share** also saves the choices the assignments were made with.
+- **Two passes.** When a planet can't be finished in one phase - e.g. Malachor reached in phase 5
+  without its first star - pick its operations in phase 5 and press **⇄ Two passes: P5 + P6** on that
+  planet's row. The planner fills what it can in phase 5, then fills the rest of the same operations in
+  phase 6, when everyone's roster has refreshed, so the same members can place the same units again
+  (e.g. one Starkiller in phase 5 and the same Starkiller in the same operation in phase 6). Those
+  operations show "+P6" in the picker, the slots are tagged *1st pass* / *2nd pass*, and the planet
+  summary shows the split. Moving an operation to another phase turns its second pass off.
 - The page shows which planets each guild is filling in each phase, and flags it when the choices
   have changed since the assignments were last made.
 
