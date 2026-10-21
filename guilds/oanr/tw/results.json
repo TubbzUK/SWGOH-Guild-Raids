@@ -52,5 +52,12 @@
   "our_score": null,
   "their_score": null,
   "opponent": "SaS Spaceballs"
+ },
+ "2026-10-21": {
+  "result": "loss",
+  "our_score": 20132,
+  "their_score": 24474,
+  "source": "game",
+  "opponent": "Kangoo Light Side"
  }
 }
