@@ -41,6 +41,7 @@ Every page has a menu down the left-hand side with everything in one place:
   another page, that page opens and the tool starts straight away.
   - 📣 Post to Discord → Raid results, Raid readiness, TB stats, TW stats, Guild effectiveness
     (officers' channel), Platoons: one phase, Platoons: whole guild
+  - Raids → Score targets
   - Territory battles → Manage TB uploads, Set TB stars, Contribution settings
   - Territory wars → Set the TW result
   - Guild effectiveness → Effectiveness weighting
@@ -469,7 +470,15 @@ roster export (e.g. `VADERDUELSEND`). To show a friendlier name or use a lower t
       relic: 9
 ```
 
-A guild can have its own target score for a raid in its `config.yml` under `target_scores`.
+Officers set each raid's **score target** from the site: side menu → Officers → Raids → **Score targets**
+- pick the raid, type the score (3000000, 3M or 2.5m), save. It's saved per guild in
+`guilds/<guild>/raid-targets.json` and wins over the other two places a target can be set.
+The **Players** tab then shows *Target* (✓ on target, or ✗ how far below) and *Times below* (raids
+they finished under the target, out of the raids they were in - a blank or zero counts), and the
+**Overview** lists every current member below target in the latest raid, how far below (%) and how
+many times they've been below. Times below uses the current target for every past raid.
+
+A guild can also have its own target score for a raid in its `config.yml` under `target_scores`.
 
 ## Adding another guild
 

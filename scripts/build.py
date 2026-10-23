@@ -736,14 +736,31 @@ def full_roster(path: Path, names: dict[str, str]) -> dict | None:
 
 
 # ---------------------------------------------------------------- main
+def raid_target(gdir: Path, cfg: dict, rdef: dict) -> float | None:
+    """A raid's score target: set by officers on the site (guilds/<guild>/raid-targets.json), else the
+    guild's config.yml target_scores, else raids/<raid>.yml."""
+    t = None
+    f = gdir / "raid-targets.json"
+    if f.exists():
+        try:
+            t = (json.loads(f.read_text(encoding="utf-8")) or {}).get(rdef["slug"])
+        except (OSError, ValueError):
+            warn(f"{gdir.name}/raid-targets.json couldn't be read - using the other targets")
+    if t is None:
+        t = (cfg.get("target_scores") or {}).get(rdef["slug"], rdef["target_score"])
+    try:
+        return float(t) if t else None
+    except (TypeError, ValueError):
+        return None
+
+
 def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict, roster_file,
               players: Players, current: set) -> dict:
     """Everything the site shows for one guild + one raid type."""
     recent_n = int(cfg.get("average_over_last", 5))
     trend_n = int(cfg.get("trend_over_last", 5))
     trend_thr = float(cfg.get("trend_threshold_pct", 3))
-    target = (cfg.get("target_scores") or {}).get(rdef["slug"], rdef["target_score"])
-    target = float(target) if target else None
+    target = raid_target(gdir, cfg, rdef)
     rconf = load_readiness_config(rdef["cfg"])
     for cid in unknown_characters(roster, rconf):
         if UNIT_INFO and str(cid).upper() not in UNIT_INFO:
@@ -791,6 +808,9 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
         delta = (last - prev) if (last and prev) else None
         tpct, tlabel = trend_of(played[-trend_n:], trend_thr)
         est = raids[-1]["estimates"].get(key) if raids else None
+        # against the target: every raid they were listed in where they scored under it (a blank or 0 counts)
+        listed_series = [r["scores"][key] for r in raids if key in r["scores"]]
+        below_n = sum(1 for v in listed_series if (v or 0) < target) if target else None
         players_out.append({
             "id": key,
             "name": info["name"],
@@ -813,6 +833,9 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
             "estimate": est,
             "vs_estimate_pct": round((last - est) / est * 100, 1) if (last and est) else None,
             "rank": latest_rank.get(key),
+            "on_target": (last >= target) if target and last is not None else None,
+            "below_pct": round((target - (last or 0)) / target * 100, 1) if target and last is not None and last < target else None,
+            "below_count": below_n,
             "readiness": readiness_for(roster.get(key), rconf) if roster else None,
         })
     # Former members only matter where they have scores in this raid
@@ -968,7 +991,7 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
         (out_dir / f"{d['slug']}.json").write_text(json.dumps(view, indent=1, ensure_ascii=False), encoding="utf-8")
         print(f"Wrote site/data/{gdir.name}/{d['slug']}.json: {len(view['raids'])} raids, "
               f"{len(view['players'])} players, {len(view['warnings'])} warnings")
-        raids_index.append({"slug": d["slug"], "name": d["name"], "raids": len(view["raids"]),
+        raids_index.append({"slug": d["slug"], "name": d["name"], "raids": len(view["raids"]), "target": view.get("target_score"),
                             "latest": view["raids"][-1]["date"] if view["raids"] else None,
                             "banner": f"banners/{d['banner_file'].name}" if d["banner_file"] else None})
 

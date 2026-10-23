@@ -71,6 +71,8 @@
       { id: "post-eff", label: "Guild effectiveness (officers)", page: EFF, sel: "#postBtn" },
       { id: "post-plat", label: "Platoons: one phase", page: PLAT, sel: "#postDiscord" },
       { id: "post-plat-all", label: "Platoons: whole guild", page: PLAT, sel: "#postAll" }] },
+    { key: "oraid", ic: "⚔", label: "Raids", kids: [
+      { id: "raid-targets", label: "Score targets", page: RAID, fn: "Raid score targets" }] },
     { key: "otb", ic: "◈", label: "Territory battles", kids: [
       { id: "tb-manage", label: "Manage TB uploads", page: TB, fn: "Manage TB uploads" },
       { id: "tb-stars", label: "Set TB stars", page: TB, fn: "Set TB stars" },

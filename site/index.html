@@ -44,6 +44,10 @@ ol.list .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-sp
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { background: var(--bad-bg); color: var(--bad-ink); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 500; }
 .chip.soft { background: var(--none-bg); color: var(--text-2); }
+#btTable td.name { font-weight: 600; } #btTable tr.click { cursor: pointer; } #btTable tr.click:hover { background: var(--surface-2); }
+.below-pct { display: inline-flex; align-items: center; gap: 8px; }
+.below-pct .bar { width: 70px; height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; display: inline-block; }
+.below-pct .bar i { display: block; height: 100%; background: var(--bad); }
 .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
 input[type=search], select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font: 14px var(--font-ui); min-width: 0; }
 input[type=search] { flex: 1 1 220px; max-width: 320px; }
@@ -215,10 +219,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
         <h2>No score in latest raid</h2>
         <p class="hint">Members listed by WookieeBot with a blank or zero score</p>
         <div class="chips" id="noScore"></div>
-        <h2 style="margin-top:18px">Below the <span id="targetLbl"></span> target</h2>
-        <p class="hint">Scored, but under target</p>
-        <div class="chips" id="belowTarget"></div>
       </div>
+    </div>
+    <div class="card" id="btCard" style="margin-bottom:12px">
+      <h2>Below the <span id="targetLbl"></span> target</h2>
+      <p class="hint" id="btHint"></p>
+      <div class="tablewrap" id="btWrap"><table id="btTable"></table></div>
     </div>
     <div class="card">
       <h2>Participation by raid</h2>
@@ -378,9 +384,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     $("#declining").innerHTML = dec.slice(0, 8).map(li).join("") || `<li class="sub">Nobody is declining 🎉</li>`;
     const ns = latest.no_score || [];
     $("#noScore").innerHTML = ns.length ? ns.map(n => `<span class="chip">${esc(n)}</span>`).join("") : `<span class="sub">Everyone posted a score.</span>`;
-    $("#targetLbl").textContent = target ? fmt(target) : "";
-    const bt = target ? current.filter(p => p.last > 0 && p.last < target) : [];
-    $("#belowTarget").innerHTML = bt.length ? bt.map(p => `<span class="chip soft">${esc(p.name)} <span class="num">${fmt(p.last)}</span></span>`).join("") : `<span class="sub">${target ? "Everyone who scored hit the target." : "No target set."}</span>`;
+    $("#targetLbl").textContent = target ? fmt(target) : "score";
+    const bt = target ? current.filter(p => p.last != null && p.last < target).sort((a, b) => (b.below_pct ?? 0) - (a.below_pct ?? 0) || (b.below_count ?? 0) - (a.below_count ?? 0) || a.name.localeCompare(b.name)) : [];
+    $("#btHint").textContent = !target ? "No target set for this raid yet. Officers: side menu → Officers → Raids → Score targets."
+      : bt.length ? `${bt.length} current member${bt.length > 1 ? "s" : ""} under ${fmt(target)} in the latest raid (${dfmt(latest.date)}), furthest below first. "Times below" counts every raid they were in where they finished under the target (a blank or zero counts).`
+      : `Everyone hit ${fmt(target)} in the latest raid. 🎉`;
+    $("#btWrap").hidden = !bt.length;
+    $("#btTable").innerHTML = bt.length ? `<thead><tr><th>Player</th><th class="r">Latest</th><th class="r">Below target</th><th class="r">Times below</th></tr></thead><tbody>${bt.map(p => `<tr class="click" data-id="${esc(p.id)}" tabindex="0"><td class="name">${esc(p.name)}</td><td class="r num">${p.last ? fmt(p.last) : '<span class="sub">no score</span>'}</td>
+      <td class="r num"><span class="below-pct"><span class="bar"><i style="width:${Math.min(100, p.below_pct ?? 0)}%"></i></span>${(p.below_pct ?? 0).toFixed(0)}%</span></td><td class="r num">${p.below_count ?? 0}<span class="sub"> of ${p.listed}</span></td></tr>`).join("")}</tbody>` : "";
+    $("#btTable").querySelectorAll("tr[data-id]").forEach(tr => { const go = () => { document.querySelector('nav button[data-tab="players"]').click(); selected = openPlayerId = tr.dataset.id; renderPlayers(); showPlayer(players.find(p => p.id === selected)); }; tr.onclick = go; tr.onkeydown = e => { if (e.key === "Enter") go(); }; });
   }
 
   // ---------------- players
@@ -389,6 +401,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     ["rank", "#", "r", p => p.rank ?? "–"],
     ["name", "Player", "", p => `${esc(p.name)}${p.current ? "" : '<span class="former">left</span>'}`],
     ["last", "Latest", "r", p => `<span class="${target && p.last != null && p.last < target ? "below" : ""}" title="${target && p.last != null && p.last < target ? "Below target" : ""}">${fmt(p.last)}</span>`],
+    ...(target ? [["target", "Target", "", p => p.on_target == null ? '<span class="sub">–</span>' : p.on_target ? '<span class="badge b-good">✓ On target</span>' : `<span class="badge b-bad" title="${fmt(p.last)} against a target of ${fmt(target)}">✗ ${(p.below_pct ?? 0).toFixed(0)}% below</span>`],
+      ["below_count", "Times below", "r", p => p.below_count == null ? "–" : `${p.below_count}<span class="sub"> of ${p.listed}</span>`]] : []),
     ["delta_pct", "vs prev", "r", p => `<span class="${dcls(p.delta)}">${signedPct(p.delta_pct)}</span>`],
     ["trend_pct", "Trend", "", p => `${trendBadge(p)}${spark(p.scores)}`],
     ["avg_recent", `Avg (last ${data.average_over_last})`, "r", p => fmt(p.avg_recent)],
@@ -398,7 +412,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     ["readiness", "Readiness", "", p => rCell(p.readiness)],
   ];
   let pSort = { key: "last", dir: -1 }, selected = null, detailChart = null;
-  const sortVal = (p, k) => k === "readiness" ? (p.readiness?.score ?? -1) : k === "name" ? p.name.toLowerCase() : (p[k] ?? -Infinity);
+  const sortVal = (p, k) => k === "readiness" ? (p.readiness?.score ?? -1) : k === "name" ? p.name.toLowerCase() : k === "target" ? (p.on_target == null ? -Infinity : p.on_target ? 1 : -(p.below_pct ?? 0)) : (p[k] ?? -Infinity);
   function renderPlayers() {
     const q = $("#pSearch").value.toLowerCase(), cur = $("#pCurrent").checked, tr = $("#pTrend").value;
     const rows = players.filter(p => (!cur || p.current) && (!tr || p.trend === tr) && p.name.toLowerCase().includes(q))
@@ -607,6 +621,33 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   (function hook() { if (!window.Officer) return setTimeout(hook, 50);
     Officer.postButton($("#postBtn"), () => { const r = guild.raids.find(x => x.slug === raid); return { guild: guild.slug, kind: "raid", raid, label: `${guild.name} ${r ? r.name : ""} results` }; });
     Officer.postButton($("#postReadyBtn"), () => { const r = guild.raids.find(x => x.slug === raid); return { guild: guild.slug, kind: "readiness", raid, label: `${guild.name} ${r ? r.name : ""} raid readiness` }; }); })();
+  // Officers: score target for each raid (saved to guilds/<guild>/raid-targets.json)
+  const parseScore = v => { const m = /^\s*([\d.,]+)\s*([kmb]?)\s*$/i.exec(String(v || "")); if (!m) return null; const n = parseFloat(m[1].replace(/,/g, "")); return isNaN(n) ? null : Math.round(n * ({ k: 1e3, m: 1e6, b: 1e9 }[m[2].toLowerCase()] || 1)); };
+  function openTargets() {
+    const rs = guild.raids, cur = rs.find(r => r.slug === raid) || rs[0];
+    const html = `<p style="margin:0 0 10px">Members who finish a raid under its target show as <b>below target</b> on the Players tab and in the overview's list. Each raid has its own target, for ${esc(guild.name)} only.</p>
+      <label style="display:block;margin:8px 0 4px;font-weight:600;color:var(--text)">Raid</label>
+      <select id="tgRaid" style="width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:14px var(--font-ui)">${rs.map(r => `<option value="${esc(r.slug)}" ${r.slug === cur.slug ? "selected" : ""}>${esc(r.name)}${r.target ? ` (now ${fmt(r.target)})` : " (no target yet)"}</option>`).join("")}</select>
+      <label style="display:block;margin:12px 0 4px;font-weight:600;color:var(--text)">Score target</label>
+      <input id="tgScore" inputmode="decimal" placeholder="e.g. 3000000 or 3M" style="width:100%;box-sizing:border-box;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:14px var(--font-ui)">
+      <p style="margin:6px 0 0;font-size:12.5px" id="tgNote">Leave it empty to remove this raid's target. You can type 3M, 2.5m or 3,000,000.</p>`;
+    Officer.form({ title: "Raid score targets", html, button: "Save target", trackLabel: "Updating raid targets",
+      ready: () => {
+        const sync = () => { const r = rs.find(x => x.slug === $("#tgRaid").value); $("#tgScore").value = r && r.target ? Math.round(r.target).toLocaleString("en-GB") : ""; };
+        $("#tgRaid").onchange = sync; sync();
+        $("#tgScore").oninput = () => { const n = parseScore($("#tgScore").value); $("#tgNote").textContent = $("#tgScore").value.trim() === "" ? "No target: this raid's target will be removed." : n ? `Target: ${n.toLocaleString("en-GB")}` : "That doesn't look like a score."; };
+      },
+      run: async ({ getJSONFile, putFile }) => {
+        const slug = $("#tgRaid").value, txt = $("#tgScore").value.trim(), n = txt === "" ? null : parseScore(txt);
+        if (txt !== "" && !n) throw new Error("the score target isn't a number");
+        const path = `guilds/${guild.slug}/raid-targets.json`, { data, sha } = await getJSONFile(path);
+        const all = data && typeof data === "object" ? data : {};
+        if (n) all[slug] = n; else delete all[slug];
+        await putFile(path, JSON.stringify(all, null, 1), `Set ${guild.name} ${(rs.find(r => r.slug === slug) || {}).name || slug} score target`, sha);
+      },
+      done: "🎯 Saved. The raid pages update in about 2 minutes." });
+  }
+  (function th() { if (!window.RaidTheme || !window.Officer) return setTimeout(th, 50); RaidTheme.menuItem("officer", "🎯 Raid score targets", openTargets); })();
   async function show(first) {
     pills($("#guildSwitch"), index, guild.slug, g => esc(g.name), async s => {
       guild = index.find(g => g.slug === s);
