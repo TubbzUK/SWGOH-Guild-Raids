@@ -1,6 +1,6 @@
 {
  "v": 1,
- "savedAt": "2026-10-17T13:10:44.115Z",
+ "savedAt": "2026-10-24T22:08:03.917Z",
  "settings": {
   "fleets": "Executor: Razor Crest, Hound's Tooth, Slave I, IG-2000, Xanadu Blood, Punishing One, Mist Hunter\nLeviathan: Scythe, Fury-class Interceptor, Mark VI Interceptor, B-28 Extinction-class Bomber, TIE Dagger\nProfundity: Outrider, Cassian's U-wing, Bistan's U-wing, Biggs Darklighter's X-wing, Wedge Antilles's X-wing, Han's Millennium Falcon, Rebel Y-wing\nNegotiator: Plo Koon's Jedi Starfighter, Anakin's Eta-2 Starfighter, Umbaran Starfighter, BTL-B Y-wing Starfighter, Jedi Consular's Starfighter\nMalevolence: Hyena Bomber, Vulture Droid, Geonosian Spy's Starfighter, Geonosian Soldier's Starfighter, Sun Fac's Geonosian Starfighter\nFinalizer: TIE Silencer, First Order SF TIE Fighter, TIE Echelon, First Order TIE Fighter, Kylo Ren's Command Shuttle",
   "keepFleets": true,
@@ -46,12 +46,25 @@
   "5|Ring of Kafrene (LS)|4": 5,
   "5|Ring of Kafrene (LS)|5": 5,
   "5|Ring of Kafrene (LS)|6": 5,
-  "5|Malachor (DS)|1": 6,
-  "5|Malachor (DS)|2": 6,
-  "5|Malachor (DS)|3": 6,
-  "5|Malachor (DS)|4": 6,
-  "5|Malachor (DS)|5": 6,
-  "5|Malachor (DS)|6": 6
+  "5|Malachor (DS)|1": 0,
+  "5|Malachor (DS)|2": 0,
+  "5|Malachor (DS)|3": 0,
+  "5|Malachor (DS)|4": 0,
+  "5|Malachor (DS)|5": 0,
+  "5|Malachor (DS)|6": 0,
+  "3|Zeffo (LS)|1": 4,
+  "3|Zeffo (LS)|2": 4,
+  "3|Zeffo (LS)|3": 4,
+  "3|Zeffo (LS)|4": 4,
+  "3|Zeffo (LS)|5": 4,
+  "3|Zeffo (LS)|6": 4,
+  "4|Mandalore (Mix)|1": 5,
+  "4|Mandalore (Mix)|2": 5,
+  "4|Mandalore (Mix)|3": 5,
+  "4|Mandalore (Mix)|4": 5,
+  "4|Mandalore (Mix)|5": 5,
+  "4|Mandalore (Mix)|6": 5
  },
+ "split": {},
  "seed": 1
 }
