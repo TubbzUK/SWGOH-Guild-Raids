@@ -1,0 +1,58 @@
+{
+ "2026-08-30": {
+  "result": "win",
+  "our_score": 27529,
+  "their_score": 11249,
+  "source": "game",
+  "opponent": "TR Consortium"
+ },
+ "2026-09-09": {
+  "result": "win",
+  "our_score": 27733,
+  "their_score": 12853,
+  "source": "game",
+  "opponent": "Ostdeutschland "
+ },
+ "2026-09-13": {
+  "result": "win",
+  "our_score": 26283,
+  "their_score": 13635,
+  "source": "game",
+  "opponent": "Empire's 501st"
+ },
+ "2026-09-23": {
+  "result": "win",
+  "our_score": 28686,
+  "their_score": 12151,
+  "source": "game",
+  "opponent": "Dark Lords Unicorns"
+ },
+ "2026-09-27": {
+  "result": "win",
+  "our_score": 26981,
+  "their_score": 11039,
+  "source": "game",
+  "opponent": "Blue MiIk Emporium"
+ },
+ "2026-10-07": {
+  "result": "win",
+  "our_score": 28838,
+  "their_score": 12190,
+  "source": "game",
+  "opponent": "ANZAC Spirit"
+ },
+ "2026-10-11": {
+  "result": "win",
+  "our_score": 27574,
+  "their_score": 11244,
+  "source": "game",
+  "opponent": "Gwiezdna Horda"
+ },
+ "2026-10-21": {
+  "result": "loss",
+  "our_score": 21147,
+  "their_score": 29372,
+  "source": "game",
+  "opponent": "sL Dead Forest Guards"
+ }
+}
