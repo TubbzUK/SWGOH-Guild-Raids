@@ -617,6 +617,13 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
           <textarea id="fleets" spellcheck="false" style="min-height:150px"></textarea>
           <p class="note" style="margin-top:6px">Preset with common fleets. Edit them to match how your guild runs its squads; character squads work too (for example <i>Lord Vader: Darth Vader, Admiral Piett</i>).</p>
         </div>
+        <div class="modebox">
+          <div class="check" style="margin-top:0"><input type="checkbox" id="keepGLSquads" checked=""><label for="keepGLSquads" style="margin:0"><b>Keep Galactic Legend squads together</b></label></div>
+          <p class="note" style="margin:6px 0 0">The same for Galactic Legends: whoever is given a GL (say Supreme Leader Kylo Ren) also gets the rest of that GL's squad needed in the same phase (the First Order units), as far as they have them at the level needed. Their GL squad is already broken up for that TB, so nobody else's has to be.</p>
+          <label for="glSquads" style="margin-top:10px">GL squads: the GL, then a colon, then the squad's other units (names or BaseIds, comma-separated), one per line</label>
+          <textarea id="glSquads" spellcheck="false" style="min-height:150px"></textarea>
+          <p class="note" style="margin-top:6px">Preset with the usual squad for each GL in the plan. Edit to match the squads your guild runs.</p>
+        </div>
       </div>
     </div>
     </section>
@@ -653,6 +660,14 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const norm=s=>String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'');
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
 const DEFAULT_GL=['Supreme Leader Kylo Ren','Rey (GLREY)','Jedi Master Luke Skywalker','Sith Eternal Emperor','Jedi Master Kenobi','Lord Vader','Jabba the Hutt','Leia Organa (GLLEIA)'];
+const DEFAULT_GL_SQUADS=["Supreme Leader Kylo Ren: Kylo Ren (Unmasked), Kylo Ren, General Hux, Sith Trooper, First Order Officer, First Order Stormtrooper, First Order Executioner, First Order SF TIE Pilot, First Order TIE Pilot",
+  "Rey: Resistance Hero Finn, Resistance Hero Poe, Ben Solo, Amilyn Holdo, Rose Tico, BB-8, Finn, Poe Dameron, Rey (Jedi Training), Resistance Trooper, Resistance Pilot",
+  "Jedi Master Luke Skywalker: Jedi Knight Luke Skywalker, Hermit Yoda, Obi-Wan Kenobi (Old Ben), Han Solo, Chewbacca, Threepio & Chewie, C-3PO, R2-D2, Commander Luke Skywalker",
+  "Sith Eternal Emperor: Darth Vader, Darth Sidious, Emperor Palpatine, Darth Maul, Count Dooku, Darth Malak, Darth Revan, Wat Tambor",
+  "Jedi Master Kenobi: General Kenobi, CC-2224 \"Cody\", Mace Windu, Qui-Gon Jinn, Ki-Adi-Mundi, Plo Koon, Aayla Secura, Padmé Amidala, Jedi Knight Anakin",
+  "Lord Vader: B2 Super Battle Droid, B1 Battle Droid, IG-100 MagnaGuard, Droideka, General Grievous, Maul",
+  "Jabba the Hutt: Krrsantan, Boushh (Leia Organa), Skiff Guard (Lando Calrissian), Gamorrean Guard, Bossk, Boba Fett",
+  "Leia Organa: Captain Drogan, Admiral Raddus, Rebel Officer Leia Organa, Scarif Rebel Pathfinder, Bistan, Mon Mothma"];
 const DEFAULT_FLEETS=["Executor: Razor Crest, Hound's Tooth, Slave I, IG-2000, Xanadu Blood, Punishing One, Mist Hunter",
   "Leviathan: Scythe, Fury-class Interceptor, Mark VI Interceptor, B-28 Extinction-class Bomber, TIE Dagger",
   "Profundity: Outrider, Cassian's U-wing, Bistan's U-wing, Biggs Darklighter's X-wing, Wedge Antilles's X-wing, Han's Millennium Falcon, Rebel Y-wing",
@@ -902,10 +917,10 @@ function assign(roster,plan,o,includeOff=false){
 /* ---------- Setup and persistence ---------- */
 const relBox=$('#relics');
 for(let i=1;i<=6;i++)relBox.insertAdjacentHTML('beforeend',`<div><label for="rel${i}">P${i}</label><input type="number" id="rel${i}" min="0" max="10" value="${DEFAULT_RELIC[i]}"></div>`);
-const settings=['fleets','keepFleets','gls','stars','plain','scale','oneGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
+const settings=['fleets','keepFleets','glSquads','keepGLSquads','gls','stars','plain','scale','oneGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
 function restore(){
   let saved={};try{saved=JSON.parse(store.get(K('rote-settings'))||'{}')}catch(e){}
-  $('#gls').value=DEFAULT_GL.join('\n');$('#fleets').value=DEFAULT_FLEETS.join('\n');
+  $('#gls').value=DEFAULT_GL.join('\n');$('#fleets').value=DEFAULT_FLEETS.join('\n');$('#glSquads').value=DEFAULT_GL_SQUADS.join('\n');
   for(const f of settings){if(saved[f]==null)continue;const el=$('#'+f);if(el.type==='checkbox')el.checked=saved[f];else el.value=saved[f]}
 }
 function saveSettings(){const o={};for(const f of settings){const el=$('#'+f);o[f]=el.type==='checkbox'?el.checked:el.value}store.set(K('rote-settings'),JSON.stringify(o));if(typeof renderSel==='function'){SELDIRTY=true;renderSel()}}
@@ -999,7 +1014,7 @@ $('#opsNone').addEventListener('click',()=>{let plan;try{plan=opsPlan()}catch(e)
   planets(plan).forEach(p=>p.ops.forEach(op=>{if(dOf(p.zone,p.planet,op)===OPSPH)setD(`${p.zone}|${p.planet}|${op}`,0)}));saveDeploy()});
 
 /* ---------- Run ---------- */
-function opts(){return{gl:$('#gls').value.split('\n'),fleets:$('#keepFleets').checked?fleetGroups($('#fleets').value.split('\n')):[],oneGL:$('#oneGL').checked,relaxGL:$('#relaxGL').checked,tierMode:$('#tierMode').checked,cap:+$('#cap').value||0,minStars:+$('#stars').value||7,
+function opts(){return{gl:$('#gls').value.split('\n'),fleets:[...($('#keepFleets').checked?fleetGroups($('#fleets').value.split('\n')):[]),...($('#keepGLSquads').checked?fleetGroups($('#glSquads').value.split('\n')):[])],oneGL:$('#oneGL').checked,relaxGL:$('#relaxGL').checked,tierMode:$('#tierMode').checked,cap:+$('#cap').value||0,minStars:+$('#stars').value||7,
   relic:Object.fromEntries([1,2,3,4,5,6].map(i=>[i,+$('#rel'+i).value||0])),seed:SEED}}
 let DIRTY=false,SHARED=null,OK=false,MISSING=false,MSCOPE='on',MPHASE=0;
 function run(){OK=false;
@@ -1672,7 +1687,7 @@ async function putFile(path,text,message){
 }
 
 /* ---------- Shared, saved state ---------- */
-const SETTINGS_SHARED=['fleets','keepFleets','gls','stars','plain','scale','oneGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
+const SETTINGS_SHARED=['fleets','keepFleets','glSquads','keepGLSquads','gls','stars','plain','scale','oneGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
 function curSettings(){const s={};SETTINGS_SHARED.forEach(f=>{const el=$('#'+f);s[f]=el.type==='checkbox'?el.checked:el.value});return s}
 function packState(){
   const R=RESULT,keys=new Set(R.plan.slots.map(s=>s.key)),names=new Set(R.plan.slots.map(s=>s.nameKey));
