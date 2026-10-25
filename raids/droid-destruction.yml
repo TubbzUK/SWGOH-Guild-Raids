@@ -61,5 +61,5 @@ readiness:
     - THERONIN
     - DARTHJARJAR
     - MANDALORIANANDGROGU
-    - B1BATTLEDROIDV2
+    - B1MERCDROID          # Mercenary Guard Droid (B1), the new B1 from the Era event (not the original B1BATTLEDROIDV2)
     - ADELPHIRANGER
