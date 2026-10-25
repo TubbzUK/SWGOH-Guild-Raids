@@ -816,6 +816,57 @@
     f.innerHTML = `<span class="wordmark"><span data-emblem></span>Guild Statistics</span><span>${site.replace(/^https?:\/\//, "").replace(/\?.*$/, "").replace(/[<>&"]/g, "")}</span>`;
     document.body.appendChild(f);
   }
-  const ready = () => { if (!root.classList.contains("cardmode")) resumeTrack(); cardFoot(); mountSky(); document.querySelectorAll("[data-theme-toggle], [data-site-menu]").forEach(mountMenu); pending.splice(0).forEach(a => menuItem(...a)); if (window.MutationObserver && menuPanel) new MutationObserver(tidy).observe(menuPanel, { subtree: true, attributes: true, attributeFilter: ["hidden"] }); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
+  // ---------------- guild picker: the banner's guild buttons become one dropdown ----------------
+  // The page still draws its buttons (hidden); the dropdown mirrors them and clicks the chosen one.
+  // The choice is remembered on this device and carried to every page (see the snippet in each page's head).
+  function mountGuildSelect() {
+    const pills = document.getElementById("guildSwitch");
+    if (!pills || root.classList.contains("cardmode")) return;
+    if (!document.getElementById("gsGselCss")) {
+      const st = document.createElement("style"); st.id = "gsGselCss";
+      st.textContent = `#guildSwitch.gs-replaced { display: none !important; }
+      .gs-gsel { display: inline-flex; align-items: center; gap: 8px; }
+      .gs-gsel span { font: 700 10.5px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: rgba(230,236,255,.75); }
+      .gs-gsel select { appearance: none; -webkit-appearance: none; background: rgba(5,7,15,.55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23e6ecff' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center / 11px 8px;
+        color: #f2f5ff; border: 1px solid rgba(230,236,255,.35); border-radius: 999px; padding: 7px 34px 7px 14px; font: 600 13.5px var(--font-ui); cursor: pointer; max-width: 260px;
+        -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+      .gs-gsel select:hover, .gs-gsel select:focus { border-color: #8fdcff; outline: none; }
+      .gs-gsel select option { background: var(--surface-solid); color: var(--text); }`;
+      document.head.appendChild(st);
+    }
+    const wrap = document.createElement("label"); wrap.className = "gs-gsel"; wrap.hidden = true;
+    wrap.innerHTML = `<span>Guild</span><select aria-label="Guild"></select>`;
+    pills.after(wrap); pills.classList.add("gs-replaced");
+    const sel = wrap.querySelector("select");
+    const btns = () => [...pills.querySelectorAll("button")];
+    const valOf = b => b.dataset.id || b.dataset.slug || b.textContent.trim();
+    const sync = () => {
+      const bs = btns();
+      wrap.hidden = pills.hidden || bs.length < 2;
+      const sig = bs.map(b => valOf(b) + (b.getAttribute("aria-pressed") === "true" ? "*" : "")).join("|");
+      if (sel.dataset.sig === sig) return;
+      sel.dataset.sig = sig;
+      sel.innerHTML = bs.map(b => `<option value="${esc(valOf(b))}"${b.getAttribute("aria-pressed") === "true" ? " selected" : ""}>${esc(b.textContent.trim())}</option>`).join("");
+    };
+    sel.onchange = () => {
+      ls.set(G_KEY, sel.value);
+      const b = btns().find(x => valOf(x) === sel.value);
+      if (b) b.click();
+    };
+    sync();
+    if (window.MutationObserver) new MutationObserver(sync).observe(pills, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "aria-pressed"] });
+  }
+  // remember the guild this page shows, so the next page opens on it too
+  function rememberGuild() {
+    const g = /[?&]guild=([^&#]*)/.exec(location.search);
+    if (g && g[1]) ls.set(G_KEY, decodeURIComponent(g[1]));
+  }
+  if (window.history && history.replaceState) {
+    const rs = history.replaceState.bind(history);
+    history.replaceState = function () { const r = rs.apply(history, arguments); try { if (!root.classList.contains("cardmode")) rememberGuild(); } catch (e) {} return r; };
+  }
+
+  const ready = () => { if (!root.classList.contains("cardmode")) { resumeTrack(); rememberGuild(); mountGuildSelect();
+    const up = /upload\.html$/.test(location.pathname) && document.querySelector("select#guild"); if (up) up.addEventListener("change", () => { if (up.value) ls.set(G_KEY, up.value); }); } cardFoot(); mountSky(); document.querySelectorAll("[data-theme-toggle], [data-site-menu]").forEach(mountMenu); pending.splice(0).forEach(a => menuItem(...a)); if (window.MutationObserver && menuPanel) new MutationObserver(tidy).observe(menuPanel, { subtree: true, attributes: true, attributeFilter: ["hidden"] }); document.querySelectorAll("[data-emblem]").forEach(e => e.innerHTML = emblem); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
 })();

@@ -441,6 +441,13 @@ Webhooks are GitHub secrets (Settings → Secrets and variables → Actions):
 How it works: the button saves a small request in `guilds/<guild>/posts/`; the next site update posts it
 and removes the request.
 
+## Choosing a guild
+
+The guild is picked from the **Guild** dropdown in each page's banner. The choice is remembered on
+the device and carried to every page (and the side menu's links), until a different guild is picked.
+A link with `?guild=...` in it always opens that guild. A page with no data for the chosen guild yet
+(e.g. no territory wars uploaded) shows the first guild that has some.
+
 ## Site update progress
 
 Uploading a file, **Pull from the game now**, and the officer tools that save something (TB stars,
