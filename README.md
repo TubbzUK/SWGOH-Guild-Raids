@@ -260,12 +260,13 @@ password to choose operations, change the rules, run **Assign platoons** and **S
   the same phase, as far as they own them, so nobody else loses their fleet. The squads list is preset
   with common fleets and can be edited (lead: unit, unit, ... one per line; character squads work too).
   Those slots show a "with Executor" tag.
-- **GL squads stay together** the same way (*Keep Galactic Legend squads together*, on by default):
-  whoever is given a Galactic Legend - Supreme Leader Kylo Ren, say - also gets the rest of that
-  GL's squad needed in the same phase (the First Order units), as far as they have them at the level
-  needed, so another member's SLKR squad isn't broken up. The GL squads list is preset (SLKR, Rey,
-  JML, SEE, JMK, Lord Vader, Jabba, Leia) and can be edited in Platoon planner: rules. Those slots show
-  a "with Supreme Leader Kylo Ren" tag.
+- **Character squads stay together** the same way (*Keep character squads together*, on by default):
+  whoever is given a squad's leader - a GL such as Supreme Leader Kylo Ren, or a leader such as Darth
+  Traya - also gets the rest of that squad needed in the same phase, as far as they have them at the
+  level needed, so another member's team isn't broken up. The list is preset from the GAC 5v5 squads
+  list (S tier first, then A to D; SLKR also keeps the First Order units) and can be edited in
+  Platoon planner: rules. A unit in more than one squad goes with the squad higher up the list.
+  Those slots show a "with <leader>" tag.
 - **Each guild has its own planet and operation choices.** Officers pick them in side menu → ⚙ Platoon planner: operations
   to fill and press **Save selections** (saved to `guilds/<guild>/platoon-settings.json`). The rules
   (relic minimums, per-member limit, GL rules, tier balancing) are saved there too, per guild.
