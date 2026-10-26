@@ -300,8 +300,10 @@ of a phase starting, only once per phase. It uses the assignments saved with **S
   at 17:00 UK time on 26 Oct 2026, every 14 days.
 - **Posted already:** kept in `guilds/<guild>/tb-posts.json`. A phase that started more than 20 hours ago
   isn't posted late.
-- **By hand:** **📣 Post phase as text** in the planner (or Officers → Post to Discord → Platoons: phase
-  as text) posts the phase shown.
+- **By hand:** **📣 Post phase to Discord** in the planner (or Officers → Post to Discord → Platoons: one
+  phase) posts the same text for the phase shown (or just the member picked in "Show"), and **Platoons:
+  whole guild** posts every phase. Every platoon post goes to the `<GUILD>_ASSIGN` webhook (falling back
+  to `DISCORD_WEBHOOK_<GUILD>_PLATOONS` if that isn't set).
 
 ## Guild overview
 

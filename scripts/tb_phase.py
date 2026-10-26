@@ -89,8 +89,8 @@ def current_phase(sch: dict, now: dt.datetime) -> tuple[int, dt.datetime] | None
     return n, sch["start"] + dt.timedelta(hours=sch["hours"] * (n - 1))
 
 
-def phase_text(gdir: Path, phase: int) -> tuple[str, int, int] | None:
-    """The phase's assignments as text, one block per member A-Z. Returns (text, members, slots)."""
+def phase_text(gdir: Path, phase: int, who: str = "") -> tuple[str, int, int] | None:
+    """The phase's assignments as text, one block per member A-Z (or just `who`). Returns (text, members, slots)."""
     st = load(gdir / "platoons.json")
     if not st or not st.get("plan") or not st.get("res"):
         return None
@@ -98,7 +98,7 @@ def phase_text(gdir: Path, phase: int) -> tuple[str, int, int] | None:
     by: dict[str, list] = {}
     for r in st["res"]:
         i, pi, d = r[0], r[1], (r[4] if len(r) > 4 else 0)
-        if pi is None or pi < 0 or d != phase:
+        if pi is None or pi < 0 or d != phase or (who and players[pi] != who):
             continue
         p = plan[i]
         by.setdefault(players[pi], []).append((p[1], str(p[2]), p[3] if p[3] is not None else 0, p[5]))
@@ -113,7 +113,8 @@ def phase_text(gdir: Path, phase: int) -> tuple[str, int, int] | None:
             ops.setdefault(f"{planet} op {op}", []).append(unit)
         lines = [f"• {k}: {', '.join(v)}" for k, v in ops.items()]
         blocks.append(f"**{name}** ({len(items)})\n" + "\n".join(lines))
-    head = (f"RotE phase {phase} platoon assignments · {len(by)} members, "
+    head = (f"RotE phase {phase} platoon assignments for {who}." if who else
+            f"RotE phase {phase} platoon assignments · {len(by)} members, "
             f"{sum(len(v) for v in by.values())} units. Search for your name (Ctrl+F) and place these this phase.")
     return head + "\n\n" + "\n\n".join(blocks), len(by), sum(len(v) for v in by.values())
 

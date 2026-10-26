@@ -516,7 +516,6 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
     <div class="stats" id="stats"></div>
     <div class="toolbar">
       <button class="btn primary" id="postDiscord">📣 Post phase to Discord</button>
-      <button class="btn" id="postText" title="This phase's assignments as text, one block per member, to the assignments channel (secret <GUILD>_ASSIGN)">📣 Post phase as text</button>
       <button class="btn" id="postAll" title="Every member's platoons for every phase, as one list per member">📣 Post whole guild to Discord</button>
       <button class="btn" id="copyDiscord">Copy phase for Discord</button>
       <button class="btn" id="dlCsv">Download all as CSV</button>
@@ -1569,13 +1568,13 @@ function discordText(){
   for(const[p,a]of [...by].sort((x,y)=>x[0].localeCompare(y[0]))){t+=`\n**${p}** (${a.length})\n`+a.map(s=>`• ${s.planet} op ${s.op}: ${s.unit}`).join('\n')+'\n'}
   return t}
 $('#copyDiscord').addEventListener('click',()=>copy(discordText(),WHO?'Copied '+WHO+'’s Phase '+PHASE+' list.':'Copied Phase '+PHASE+' for Discord.'));
-// Officers: post this phase's assignments (picture + member lists) to the guild's platoon channel
+// Officers: post this phase's assignments to the assignments channel - the same text as the automatic phase post
 (function hook(){if(!window.Officer)return setTimeout(hook,50);
   if(TOKEN)Officer.setToken(TOKEN);
   Officer.postButton($('#postDiscord'),()=>{
     if(DIRTY){showMsg('#toolMsg','err','Save and share these assignments first, so the post matches what members see.');return null}
     if(TOKEN)Officer.setToken(TOKEN);
-    return{guild:GUILD,kind:'platoons',phase:PHASE,who:WHO||'',text:discordText(),label:`${guildName()} RotE phase ${PHASE} platoons${WHO?' for '+WHO:''}`}})})();
+    return{guild:GUILD,kind:'platoons-text',phase:PHASE,who:WHO||'',label:`${guildName()} RotE phase ${PHASE} platoon assignments${WHO?' for '+WHO:''}`}})})();
 // every member's assignments for every phase that has any, one block per member
 function allText(){
   const phs=[1,2,3,4,5,6].filter(p=>RESULT&&phaseSlots(p).some(s=>s.player));
@@ -1586,11 +1585,6 @@ function allText(){
     const n=[...m.values()].reduce((a,x)=>a+x.length,0);
     t+=`**${p}** (${n})\n`+[...m].map(([ph,a])=>{const ops=new Map();a.forEach(s=>{const k=`${s.planet} op ${s.op}`;if(!ops.has(k))ops.set(k,[]);ops.get(k).push(s.unit)});return `P${ph}: `+[...ops].map(([k,u])=>`${k} – ${u.join(', ')}`).join(' · ')}).join('\n')+'\n\n'}
   return t.trim()}
-(function hookText(){if(!window.Officer)return setTimeout(hookText,50);
-  Officer.postButton($('#postText'),()=>{
-    if(DIRTY){showMsg('#toolMsg','err','Save and share these assignments first, so the post matches what members see.');return null}
-    if(TOKEN)Officer.setToken(TOKEN);
-    return{guild:GUILD,kind:'platoons-text',phase:PHASE,label:`${guildName()} RotE phase ${PHASE} platoon assignments (text)`}})})();
 // Officers: when each TB phase starts, so its assignments post to Discord by themselves
 async function openSchedule(){
   const sch=await getJSON(`data/${encodeURIComponent(GUILD)}/tb-schedule.json`)||{},posts=await getJSON(`data/${encodeURIComponent(GUILD)}/tb-posts.json`)||{};

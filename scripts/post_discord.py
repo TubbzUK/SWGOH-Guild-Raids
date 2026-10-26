@@ -256,9 +256,14 @@ def main():
             print(f"::warning::Post request for an unknown guild ({slug}) - skipped")
             continue
         channel = {"platoons": "platoons", "platoons-all": "platoons", "effectiveness": "officers"}.get(kind, "main")
-        if kind == "platoons-text":      # a phase's assignments as text, to the assignments channel
+        if kind == "platoons":           # a phase's assignments: the same text as the automatic phase post
+            kind = "platoons-text"
+        if kind.startswith("platoons"):   # all platoon assignments go to the assignments channel (<GUILD>_ASSIGN)
             import tb_phase
             secret, hook = tb_phase.webhook(slug)
+            if not hook:                  # not set up yet: the old platoons channel, if there is one
+                old, hook = webhook_for(slug, "platoons")
+                secret = f"{secret} (or {old})"
         else:
             secret, hook = webhook_for(slug, channel)
         if not hook:
@@ -286,7 +291,7 @@ def main():
             elif kind == "platoons-text":
                 import tb_phase
                 ph = int(it.get("phase") or 1)
-                r = tb_phase.phase_text(ROOT / "guilds" / slug, ph)
+                r = tb_phase.phase_text(ROOT / "guilds" / slug, ph, it.get("who") or "")
                 if not r:
                     print(f"{slug}: the saved assignments have nothing for phase {ph} - nothing posted")
                     continue
@@ -386,32 +391,14 @@ def post_platoons(slug, it, hook):
                [{"name": "Assignments", "value": "The pictures couldn't be made this time - open the planner for this phase's lists.", "inline": False}])
 
 def post_platoons_all(slug, it, hook):
-    """Every member's platoon assignments for every phase, as text (split into as many messages as it needs)."""
+    """Every member's platoon assignments for every phase, as plain text messages (searchable by name)."""
+    import tb_phase
     text = str(it.get("text") or "").strip()
     if not text:
         print(f"{slug}: no platoon assignments in the request - nothing to post")
         return
-    link = site_link(f"platoons.html?guild={slug}")
-    blocks = [b.strip() for b in re.split(r"\n\s*\n", text) if b.strip()]
-    head = blocks.pop(0) if blocks and not blocks[0].startswith("**") else ""
-    chunks, cur = [], ""
-    for b in blocks:
-        b = clip(b, 3900)
-        if cur and len(cur) + len(b) + 2 > 3900:
-            chunks.append(cur)
-            cur = ""
-        cur = (cur + "\n\n" + b) if cur else b
-    if cur:
-        chunks.append(cur)
-    title = f"{guild_name(slug)} · RotE platoon assignments"
-    for i, c in enumerate(chunks or [head or "No assignments."]):
-        embed = {"title": title + (f" ({i + 1}/{len(chunks)})" if len(chunks) > 1 else ""), "color": 0x2A78D6,
-                 "description": ((head + "\n\n") if head and i == 0 else "") + c}
-        if link and i == len(chunks) - 1:
-            embed["description"] += f"\n\n[Open the planner]({link})"
-        send(hook, {"embeds": [embed], "allowed_mentions": {"parse": []}}, None)
-        time.sleep(1)
-    print(f"{slug}: posted platoon assignments for the whole guild ({len(chunks)} message{'s' if len(chunks) != 1 else ''})")
+    n = tb_phase.post_text(hook, f"{guild_name(slug)} · RotE platoon assignments, all phases", text, site_link(f"platoons.html?guild={slug}"))
+    print(f"{slug}: posted platoon assignments for the whole guild ({n} messages)")
 
 
 def post_readiness(slug, raid, hook):

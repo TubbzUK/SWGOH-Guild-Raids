@@ -70,7 +70,6 @@
       { id: "post-tw", label: "TW stats", page: TW, sel: "#postBtn" },
       { id: "post-eff", label: "Guild effectiveness (officers)", page: EFF, sel: "#postBtn" },
       { id: "post-plat", label: "Platoons: one phase", page: PLAT, sel: "#postDiscord" },
-      { id: "post-plat-text", label: "Platoons: phase as text", page: PLAT, sel: "#postText" },
       { id: "post-plat-all", label: "Platoons: whole guild", page: PLAT, sel: "#postAll" }] },
     { key: "oraid", ic: "⚔", label: "Raids", kids: [
       { id: "raid-targets", label: "Score targets", page: RAID, fn: "Raid score targets" }] },
