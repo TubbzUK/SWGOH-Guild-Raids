@@ -101,7 +101,7 @@
     if (!TOKEN) TOKEN = await remembered();
     const s = await loadSite();
     d.classList.remove("wide"); $("#offTitle").textContent = "Post to Discord"; $("#offGo").textContent = "Post";
-    $("#offText").innerHTML = `Post <b>${esc(req.label)}</b> to the guild's ${String(req.kind).startsWith("platoons") ? "platoons" : req.kind === "effectiveness" ? "officers'" : "Discord"} channel? It appears about 3 minutes from now, once the site has updated.`
+    $("#offText").innerHTML = `Post <b>${esc(req.label)}</b> to the guild's ${req.kind === "platoons-text" ? "assignments" : String(req.kind).startsWith("platoons") ? "platoons" : req.kind === "effectiveness" ? "officers'" : "Discord"} channel? It appears about 3 minutes from now, once the site has updated.`
       + (TOKEN ? "" : `<br><br>${s.key ? "Enter the officer password (the same one as the upload page)." : "No officer password is set up yet: enter a GitHub access token."}`);
     $("#offPw").hidden = !!TOKEN; $("#offPass").value = ""; msg(); $("#offGo").disabled = false;
     $("#offForm").onsubmit = async e => {

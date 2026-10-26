@@ -972,6 +972,9 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
             shutil.copy2(gdir / name, out_dir / name)
     if (gdir / "platoon-settings.json").exists():
         shutil.copy2(gdir / "platoon-settings.json", out_dir / "platoon-settings.json")
+    for name in ("tb-schedule.json", "tb-posts.json"):     # TB phase times and which phases' platoons were posted
+        if (gdir / name).exists():
+            shutil.copy2(gdir / name, out_dir / name)
     if (gdir / "profiles.json").exists():                 # GA and mods from the game, for the Guild overview
         shutil.copy2(gdir / "profiles.json", out_dir / "profiles.json")
     if (gdir / "platoon-pledges.json").exists():           # who has signed up to fill missing platoon units

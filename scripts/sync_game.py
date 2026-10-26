@@ -244,6 +244,7 @@ class Guild:
         self.raids(g, members)
         self.tw(g)
         self.tb_stars(g)
+        self.tb_live(g)
 
     # roster: once a day, and again whenever someone joins or leaves, or an officer pressed "Pull from the game now"
     def roster(self, members: list[dict]) -> None:
@@ -435,6 +436,69 @@ class Guild:
             self.log.append(f"{self.gdir.name}: territory battle stars from the game ({added} TB{'s' if added > 1 else ''})")
 
 
+    # when the territory battle's phases start, for posting each phase's platoons (tb_phase.py)
+    def tb_live(self, g: dict) -> None:
+        sch = None
+        for st in g.get("territoryBattleStatus") or []:    # the guild's own running TB, when the game shares it
+            rnd, rend = num(st.get("currentRound")), num(st.get("currentRoundEndTime"))
+            if rnd and rend:
+                end_s = rend / 1000 if rend > 1e11 else rend
+                start = dt.datetime.fromtimestamp(end_s - rnd * 24 * 3600, dt.timezone.utc)
+                sch = {"start": start.isoformat(timespec="seconds"), "phases": 6, "hours": 24,
+                       "id": str(st.get("instanceId") or start.date()), "from": "guild status"}
+                print(f"  TB running: {st.get('definitionId')} round {int(rnd)}, ends {dt.datetime.fromtimestamp(end_s, dt.timezone.utc):%d %b %H:%M} UTC")
+                break
+        if not sch and TB_EVENT:
+            sch = dict(TB_EVENT, **{"from": "game events"})
+        if not sch:
+            return
+        f = self.gdir / "tb-schedule.json"
+        try:
+            data = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+        except (OSError, ValueError):
+            data = {}
+        if data.get("game") != sch:
+            data["game"] = sch
+            f.write_text(json.dumps(data, indent=1, sort_keys=True), encoding="utf-8")
+            self.changed = True
+            self.log.append(f"{self.gdir.name}: territory battle schedule from the game (phase 1 starts {sch['start']})")
+
+
+TB_EVENT: dict | None = None
+
+
+def find_tb_event() -> dict | None:
+    """The live or next Rise of the Empire territory battle from the game's event list (a ~6 day event)."""
+    try:
+        ev = call("getEvents", {})
+    except RuntimeError as e:
+        print(f"::warning::Couldn't read the game's event list ({e}) - TB phase times not updated")
+        return None
+    now = time.time() * 1000
+    found = []
+    for e in ev.get("gameEvent") or []:
+        tag = " ".join(str(e.get(k) or "") for k in ("id", "nameKey", "descKey")).upper()
+        if not re.search(r"TERRITORY_?BATTLE|\bTB_|ROTE|T05D|RISE.?OF.?THE.?EMPIRE", tag):
+            continue
+        for run in e.get("instance") or []:
+            st, en = num(run.get("startTime")), num(run.get("endTime"))
+            if not st or not en or en <= now:
+                continue
+            days = (en - st) / 864e5
+            found.append((st, en, days, str(e.get("id")), str(run.get("id") or "")))
+    for st, en, days, eid, rid in sorted(found)[:6]:
+        print(f"  game event: {eid} {rid} {dt.datetime.fromtimestamp(st / 1000, dt.timezone.utc):%d %b %H:%M} -> "
+              f"{dt.datetime.fromtimestamp(en / 1000, dt.timezone.utc):%d %b %H:%M} UTC ({days:.1f} days)")
+    rote = [x for x in sorted(found) if 5.5 <= x[2] <= 6.6 and re.search(r"ROTE|T05D|EMPIRE", x[3].upper() + x[4].upper())] or \
+           [x for x in sorted(found) if 5.5 <= x[2] <= 6.6]
+    if not rote:
+        return None
+    st, en, days, eid, rid = rote[0]
+    return {"start": dt.datetime.fromtimestamp(st / 1000, dt.timezone.utc).isoformat(timespec="seconds"),
+            "end": dt.datetime.fromtimestamp(en / 1000, dt.timezone.utc).isoformat(timespec="seconds"),
+            "phases": 6, "hours": round((en - st) / 36e5 / 6, 2), "id": rid or eid}
+
+
 def B_safe(s: str) -> str:
     return re.sub(r'[\\/:*?"<>|]+', "", s).strip() or "Raid"
 
@@ -474,6 +538,8 @@ def main() -> int:
             with open(out, "a") as fh:
                 fh.write("changed=false\nnew=\n")
         return 0
+    global TB_EVENT
+    TB_EVENT = find_tb_event()
     ships = known_ships()
     log, added, changed = [], [], False
     for gdir, cfg in targets:

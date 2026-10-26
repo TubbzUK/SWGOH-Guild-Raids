@@ -281,6 +281,28 @@ password to choose operations, change the rules, run **Assign platoons** and **S
 - The page shows which planets each guild is filling in each phase, and flags it when the choices
   have changed since the assignments were last made.
 
+## TB phase assignments posted automatically
+
+When each Rise of the Empire phase starts, that phase's platoon assignments are posted to the guild's
+assignments channel as plain text - one block per member (name, then each planet and operation with
+the units to place) - so members can search Discord for their name. It runs by itself every 15
+minutes (`.github/workflows/tb-phase.yml` → `scripts/tb_phase.py`) and posts within about 15 minutes
+of a phase starting, only once per phase. It uses the assignments saved with **Save and share**.
+
+- **Webhook:** GitHub secret `<GUILD>_ASSIGN` - `OANR_ASSIGN` for OANR (GitHub stores secret names in
+  capitals, so `OANR_assign` works). A guild's `config.yml` can name another with `discord_assign_secret`.
+- **When phases start:** read from the game on each pull (the guild's running TB, or the TB event in the
+  game's schedule) and saved in `guilds/<guild>/tb-schedule.json`. If that's wrong or missing, an officer
+  sets the phase 1 start time under side menu → Officers → RotE platoons → **TB phase times (auto-post)**,
+  which also lists when each phase will post. With **A new TB every 14 days** (the default) the time
+  repeats: phase 1 of each TB starts 14 days after the last, each phase 24 hours. Set to 0 for a
+  one-off time, used until that TB ends. A time set here wins over the game's. OANR is set to phase 1
+  at 17:00 UK time on 26 Oct 2026, every 14 days.
+- **Posted already:** kept in `guilds/<guild>/tb-posts.json`. A phase that started more than 20 hours ago
+  isn't posted late.
+- **By hand:** **📣 Post phase as text** in the planner (or Officers → Post to Discord → Platoons: phase
+  as text) posts the phase shown.
+
 ## Guild overview
 
 The **▦ Guild overview** page (`…/guild.html?guild=oanr`) shows every current member side by side,

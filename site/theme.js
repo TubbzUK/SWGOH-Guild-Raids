@@ -70,6 +70,7 @@
       { id: "post-tw", label: "TW stats", page: TW, sel: "#postBtn" },
       { id: "post-eff", label: "Guild effectiveness (officers)", page: EFF, sel: "#postBtn" },
       { id: "post-plat", label: "Platoons: one phase", page: PLAT, sel: "#postDiscord" },
+      { id: "post-plat-text", label: "Platoons: phase as text", page: PLAT, sel: "#postText" },
       { id: "post-plat-all", label: "Platoons: whole guild", page: PLAT, sel: "#postAll" }] },
     { key: "oraid", ic: "⚔", label: "Raids", kids: [
       { id: "raid-targets", label: "Score targets", page: RAID, fn: "Raid score targets" }] },
@@ -84,7 +85,8 @@
     { key: "oplat", ic: "⚑", label: "RotE platoons", kids: [
       { id: "plat-data", label: "Planner data", page: PLAT, fn: "Platoon planner: data" },
       { id: "plat-ops", label: "Operations to fill", page: PLAT, fn: "Platoon planner: operations to fill" },
-      { id: "plat-rules", label: "Rules", page: PLAT, fn: "Platoon planner: rules" }] },
+      { id: "plat-rules", label: "Rules", page: PLAT, fn: "Platoon planner: rules" },
+      { id: "plat-times", label: "TB phase times (auto-post)", page: PLAT, fn: "TB phase times" }] },
   ];
   const OFF_FN = new Set(OFFICER.flatMap(g => g.kids).filter(k => k.fn).map(k => k.fn));
   const offReg = {};   // fn label -> the page's action

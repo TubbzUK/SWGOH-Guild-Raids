@@ -516,6 +516,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
     <div class="stats" id="stats"></div>
     <div class="toolbar">
       <button class="btn primary" id="postDiscord">📣 Post phase to Discord</button>
+      <button class="btn" id="postText" title="This phase's assignments as text, one block per member, to the assignments channel (secret <GUILD>_ASSIGN)">📣 Post phase as text</button>
       <button class="btn" id="postAll" title="Every member's platoons for every phase, as one list per member">📣 Post whole guild to Discord</button>
       <button class="btn" id="copyDiscord">Copy phase for Discord</button>
       <button class="btn" id="dlCsv">Download all as CSV</button>
@@ -1585,6 +1586,44 @@ function allText(){
     const n=[...m.values()].reduce((a,x)=>a+x.length,0);
     t+=`**${p}** (${n})\n`+[...m].map(([ph,a])=>{const ops=new Map();a.forEach(s=>{const k=`${s.planet} op ${s.op}`;if(!ops.has(k))ops.set(k,[]);ops.get(k).push(s.unit)});return `P${ph}: `+[...ops].map(([k,u])=>`${k} – ${u.join(', ')}`).join(' · ')}).join('\n')+'\n\n'}
   return t.trim()}
+(function hookText(){if(!window.Officer)return setTimeout(hookText,50);
+  Officer.postButton($('#postText'),()=>{
+    if(DIRTY){showMsg('#toolMsg','err','Save and share these assignments first, so the post matches what members see.');return null}
+    if(TOKEN)Officer.setToken(TOKEN);
+    return{guild:GUILD,kind:'platoons-text',phase:PHASE,label:`${guildName()} RotE phase ${PHASE} platoon assignments (text)`}})})();
+// Officers: when each TB phase starts, so its assignments post to Discord by themselves
+async function openSchedule(){
+  const sch=await getJSON(`data/${encodeURIComponent(GUILD)}/tb-schedule.json`)||{},posts=await getJSON(`data/${encodeURIComponent(GUILD)}/tb-posts.json`)||{};
+  const g=sch.game||{},rp=sch.repeat||{},m=sch.manual||rp;
+  const pad=n=>String(n).padStart(2,'0'),local=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const fmtD=d=>d.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const cur=m.start?new Date(m.start):g.start?new Date(g.start):null,hours=+(m.hours||g.hours||24);
+  const html=`<p style="margin:0 0 10px">Each phase's platoon assignments post to the assignments channel (GitHub secret <b>${esc(GUILD.toUpperCase().replace(/[^A-Z0-9]/g,'_'))}_ASSIGN</b>) as text, by themselves, within about 15 minutes of the phase starting. They use the assignments saved with <b>Save and share</b>.</p>
+    <p style="margin:0 0 10px;font-size:13px">${g.start?`From the game: phase 1 starts <b>${esc(fmtD(new Date(g.start)))}</b> (your time).`:'The game hasn\u2019t shown a territory battle yet.'} Set the start below if the game's time is wrong or missing; leave it empty to use the game's.</p>
+    <label style="display:block;margin:8px 0 4px;font-weight:600;color:var(--text)">Phase 1 starts (your time)</label>
+    <input type="datetime-local" id="tbStart" value="${m.start?local(new Date(m.start)):''}" style="width:100%;box-sizing:border-box;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:14px var(--font-ui)">
+    <label style="display:block;margin:12px 0 4px;font-weight:600;color:var(--text)">Hours per phase</label>
+    <input type="number" id="tbHours" min="1" max="72" step="1" value="${m.hours||24}" style="width:120px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:14px var(--font-ui)">
+    <label style="display:block;margin:12px 0 4px;font-weight:600;color:var(--text)">A new TB every (days)</label>
+    <input type="number" id="tbEvery" min="0" max="60" step="1" value="${sch.manual?0:(rp.every_days??14)}" style="width:120px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:14px var(--font-ui)">
+    <span style="font-size:12.5px;margin-left:8px">0 = this TB only</span>
+    <div id="tbWhen" style="margin-top:12px;font-size:13px"></div>`;
+  Officer.form({title:'TB phase times and auto-posting',html,button:'Save',trackLabel:'Saving TB phase times',wide:true,
+    ready:()=>{const show=()=>{const v=$('#tbStart').value,h=+$('#tbHours').value||24,ev=+$('#tbEvery').value||0;let st=v?new Date(v):cur;
+        if(st&&ev>0){const per=ev*864e5,now=Date.now();while(st.getTime()+6*h*3600e3<now)st=new Date(st.getTime()+per)}
+        const done=(posts[Object.keys(posts).filter(k=>k!=='last').pop()]||[]);
+        $('#tbWhen').innerHTML=st?`<b>${ev>0?`This or the next TB, then every ${ev} days`:'Posts at'}</b> (your time):<br>`+[1,2,3,4,5,6].map(p=>`Phase ${p}: ${esc(fmtD(new Date(st.getTime()+(p-1)*h*3600e3)))}${done.includes(p)?' · posted':''}`).join('<br>'):'No start time yet, so nothing will post.'};
+      $('#tbStart').oninput=show;$('#tbHours').oninput=show;$('#tbEvery').oninput=show;show()},
+    run:async({getJSONFile,putFile})=>{
+      const path=`guilds/${GUILD}/tb-schedule.json`,{data,sha}=await getJSONFile(path);const all=data&&typeof data==='object'?data:{};
+      const v=$('#tbStart').value,h=+$('#tbHours').value||24;
+      const ev=+$('#tbEvery').value||0;
+      if(v){const d=new Date(v);if(isNaN(d))throw new Error('that start time isn\u2019t a date');
+        if(ev>0){all.repeat={start:d.toISOString(),every_days:ev,phases:6,hours:h};delete all.manual}else all.manual={start:d.toISOString(),phases:6,hours:h}}
+      else{delete all.manual;delete all.repeat}
+      await putFile(path,JSON.stringify(all,null,1),`Set ${guildName()} TB phase times`,sha)},
+    done:'Saved. Phase posts will follow these times.'})}
+addEventListener('DOMContentLoaded',()=>{(function mi(){if(!window.RaidTheme)return setTimeout(mi,50);RaidTheme.menuItem('officer','⏱ TB phase times',openSchedule)})()});
 (function hookAll(){if(!window.Officer)return setTimeout(hookAll,50);
   Officer.postButton($('#postAll'),()=>{
     if(DIRTY){showMsg('#toolMsg','err','Save and share these assignments first, so the post matches what members see.');return null}

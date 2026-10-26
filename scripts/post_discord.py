@@ -256,7 +256,11 @@ def main():
             print(f"::warning::Post request for an unknown guild ({slug}) - skipped")
             continue
         channel = {"platoons": "platoons", "platoons-all": "platoons", "effectiveness": "officers"}.get(kind, "main")
-        secret, hook = webhook_for(slug, channel)
+        if kind == "platoons-text":      # a phase's assignments as text, to the assignments channel
+            import tb_phase
+            secret, hook = tb_phase.webhook(slug)
+        else:
+            secret, hook = webhook_for(slug, channel)
         if not hook:
             print(f"::warning::{slug}: no GitHub secret called {secret} - can't post the {kind} panel. "
                   f"Add it under Settings > Secrets and variables > Actions.")
@@ -279,6 +283,15 @@ def main():
                 post_platoons(slug, it, hook)
             elif kind == "platoons-all":
                 post_platoons_all(slug, it, hook)
+            elif kind == "platoons-text":
+                import tb_phase
+                ph = int(it.get("phase") or 1)
+                r = tb_phase.phase_text(ROOT / "guilds" / slug, ph)
+                if not r:
+                    print(f"{slug}: the saved assignments have nothing for phase {ph} - nothing posted")
+                    continue
+                n = tb_phase.post_text(hook, f"{guild_name(slug)} · RotE phase {ph} platoons", r[0], site_link(f"platoons.html?guild={slug}"))
+                print(f"{slug}: posted phase {ph} assignments as text ({n} messages)")
             else:
                 print(f"::warning::{slug}: unknown post type {kind!r} - skipped")
         except Exception as e:  # one post failing shouldn't stop the others
