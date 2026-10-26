@@ -315,6 +315,7 @@
       const id = decodeURIComponent(m[1]), k = OFFICER.flatMap(g => g.kids).find(x => x.id === id);
       const strip = () => { try { history.replaceState(null, "", location.pathname + location.search.replace(/([?&])do=[^&#]*&?/, "$1").replace(/[?&]$/, "") + location.hash); } catch (e) {} };
       if (id === "pull") { strip(); const t0 = Date.now(); (function w() { if (window.Officer) pullNow(); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
+      if (id === "webhooks") { strip(); const t0 = Date.now(); (function w() { if (window.Officer && Officer.webhooks) Officer.webhooks(guildNow()); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
       if (!k || !kidHere(k)) { strip(); return; }
       const t0 = Date.now();
       (function tryIt() {
@@ -410,6 +411,10 @@
     }
     menuItem("upload", "＋ Add a new guild", "upload.html#newguild");
     menuItem("upload", "🔗 Connect a guild to the game", "upload.html" + (guildNow() ? "?guild=" + encodeURIComponent(guildNow()) : "") + "#connect");
+    menuItem("officer", "🔗 Discord webhooks", () => {
+      if (window.Officer && Officer.webhooks) return Officer.webhooks(guildNow());
+      const g = guildNow(); location.href = "./?" + (g ? "guild=" + encodeURIComponent(g) + "&" : "") + "do=webhooks";
+    });
     menuItem("officer", "🔄 Pull from the game now", () => {
       if (window.Officer) return pullNow();
       const g = guildNow(); location.href = "./?" + (g ? "guild=" + encodeURIComponent(g) + "&" : "") + "do=pull";

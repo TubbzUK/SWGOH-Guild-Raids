@@ -457,6 +457,13 @@ Each post is the whole page as pictures (cut between sections so they stay reada
   …" - split over as many messages as it needs, to the platoons channel. Save and share the
   assignments first. The button asks for the officer password, then the post appears about 3 minutes later.
 
+**Setting webhooks from the site:** side menu → Officers → **🔗 Discord webhooks**. Pick the guild, paste
+the Discord webhook for each channel (main, officers', platoon assignments), optionally **Send a test
+message**, and save. The site encrypts each one with the repository's public key and saves it straight
+into the GitHub secrets below, so nobody needs to open GitHub; a saved webhook can't be read back, only
+replaced or removed. This needs the GitHub token behind the officer password to have **Secrets: Read and
+write** (a one-time change to the token on GitHub; the form says so if it's missing).
+
 Webhooks are GitHub secrets (Settings → Secrets and variables → Actions):
 
 | Posts | Secret |

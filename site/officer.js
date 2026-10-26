@@ -166,7 +166,7 @@
       msg("info", "Saving…");
       try {
         lastSha = null;
-        await run({ getJSONFile, putFile: putFileSha });
+        await run({ getJSONFile, putFile: putFileSha, gh, site: await loadSite() });
         d.close();
         // follow the site update with a progress bar, then refresh the page once it's live
         if (lastSha && window.RaidTheme && RaidTheme.track) RaidTheme.track({ sha: lastSha, label: trackLabel || title, token: TOKEN });
@@ -183,5 +183,82 @@
     btn.addEventListener("click", () => { const r = getReq(); if (r) post(r); });
   }
 
-  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; }, authToken: async () => TOKEN || await remembered() };
+  // ---------- Discord webhooks for any guild, saved straight into the repository's GitHub secrets ----------
+  const loadScript = src => new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("couldn't load " + src)); document.head.appendChild(s); });
+  const HOOK_RE = /^https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/;
+  const KINDS = [
+    { k: "main", name: g => `DISCORD_WEBHOOK_${g}`, label: "Main channel", hint: "raid results and readiness, TB and TW stats" },
+    { k: "officers", name: g => `OFFICER_${g}`, label: "Officers' channel", hint: "guild effectiveness (falls back to the main channel)" },
+    { k: "assign", name: g => `${g}_ASSIGN`, label: "Platoon assignments", hint: "each TB phase's platoons, posted automatically" },
+  ];
+  async function webhooks(slug) {
+    let guilds = [];
+    try { guilds = await (await fetch("guilds.json", { cache: "no-store" })).json(); } catch (e) {}
+    if (!guilds.length) { toast("No guilds found."); return; }
+    let cur = guilds.find(g => g.slug === slug) || guilds[0];
+    const up = s => s.toUpperCase().replace(/[^A-Z0-9]/g, "_");
+    const inp = "width:100%;box-sizing:border-box;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:13.5px var(--font-ui)";
+    const html = `<p style="margin:0 0 10px">Paste a Discord webhook for each channel. It's saved straight into the site's GitHub secrets (encrypted - nobody can read it back, not even here), so there's no need to go to GitHub. In Discord: channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL.</p>
+      <label style="display:block;margin:6px 0 4px;font-weight:600;color:var(--text)">Guild</label>
+      <select id="whGuild" style="${inp}">${guilds.map(g => `<option value="${esc(g.slug)}" ${g.slug === cur.slug ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select>
+      <div id="whRows" style="margin-top:6px"></div><div id="whNote" style="margin-top:10px;font-size:12.5px"></div>`;
+    let existing = null;   // secret name -> updated_at (null = couldn't read)
+    const drawRows = () => {
+      const G = up(cur.slug);
+      $("#whRows").innerHTML = KINDS.map(k => { const n = k.name(G), set = existing && existing[n];
+        return `<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:10px">
+          <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="color:var(--text)">${esc(k.label)}</b><span style="font-size:12px">${existing ? (set ? `✓ set ${esc(new Date(set).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }))}` : "not set") : ""} · <code>${esc(n)}</code></span></div>
+          <div style="font-size:12.5px;margin:2px 0 6px">${esc(k.hint)}</div>
+          <input type="password" autocomplete="off" spellcheck="false" data-wh="${k.k}" placeholder="${set ? "Leave empty to keep the current webhook" : "https://discord.com/api/webhooks/…"}" style="${inp}">
+          <div style="display:flex;gap:12px;align-items:center;margin-top:6px;flex-wrap:wrap"><button type="button" data-test="${k.k}" style="font-size:12px;padding:4px 10px">Send a test message</button>${set ? `<label style="margin:0;font-size:12.5px"><input type="checkbox" data-del="${k.k}"> Remove this webhook</label>` : ""}<span data-msg="${k.k}" style="font-size:12.5px"></span></div></div>`; }).join("");
+      $("#whRows").querySelectorAll("[data-test]").forEach(b => b.onclick = async () => {
+        const k = b.dataset.test, url = $(`[data-wh="${k}"]`).value.trim(), m = $(`[data-msg="${k}"]`);
+        if (!HOOK_RE.test(url)) { m.textContent = "Paste the webhook first."; return; }
+        m.textContent = "Sending…";
+        try { const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: `✅ Test from Guild Statistics: this channel will get ${KINDS.find(x => x.k === k).hint} for ${cur.name}.` }) });
+          m.textContent = r.ok ? "✓ Sent - check the channel" : `Discord said ${r.status} - check the webhook`; }
+        catch (e) { m.textContent = "The browser couldn't send it (Discord may block that) - it will still work from the site."; }
+      });
+    };
+    const loadExisting = async () => {
+      existing = null;
+      try { const s = await loadSite(); const r = await gh(`/repos/${s.repo}/actions/secrets?per_page=100`);
+        if (r.ok) { existing = {}; ((await r.json()).secrets || []).forEach(x => existing[x.name] = x.updated_at || x.created_at); $("#whNote").textContent = ""; }
+        else if (r.status === 403 || r.status === 404) $("#whNote").innerHTML = `<span style="color:var(--bad-ink)">The GitHub token behind the officer password isn't allowed to manage secrets yet. Ask the repository owner to edit it once on GitHub (Settings → Developer settings → Fine-grained tokens → the site's token → Repository permissions → <b>Secrets: Read and write</b>). After that, webhooks can be set here.</span>`;
+      } catch (e) {}
+      drawRows();
+    };
+    form({ title: "Discord webhooks", wide: true, html, button: "Save webhooks",
+      ready: () => { drawRows(); (async () => { if (!TOKEN) TOKEN = await remembered(); if (TOKEN) loadExisting(); })();
+        $("#whGuild").onchange = () => { cur = guilds.find(g => g.slug === $("#whGuild").value) || cur; drawRows(); }; },
+      run: async () => {
+        const s = await loadSite(), G = up(cur.slug), jobs = [];
+        for (const k of KINDS) {
+          const url = $(`[data-wh="${k.k}"]`).value.trim(), del = $(`[data-del="${k.k}"]`)?.checked;
+          if (url && !HOOK_RE.test(url)) throw new Error(`the ${k.label.toLowerCase()} webhook doesn't look like a Discord webhook (it starts https://discord.com/api/webhooks/)`);
+          if (url) jobs.push({ name: k.name(G), url }); else if (del) jobs.push({ name: k.name(G), del: true });
+        }
+        if (!jobs.length) throw new Error("nothing to save - paste a webhook, or tick Remove");
+        const dels = jobs.filter(j => j.del).map(j => j.name);
+        if (dels.length && !confirm(`Remove ${dels.join(", ")}? Posts that use it will stop until a new webhook is set.`)) throw new Error("cancelled");
+        let key = null;
+        if (jobs.some(j => j.url)) {
+          const kr = await gh(`/repos/${s.repo}/actions/secrets/public-key`);
+          if (!kr.ok) throw new Error(kr.status === 403 || kr.status === 404 ? "the GitHub token isn't allowed to manage secrets (it needs Secrets: Read and write)" : `GitHub said ${kr.status}`);
+          key = await kr.json();
+          await loadScript("vendor/nacl-fast.min.js"); await loadScript("vendor/sealedbox.web.js");
+        }
+        for (const j of jobs) {
+          const path = `/repos/${s.repo}/actions/secrets/${encodeURIComponent(j.name)}`;
+          if (j.del) { const r = await gh(path, { method: "DELETE" }); if (!r.ok && r.status !== 404) throw new Error(`couldn't remove ${j.name} (GitHub said ${r.status})`); continue; }
+          const sealed = window.sealedBox.seal(te.encode(j.url), unb64(key.key));
+          let bin = ""; sealed.forEach(b => bin += String.fromCharCode(b));
+          const r = await gh(path, { method: "PUT", body: JSON.stringify({ encrypted_value: btoa(bin), key_id: key.key_id }) });
+          if (!r.ok) throw new Error(`couldn't save ${j.name} (GitHub said ${r.status})`);
+        }
+      },
+      done: `🔗 Webhooks saved. Posts use them from now on.` });
+  }
+
+  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; }, authToken: async () => TOKEN || await remembered(), webhooks };
 })();
