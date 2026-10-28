@@ -1,0 +1,40 @@
+name: Post TB phase platoons
+
+# Every 15 minutes: if a territory battle phase has just started, post that phase's platoon
+# assignments to the guild's assignments channel (secret <GUILD>_ASSIGN, e.g. OANR_ASSIGN).
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tb-phase
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install PyYAML
+      - name: Post any phase that has started
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        run: python scripts/tb_phase.py
+      - name: Remember what was posted
+        run: |
+          if [ -n "$(git status --porcelain guilds)" ]; then
+            git config user.name "raid-tracker-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add guilds/*/tb-posts.json
+            git commit -m "Posted TB phase platoons"
+            git pull --rebase --autostash
+            git push
+          fi
