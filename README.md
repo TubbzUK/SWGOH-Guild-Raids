@@ -429,7 +429,7 @@ later. Anyone with the link can view the ranking; only officers can change the s
 
 ### TB results from the game (tb-history.json)
 
-For a guild connected to the game, the game's territory battle history can be used instead of the WookieeBot TB export. Upload `tb-history.json` as **Territory battle** on the Upload page. No date is needed. The next update looks up each player ID's name from the game and adds every TB in the file that isn't on the site yet, as `tb/<day it ended> RotE.csv` with stars, in the same columns as the old export. TBs already uploaded (any file dated from the TB's start to 3 days after its end) are left alone. The uploaded JSON isn't kept.
+For a guild connected to the game, the game's territory battle history can be used instead of the WookieeBot TB export. Upload `tb-history.json` as **Territory battle** on the Upload page. No date is needed. The next update looks up each player ID's name from the game and adds every TB in the file that isn't on the site yet, as `tb/<day it ended> RotE.csv` with stars, in the same columns as the old export. A TB that was already uploaded (a file dated from the day before the TB started to 3 days after it ended) has its figures replaced with the game's final ones. The file keeps its name, so its date and any stars an officer set stay the same. The uploaded JSON isn't kept.
 
 How the game's figures map to the columns: territory points = `summary`, deployed GP = `power`, combat attempts = `strike_attempt`, waves = `strike_encounter`, special missions = `covert_attempt`, platoon units = `unit_donated`, rogue actions = `disobey`, each per round for the phases. "Deployed" is Yes when a member deployed at least 95% of the most GP they deployed in any phase of that TB.
 

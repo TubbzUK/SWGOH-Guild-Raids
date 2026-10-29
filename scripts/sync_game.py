@@ -463,9 +463,11 @@ class Guild:
             if not end:
                 continue
             start = when({"endTime": r.get("startTime")}) or end - dt.timedelta(days=6)
-            have = [B.name_date(p, True)[0] for p in B.data_files(tb_dir)]
-            if any(h and start - dt.timedelta(days=1) <= h <= end + dt.timedelta(days=3) for h in have):
-                continue          # this TB is already on the site (uploaded during or after it, or pulled before)
+            # an upload dated during this TB (or just after) is the same TB: the game's final figures replace it,
+            # keeping its file name so its date, label and any stars an officer set stay as they are
+            same = [p for p in B.data_files(tb_dir)
+                    if (B.name_date(p, True)[0] or dt.date.min) >= start - dt.timedelta(days=1)
+                    and (B.name_date(p, True)[0] or dt.date.max) <= end + dt.timedelta(days=3)]
             ids = {ps.get("memberId") for st in r.get("finalStat") or [] for ps in st.get("playerStat") or []} - {None}
             for pid in ids - set(names):
                 if pid not in known:
@@ -476,17 +478,29 @@ class Guild:
                 continue
             tb_dir.mkdir(exist_ok=True)
             label = "RotE" if ("TB3" in str(r.get("instanceId")) or r.get("definitionId") == "t05D") else "TB"
-            out = tb_dir / f"{end.isoformat()} {label}.csv"
             buf = io.StringIO()
             csv.writer(buf).writerows(rows)
-            out.write_text(buf.getvalue(), encoding="utf-8")
+            text = buf.getvalue()
+            if same:
+                out = max(same, key=lambda p: p.name)
+                if out.suffix.lower() == ".csv" and out.read_bytes() == text.encode("utf-8"):
+                    continue      # already the game's figures
+                if out.suffix.lower() != ".csv":          # an .xlsx upload: replace it with the .csv
+                    out.unlink()
+                    out = out.with_suffix(".csv")
+                what = f"replaced {out.name} with the final figures"
+            else:
+                out = tb_dir / f"{end.isoformat()} {label}.csv"
+                what = "added"
+            out.write_text(text, encoding="utf-8")
             self.changed = True
             self.added.append(out.relative_to(B.ROOT).as_posix())
-            self.log.append(f"{self.gdir.name}: territory battle of {end:%d %b %Y} {'from ' + src.name if src else 'from the game'} "
+            self.log.append(f"{self.gdir.name}: territory battle of {end:%d %b %Y} {'from ' + src.name if src else 'from the game'} - {what} "
                             f"({len(rows) - 1} members{f', {missing} unknown player IDs skipped' if missing else ''})")
             st = num(r.get("totalStars"))
-            if st is not None and (stars.setdefault("game", {})).get(end.isoformat()) != int(st):
-                stars["game"][end.isoformat()] = int(st)
+            key = (B.name_date(out, True)[0] or end).isoformat()    # stars are matched to the TB file's date
+            if st is not None and (stars.setdefault("game", {})).get(key) != int(st):
+                stars["game"][key] = int(st)
                 stars_changed = True
         if stars_changed:
             stars_f.write_text(json.dumps(stars, indent=1, sort_keys=True), encoding="utf-8")

@@ -435,7 +435,7 @@ a { color: var(--accent); }
         else {
           let gameOn = null; try { const idx = await fetch("guilds.json", { cache: "no-store" }).then(r => r.json()); const gg = idx.find(x => x.slug === $("#guild").value); gameOn = gg ? !!gg.game : null; } catch (e) {}
           out.push(["ok", `Territory battle history from the game · ${info.tbs.length} TB${info.tbs.length === 1 ? "" : "s"} (ended ${info.tbs.map(t => esc(fmtDate(t.end.toISOString().slice(0, 10)))).join(", ")}) · up to ${info.players} members`]);
-          out.push(["info", "The file has player IDs rather than names, so the names are looked up from the game after uploading. Any of these TBs already on the site are left as they are; the rest are added, dated by the day each one ended."]);
+          out.push(["info", "The file has player IDs rather than names, so the names are looked up from the game after uploading. A TB already on the site gets the game's final figures (keeping its date); the rest are added, dated by the day each one ended."]);
           if (gameOn === false) out.push(["bad", `${esc($("#guild").selectedOptions[0]?.text || "This guild")} isn't connected to the game, which is needed to turn the player IDs into names. Connect it first (Upload → Connect a guild to the game).`]);
         }
         $("#check").innerHTML = out.map(([c, t]) => `<div class="msg ${c}">${t}</div>`).join(""); update(); return;
