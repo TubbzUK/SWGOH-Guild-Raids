@@ -601,7 +601,8 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
         <label for="cap">Aim for at most this many units per member, per phase</label>
         <input type="number" id="cap" min="1" max="60" value="10" style="max-width:90px">
         <div class="check"><input type="checkbox" id="oneGL" checked=""><label for="oneGL" style="margin:0">Aim for max 1 Galactic Legend per member, per phase</label></div>
-        <div class="check"><input type="checkbox" id="capGL" checked=""><label for="capGL" style="margin:0">Count capital ships too: max 1 GL <i>or</i> capital ship per member, per phase (e.g. Sith Eternal Emperor means no Leviathan)</label></div>
+        <div class="check"><input type="checkbox" id="oneCap" checked=""><label for="oneCap" style="margin:0">Aim for max 1 capital ship per member, per phase</label></div>
+        <div class="check"><input type="checkbox" id="capGL" checked=""><label for="capGL" style="margin:0">Max 1 GL <i>or</i> capital ship in total per member, per phase (e.g. Sith Eternal Emperor means no Leviathan). Untick to allow a GL and a capital ship together.</label></div>
         <div class="check"><input type="checkbox" id="relaxGL" checked=""><label for="relaxGL" style="margin:0">Allow a second GL (or capital ship) when it’s the only way to fill a slot</label></div>
         <div class="modebox">
           <div class="check" style="margin-top:0"><input type="checkbox" id="tierMode"><label for="tierMode" style="margin:0"><b>Player tier balancing</b></label></div>
@@ -864,7 +865,10 @@ function assign(roster,plan,o,includeOff=false){
     // two-pass operations: slots left empty in the first pass are filled again now, once everyone's roster has refreshed
     slots.filter(s=>s.split===ph&&!s.player&&s.phase<ph).forEach(s=>{s.carried=s.phase;s.phase=ph;s.reason=undefined});
     const ps=slots.filter(s=>s.phase===ph);
-    const load=new Map(players.map(p=>[p,0])),used=new Map(players.map(p=>[p,new Set()])),glc=new Map(players.map(p=>[p,0]));
+    const load=new Map(players.map(p=>[p,0])),used=new Map(players.map(p=>[p,new Set()])),glc=new Map(players.map(p=>[p,0])),cc=new Map(players.map(p=>[p,0]));
+    // the GL / capital ship limits: how many this member already has that count against slot s
+    const ruled=s=>(s.gl&&o.oneGL)||(s.cap&&o.oneCap)||(s.big&&o.capGL);
+    const heldBig=(p,s)=>(s.big&&o.capGL?glc.get(p)+cc.get(p):0)+(s.gl&&o.oneGL?glc.get(p):0)+(s.cap&&o.oneCap?cc.get(p):0);
     // squads: 2 = this member places the squad's lead this phase, 1 = they place another unit of it
     const held=new Map(players.map(p=>[p,new Map()]));
     const aff=(p,s)=>s.grp>=0?held.get(p).get(s.grp)||0:0;
@@ -874,34 +878,34 @@ function assign(roster,plan,o,includeOff=false){
     const cmp=(a,b)=>load.get(a)/W(a)-load.get(b)/W(b)||total.get(a)/W(a)-total.get(b)/W(b)||tier(a)-tier(b)||rank.get(a)-rank.get(b);
     const glCmp=(a,b)=>(tiers?tier(a)-tier(b):0)||cmp(a,b);
     const give=(s,p,refill)=>{
-      if(refill){if(load.get(p)>=capOf(p))s.overCap=true;if(s.big&&glc.get(p)>=1)s.extraGL=true}
-      s.player=p;load.set(p,load.get(p)+1);total.set(p,total.get(p)+1);used.get(p).add(s.key);if(s.big)glc.set(p,glc.get(p)+1);
+      if(refill){if(load.get(p)>=capOf(p))s.overCap=true;if(ruled(s)&&heldBig(p,s)>=1)s.extraGL=true}
+      s.player=p;load.set(p,load.get(p)+1);total.set(p,total.get(p)+1);used.get(p).add(s.key);if(s.gl)glc.set(p,glc.get(p)+1);if(s.cap)cc.set(p,cc.get(p)+1);
       if(s.grp>=0){const h=held.get(p);if(!s.lead&&h.get(s.grp)===2){s.squad=FG[s.grp].name;if(refill)s.overCap=false}h.set(s.grp,Math.max(h.get(s.grp)||0,s.lead?2:1))}};
     const demand=new Map();
-    ps.forEach(s=>{s.player=null;s.squad=null;[s.grp,s.lead]=groupOf(s);s.gl=gl.has(s.key)||gl.has(s.nameKey);s.big=s.gl||(!!o.capGL&&/^capital/.test(s.key));s.elig=players.filter(p=>qualifies(unit(p,s),s,o));demand.set(s.key,(demand.get(s.key)||0)+1)});
+    ps.forEach(s=>{s.player=null;s.squad=null;[s.grp,s.lead]=groupOf(s);s.gl=gl.has(s.key)||gl.has(s.nameKey);s.cap=!s.gl&&/^capital/.test(s.key);s.big=s.gl||s.cap;s.elig=players.filter(p=>qualifies(unit(p,s),s,o));demand.set(s.key,(demand.get(s.key)||0)+1)});
     const slack=s=>s.elig.length-demand.get(s.key);
     const order=(a,b)=>slack(a)-slack(b)||a.key.localeCompare(b.key);
-    // Pass 1: keep every rule. GL slots first, as a maximum matching (one GL each).
-    if(o.oneGL){
-      const gls=ps.filter(s=>s.big).sort(order),holder=new Map();
+    // Pass 1: keep every rule. Limited slots (GLs, capital ships) first, as a maximum matching (one each).
+    const match=list=>{const holder=new Map();
       const tryA=(s,seen)=>{for(const p of [...s.elig].sort(glCmp)){if(seen.has(p))continue;seen.add(p);const cur=holder.get(p);
         if(!cur||tryA(cur,seen)){holder.set(p,s);s.player=p;return true}}return false};
-      gls.forEach(s=>tryA(s,new Set()));
-      for(const[p,s]of holder)give(s,p,false);
-    }
+      list.sort(order).forEach(s=>tryA(s,new Set()));
+      for(const[p,s]of holder)give(s,p,false)};
+    if(o.capGL)match(ps.filter(s=>s.big));
+    else{if(o.oneGL)match(ps.filter(s=>s.gl));if(o.oneCap)match(ps.filter(s=>s.cap))}
     // squad leads go before the rest, so the rest of each squad can follow its lead
     const leadFirst=(a,b)=>(b.lead-a.lead)||order(a,b);
-    for(const s of ps.filter(s=>!s.player&&!(o.oneGL&&s.big)).sort(leadFirst)){
+    for(const s of ps.filter(s=>!s.player&&!ruled(s)).sort(leadFirst)){
       const c=s.elig.filter(p=>!used.get(p).has(s.key)&&(load.get(p)<capOf(p)||aff(p,s)===2));
       if(c.length){const base=s.gl?glCmp:cmp,ac=affCmp(s);c.sort((a,b)=>ac(a,b)||base(a,b));give(s,c[0],false)}
     }
     // Pass 2: refill anything still empty, going past the soft limits only where needed.
     for(const s of ps.filter(s=>!s.player).sort(leadFirst)){
       let c=s.elig.filter(p=>!used.get(p).has(s.key));
-      if(s.big&&o.oneGL&&!o.relaxGL)c=c.filter(p=>glc.get(p)===0);
-      if(c.length){const ac=affCmp(s);c.sort((a,b)=>ac(a,b)||(s.big?glc.get(a)-glc.get(b)||(tiers?tier(a)-tier(b):0):0)||cmp(a,b));give(s,c[0],true);continue}
+      if(ruled(s)&&!o.relaxGL)c=c.filter(p=>heldBig(p,s)===0);
+      if(c.length){const ac=affCmp(s);c.sort((a,b)=>ac(a,b)||(ruled(s)?heldBig(a,s)-heldBig(b,s)||(tiers?tier(a)-tier(b):0):0)||cmp(a,b));give(s,c[0],true);continue}
       s.reason=!s.elig.length?'Nobody has it at the required level'
-        :s.big&&o.oneGL&&!o.relaxGL?`${s.elig.length>1?`All ${s.elig.length} qualifying members already have`:'The only qualifying member already has'} a GL${o.capGL?' or capital ship':''} this phase (rule kept strict)`
+        :ruled(s)&&!o.relaxGL?`${s.elig.length>1?`All ${s.elig.length} qualifying members already have`:'The only qualifying member already has'} ${s.big&&o.capGL?'a GL or capital ship':s.gl?'a GL':'a capital ship'} this phase (rule kept strict)`
         :`Only ${s.elig.length} member${s.elig.length>1?'s have':' has'} it at the required level, and ${s.elig.length>1?'all are':'they are'} already placing it`;
     }
   }
@@ -911,7 +915,7 @@ function assign(roster,plan,o,includeOff=false){
 /* ---------- Setup and persistence ---------- */
 const relBox=$('#relics');
 for(let i=1;i<=6;i++)relBox.insertAdjacentHTML('beforeend',`<div><label for="rel${i}">P${i}</label><input type="number" id="rel${i}" min="0" max="10" value="${DEFAULT_RELIC[i]}"></div>`);
-const settings=['fleets','keepFleets','charSquads','keepCharSquads','gls','stars','plain','scale','oneGL','capGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
+const settings=['fleets','keepFleets','charSquads','keepCharSquads','gls','stars','plain','scale','oneGL','oneCap','capGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
 function restore(){
   let saved={};try{saved=JSON.parse(store.get(K('rote-settings'))||'{}')}catch(e){}
   $('#gls').value=DEFAULT_GL.join('\n');$('#fleets').value=DEFAULT_FLEETS.join('\n');$('#charSquads').value=DEFAULT_CHAR_SQUADS.join('\n');
@@ -1008,7 +1012,7 @@ $('#opsNone').addEventListener('click',()=>{let plan;try{plan=opsPlan()}catch(e)
   planets(plan).forEach(p=>p.ops.forEach(op=>{if(dOf(p.zone,p.planet,op)===OPSPH)setD(`${p.zone}|${p.planet}|${op}`,0)}));saveDeploy()});
 
 /* ---------- Run ---------- */
-function opts(){return{gl:$('#gls').value.split('\n'),fleets:[...($('#keepFleets').checked?fleetGroups($('#fleets').value.split('\n')):[]),...($('#keepCharSquads').checked?fleetGroups($('#charSquads').value.split('\n')):[])],oneGL:$('#oneGL').checked||$('#capGL').checked,capGL:$('#capGL').checked,relaxGL:$('#relaxGL').checked,tierMode:$('#tierMode').checked,cap:+$('#cap').value||0,minStars:+$('#stars').value||7,
+function opts(){return{gl:$('#gls').value.split('\n'),fleets:[...($('#keepFleets').checked?fleetGroups($('#fleets').value.split('\n')):[]),...($('#keepCharSquads').checked?fleetGroups($('#charSquads').value.split('\n')):[])],oneGL:$('#oneGL').checked,oneCap:$('#oneCap').checked,capGL:$('#capGL').checked,relaxGL:$('#relaxGL').checked,tierMode:$('#tierMode').checked,cap:+$('#cap').value||0,minStars:+$('#stars').value||7,
   relic:Object.fromEntries([1,2,3,4,5,6].map(i=>[i,+$('#rel'+i).value||0])),seed:SEED}}
 let DIRTY=false,SHARED=null,OK=false,MISSING=false,MSCOPE='on',MPHASE=0;
 function run(){OK=false;
@@ -1714,7 +1718,7 @@ async function putFile(path,text,message){
 }
 
 /* ---------- Shared, saved state ---------- */
-const SETTINGS_SHARED=['fleets','keepFleets','charSquads','keepCharSquads','gls','stars','plain','scale','oneGL','capGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
+const SETTINGS_SHARED=['fleets','keepFleets','charSquads','keepCharSquads','gls','stars','plain','scale','oneGL','oneCap','capGL','relaxGL','cap','tierMode',...[1,2,3,4,5,6].map(i=>'rel'+i)];
 function curSettings(){const s={};SETTINGS_SHARED.forEach(f=>{const el=$('#'+f);s[f]=el.type==='checkbox'?el.checked:el.value});return s}
 function packState(){
   const R=RESULT,keys=new Set(R.plan.slots.map(s=>s.key)),names=new Set(R.plan.slots.map(s=>s.nameKey));
