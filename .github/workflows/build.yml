@@ -53,7 +53,7 @@ jobs:
           fi
           { echo "new<<EOF"; echo "$NEW"; echo "EOF"; } >> "$GITHUB_OUTPUT"
           # pull from the game on the schedule, when run by hand, or when an officer pressed "Pull from the game now"
-          if [ "${{ github.event_name }}" = "schedule" ] || echo "$NEW" | grep -q "/sync-now"; then
+          if [ "${{ github.event_name }}" = "schedule" ] || echo "$NEW" | grep -q "/sync-now" || echo "$NEW" | grep -Eq "/tb/history-[^/]*\.json$"; then
             echo "sync=true" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.sync_from_game }}" = "true" ]; then
             echo "sync=true" >> "$GITHUB_OUTPUT"
