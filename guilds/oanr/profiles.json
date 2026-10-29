@@ -207,8 +207,8 @@
 },
 {
 "name": "DefenderBuss",
-"gp": 13241713,
-"gp_char": 8846901,
+"gp": 13247047,
+"gp_char": 8852235,
 "gp_ship": 4394812,
 "skill": 2704,
 "league": "Aurodium",
@@ -292,8 +292,8 @@
 },
 {
 "name": "Everton Jabb",
-"gp": 13204323,
-"gp_char": 8717678,
+"gp": 13206729,
+"gp_char": 8720084,
 "gp_ship": 4486645,
 "skill": 2941,
 "league": "Aurodium",
@@ -309,26 +309,26 @@
 },
 {
 "name": "Figrin Pinhead",
-"gp": 16551407,
-"gp_char": 11016980,
-"gp_ship": 5534427,
+"gp": 16538542,
+"gp_char": 11008384,
+"gp_ship": 5530158,
 "skill": 3271,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 1374,
-"s15": 758,
-"s20": 298,
+"s10": 1360,
+"s15": 753,
+"s20": 299,
 "s25": 49,
-"six": 1393,
-"mods": 2040
+"six": 1382,
+"mods": 2011
 }
 },
 {
 "name": "Fleshstorm",
-"gp": 13955433,
+"gp": 13953710,
 "gp_char": 9070498,
-"gp_ship": 4884935,
+"gp_ship": 4883212,
 "skill": 2890,
 "league": "Aurodium",
 "division": 2,
