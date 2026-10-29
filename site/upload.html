@@ -115,7 +115,7 @@ a { color: var(--accent); }
         <div class="choices">
           <label><input type="radio" name="kind" value="raid" id="kindRaid" checked> <span>Raid results<small>WookieeBot raid export, e.g. Order66_Raid_1.csv</small></span></label>
           <label><input type="radio" name="kind" value="roster" id="kindRoster"> <span>Guild roster<small>Relic levels for the readiness pages</small></span></label>
-          <label><input type="radio" name="kind" value="tb" id="kindTb"> <span>Territory battle<small>TB results, one row per member</small></span></label>
+          <label><input type="radio" name="kind" value="tb" id="kindTb"> <span>Territory battle<small>TB results, one row per member, or the game's tb-history.json</small></span></label>
           <label><input type="radio" name="kind" value="tw" id="kindTw"> <span>Territory war<small>WookieeBot TW stats (twstats.csv)</small></span></label>
         </div>
       </div>
@@ -162,7 +162,7 @@ a { color: var(--accent); }
       <div>
         <span class="title">File</span>
         <label class="drop" id="drop" tabindex="0">
-          <input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls">
+          <input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.json">
           <span id="dropText"><b>Choose a file</b> or drag it here</span>
         </label>
         <div class="check" id="check"></div>
@@ -347,6 +347,18 @@ a { color: var(--accent); }
     for (const k of keys) { if (k.length < min) continue; const i = hdr.findIndex(h => h.includes(k)); if (i >= 0) return i; }
     return -1;
   };
+  // the game's territory battle history (tb-history.json): finished TBs with every member's stats, by player ID
+  function inspectTbJson(text) {
+    let d; try { d = JSON.parse(text.replace(/^\uFEFF/, "")); } catch (e) { return { type: "unknown" }; }
+    if (d && !Array.isArray(d)) d = d.recentTerritoryBattleResult || d.territoryBattleResult || (d.guild && d.guild.recentTerritoryBattleResult) || [d];
+    if (!Array.isArray(d) || !d.length || !d.every(x => x && typeof x === "object" && "finalStat" in x)) return { type: "unknown" };
+    const ms = v => { const n = Number(v); return n ? new Date(n > 1e11 ? n : n * 1000) : null; };
+    const tbs = d.map(t => ({ end: ms(t.endTime), stars: t.totalStars, members: new Set((t.finalStat || []).flatMap(s => (s.playerStat || []).map(p => p.memberId))).size }))
+      .filter(t => t.end).sort((a, b) => a.end - b.end);
+    return { type: "tbjson", tbs, players: Math.max(0, ...tbs.map(t => t.members)), names: new Set(), allies: new Set() };
+  }
+  const isJsonFile = () => !!file && /\.json$/i.test(file.name);
+
   function inspect(text) {
     const rows = parseCSV(text.replace(/^﻿/, ""));
     const hi = rows.slice(0, 20).findIndex(r => r.some(c => NAME.includes(norm(c)) || ["allycode", "ally"].includes(norm(c))));
@@ -417,7 +429,17 @@ a { color: var(--accent); }
     if (isExcel) {
       out.push(["info", "Excel file: it can't be checked here, but it will be read after uploading. Any problem will show in the Data notes on the site."]);
     } else {
-      info = inspect(await file.text());
+      info = isJsonFile() ? inspectTbJson(await file.text()) : inspect(await file.text());
+      if (info.type === "tbjson") {
+        if (kind() !== "tb") out.push(["bad", "This is a territory battle history file from the game. Choose Territory battle in step 2."]);
+        else {
+          let gameOn = null; try { const idx = await fetch("guilds.json", { cache: "no-store" }).then(r => r.json()); const gg = idx.find(x => x.slug === $("#guild").value); gameOn = gg ? !!gg.game : null; } catch (e) {}
+          out.push(["ok", `Territory battle history from the game · ${info.tbs.length} TB${info.tbs.length === 1 ? "" : "s"} (ended ${info.tbs.map(t => esc(fmtDate(t.end.toISOString().slice(0, 10)))).join(", ")}) · up to ${info.players} members`]);
+          out.push(["info", "The file has player IDs rather than names, so the names are looked up from the game after uploading. Any of these TBs already on the site are left as they are; the rest are added, dated by the day each one ended."]);
+          if (gameOn === false) out.push(["bad", `${esc($("#guild").selectedOptions[0]?.text || "This guild")} isn't connected to the game, which is needed to turn the player IDs into names. Connect it first (Upload → Connect a guild to the game).`]);
+        }
+        $("#check").innerHTML = out.map(([c, t]) => `<div class="msg ${c}">${t}</div>`).join(""); update(); return;
+      }
       const gName = $("#guild").selectedOptions[0]?.text || "this guild";
       const KIND = { raid: ["raid results", "Raid results"], roster: ["roster", "Guild roster"], tb: ["territory battle", "Territory battle"], tw: ["territory war", "Territory war"] };
       if (info.type === "unknown") out.push(["bad", "This doesn't look like a raid, roster, territory battle or territory war export (no player name and score, relic or territory point columns found)."]);
@@ -455,13 +477,13 @@ a { color: var(--accent); }
   function update() {
     const raidKind = kind() === "raid", tbKind = kind() === "tb", twKind = kind() === "tw";
     $("#raidStep").hidden = !raidKind;
-    $("#tbStep").hidden = !tbKind;
+    $("#tbStep").hidden = !tbKind || isJsonFile();
     $("#twStep").hidden = !twKind;
     $("#fileN").textContent = raidKind || tbKind || twKind ? "4" : "3";
     $("#tokenN").textContent = raidKind || tbKind || twKind ? "5" : "4";
     const blocked = !!$("#check .bad");
     const login = mode === "password" ? $("#password").value : $("#token").value.trim();
-    $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && (!tbKind || tbWhich() || /^\d{4}-\d{2}-\d{2}$/.test($("#tbDate").value)) && !blocked && repo);
+    $("#go").disabled = !(file && login && $("#guild").value && (!raidKind || $("#raid").value) && (!tbKind || isJsonFile() || tbWhich() || /^\d{4}-\d{2}-\d{2}$/.test($("#tbDate").value)) && !blocked && repo);
   }
   const pick = f => { file = f || null; $("#dropText").innerHTML = file ? `<b>${esc(file.name)}</b> · ${(file.size / 1024).toFixed(0)} KB · <u>change</u>` : `<b>Choose a file</b> or drag it here`; runChecks(); };
   $("#file").onchange = e => pick(e.target.files[0]);
@@ -531,16 +553,17 @@ a { color: var(--accent); }
     const isRaid = kind() === "raid", rName = $("#raid").selectedOptions[0]?.text;
     const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
     const safeName = file.name.replace(/[\\/:*?"<>|#%]+/g, "_");
-    const isTb = kind() === "tb", tbOld = isTb ? tbWhich() : "", tbOldT = tbList.find(t => t.file === tbOld);
+    const tbJson = kind() === "tb" && isJsonFile();
+    const isTb = kind() === "tb" && !tbJson, tbOld = isTb ? tbWhich() : "", tbOldT = tbList.find(t => t.file === tbOld);
     const tbDate = tbOldT ? tbOldT.date : $("#tbDate").value;
     const isTw = kind() === "tw", twDate = (info && info.type === "tw" && info.date) || null;
     const ext = (/\.(csv|tsv|txt|xlsx|xls)$/i.exec(file.name) || [".csv"])[0].toLowerCase();
-    const path = isRaid ? `guilds/${g}/${$("#raid").value}/upload-${stamp} ${safeName}`
+    const path = tbJson ? `guilds/${g}/tb/history-${stamp}.json` : isRaid ? `guilds/${g}/${$("#raid").value}/upload-${stamp} ${safeName}`
       : isTb ? (tbOldT ? `guilds/${g}/tb/${tbOld.replace(/\.[^.]+$/, "")}${ext}` : `guilds/${g}/tb/${tbDate} RotE${ext}`)
       : isTw ? (twDate ? `guilds/${g}/tw/${twDate} TW${ext}` : `guilds/${g}/tw/upload-${stamp} ${safeName}`)
       : `guilds/${g}/roster/upload-${stamp} ${safeName}`;
-    const what = isRaid ? `${gName} ${rName} results` : isTb ? `${gName} territory battle (${fmtDate(tbDate)})` : isTw ? `${gName} territory war${twDate ? ` (${fmtDate(twDate)})` : ""}` : `${gName} roster`;
-    const viewUrl = isTw ? `tw.html?guild=${encodeURIComponent(g)}${twDate ? "&tw=" + twDate : ""}` : isTb ? `tb.html?guild=${encodeURIComponent(g)}&tb=${tbDate}` : `./?guild=${encodeURIComponent(g)}${isRaid ? "&raid=" + encodeURIComponent($("#raid").value) : ""}`;
+    const what = tbJson ? `${gName} territory battle history` : isRaid ? `${gName} ${rName} results` : isTb ? `${gName} territory battle (${fmtDate(tbDate)})` : isTw ? `${gName} territory war${twDate ? ` (${fmtDate(twDate)})` : ""}` : `${gName} roster`;
+    const viewUrl = tbJson ? `tb.html?guild=${encodeURIComponent(g)}` : isTw ? `tw.html?guild=${encodeURIComponent(g)}${twDate ? "&tw=" + twDate : ""}` : isTb ? `tb.html?guild=${encodeURIComponent(g)}&tb=${tbDate}` : `./?guild=${encodeURIComponent(g)}${isRaid ? "&raid=" + encodeURIComponent($("#raid").value) : ""}`;
     const list = [["run", `Uploading ${esc(what)}…`], ["todo", "Updating the site"], ["todo", "Done"]];
     progress(list);
     try {

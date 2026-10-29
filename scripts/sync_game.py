@@ -244,6 +244,7 @@ class Guild:
         self.raids(g, members)
         self.tw(g)
         self.tb_stars(g)
+        self.tb_history(g, members)
         self.tb_live(g)
 
     # roster: once a day, and again whenever someone joins or leaves, or an officer pressed "Pull from the game now"
@@ -436,6 +437,65 @@ class Guild:
             self.log.append(f"{self.gdir.name}: territory battle stars from the game ({added} TB{'s' if added > 1 else ''})")
 
 
+    # territory battle results per member, from the game (or an uploaded tb-history.json) -> tb/<end date> RotE.csv
+    def tb_history(self, g: dict, members: list[dict]) -> None:
+        tb_dir = self.gdir / "tb"
+        sources: list[tuple[dict, Path | None]] = [(r, None) for r in g.get("recentTerritoryBattleResult") or [] if r.get("finalStat")]
+        uploads = sorted(p for p in tb_dir.glob("*.json") if not p.name.startswith("changes-")) if tb_dir.exists() else []
+        for p in uploads:
+            results = tb_history_results(p)
+            if results is None:
+                print(f"::warning::{self.gdir.name}: tb/{p.name} isn't a territory battle history file - left as it is")
+                continue
+            sources += [(r, p) for r in results]
+        if not sources:
+            return
+        names = {m.get("playerId"): m.get("playerName") for m in members if m.get("playerId")}
+        known = self.state.setdefault("names", {})     # members who have since left, looked up once
+        stars_f = self.gdir / "tb-stars.json"
+        try:
+            stars = json.loads(stars_f.read_text(encoding="utf-8")) if stars_f.exists() else {}
+        except (OSError, ValueError):
+            stars = {}
+        stars_changed = False
+        for r, src in sorted(sources, key=lambda x: str(x[0].get("endTime"))):
+            end = when(r)
+            if not end:
+                continue
+            start = when({"endTime": r.get("startTime")}) or end - dt.timedelta(days=6)
+            have = [B.name_date(p, True)[0] for p in B.data_files(tb_dir)]
+            if any(h and start - dt.timedelta(days=1) <= h <= end + dt.timedelta(days=3) for h in have):
+                continue          # this TB is already on the site (uploaded during or after it, or pulled before)
+            ids = {ps.get("memberId") for st in r.get("finalStat") or [] for ps in st.get("playerStat") or []} - {None}
+            for pid in ids - set(names):
+                if pid not in known:
+                    known[pid] = (self.player(pid) or {}).get("name") or ""
+                names[pid] = known[pid]
+            rows, missing = tb_rows(r, names)
+            if not rows:
+                continue
+            tb_dir.mkdir(exist_ok=True)
+            label = "RotE" if ("TB3" in str(r.get("instanceId")) or r.get("definitionId") == "t05D") else "TB"
+            out = tb_dir / f"{end.isoformat()} {label}.csv"
+            buf = io.StringIO()
+            csv.writer(buf).writerows(rows)
+            out.write_text(buf.getvalue(), encoding="utf-8")
+            self.changed = True
+            self.added.append(out.relative_to(B.ROOT).as_posix())
+            self.log.append(f"{self.gdir.name}: territory battle of {end:%d %b %Y} {'from ' + src.name if src else 'from the game'} "
+                            f"({len(rows) - 1} members{f', {missing} unknown player IDs skipped' if missing else ''})")
+            st = num(r.get("totalStars"))
+            if st is not None and (stars.setdefault("game", {})).get(end.isoformat()) != int(st):
+                stars["game"][end.isoformat()] = int(st)
+                stars_changed = True
+        if stars_changed:
+            stars_f.write_text(json.dumps(stars, indent=1, sort_keys=True), encoding="utf-8")
+            self.changed = True
+        for p in uploads:              # an uploaded history file has been read - it's not kept
+            if tb_history_results(p) is not None:
+                p.unlink()
+                self.changed = True
+
     # when the territory battle's phases start, for posting each phase's platoons (tb_phase.py)
     def tb_live(self, g: dict) -> None:
         sch = None
@@ -462,6 +522,52 @@ class Guild:
             f.write_text(json.dumps(data, indent=1, sort_keys=True), encoding="utf-8")
             self.changed = True
             self.log.append(f"{self.gdir.name}: territory battle schedule from the game (phase 1 starts {sch['start']})")
+
+
+def tb_history_results(path: Path) -> list[dict] | None:
+    """The TB results in an uploaded tb-history.json (a list of them, or one), or None if it isn't one."""
+    try:
+        d = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return None
+    if isinstance(d, dict):
+        d = d.get("recentTerritoryBattleResult") or d.get("territoryBattleResult") or ((d.get("guild") or {}).get("recentTerritoryBattleResult")) or [d]
+    if not isinstance(d, list) or not d or not all(isinstance(x, dict) and "finalStat" in x for x in d):
+        return None
+    return d
+
+
+def tb_rows(r: dict, names: dict) -> tuple[list[list], int]:
+    """One TB result from the game as the TB export table (tb.py): a header row, then one row per member.
+    Stats: summary = territory points, power = GP deployed, strike_attempt = combat missions,
+    strike_encounter = waves completed, covert_attempt = special missions, unit_donated = platoon units,
+    disobey = rogue actions; each also per round (= phase)."""
+    st: dict[str, dict[str, float]] = {}
+    for s in r.get("finalStat") or []:
+        st[s.get("mapStatId") or ""] = {p.get("memberId"): num(p.get("score")) or 0 for p in s.get("playerStat") or []}
+    rounds = max([int(m.group(1)) for k in st for m in [re.fullmatch(r"\w+_round_(\d+)", k)] if m] or [0])
+    ids = set().union(*[set(v) for v in st.values()]) - {None, ""} if st else set()
+    get = lambda k, pid: int(st.get(k, {}).get(pid, 0))  # noqa: E731
+    head = ["Name", "Total Territory Points", "Platoon Units", "Combat Waves", "Rogue Actions"]
+    for n in range(1, rounds + 1):
+        head += [f"P{n} {c}" for c in ("Deployed", "Territory Points", "Deployed GP", "Combat Attempts", "Special Attempts", "Waves")]
+    rows, missing = [], 0
+    for pid in ids:
+        name = names.get(pid)
+        if not name:
+            missing += 1
+            continue
+        power = [get(f"power_round_{n}", pid) for n in range(1, rounds + 1)]
+        full = max(power or [0])
+        row = [name, get("summary", pid), get("unit_donated", pid), get("strike_encounter", pid), get("disobey", pid)]
+        for n in range(1, rounds + 1):
+            gp = power[n - 1]
+            row += ["Yes" if gp > 0 and gp >= 0.95 * full else "No",     # deployed (about) everything they had
+                    get(f"summary_round_{n}", pid), gp, get(f"strike_attempt_round_{n}", pid),
+                    get(f"covert_attempt_round_{n}", pid), get(f"strike_encounter_round_{n}", pid)]
+        rows.append(row)
+    rows.sort(key=lambda x: str(x[0]).lower())
+    return ([head] + rows if rows else []), missing
 
 
 TB_EVENT: dict | None = None

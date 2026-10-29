@@ -427,6 +427,14 @@ Phase 1) and how much each part is worth. **Preview** changes only their own vie
 everyone** saves to `guilds/<guild>/tb-settings.json` and every member sees it about two minutes
 later. Anyone with the link can view the ranking; only officers can change the settings.
 
+### TB results from the game (tb-history.json)
+
+For a guild connected to the game, the game's territory battle history can be used instead of the WookieeBot TB export. Upload `tb-history.json` as **Territory battle** on the Upload page. No date is needed. The next update looks up each player ID's name from the game and adds every TB in the file that isn't on the site yet, as `tb/<day it ended> RotE.csv` with stars, in the same columns as the old export. TBs already uploaded (any file dated from the TB's start to 3 days after its end) are left alone. The uploaded JSON isn't kept.
+
+How the game's figures map to the columns: territory points = `summary`, deployed GP = `power`, combat attempts = `strike_attempt`, waves = `strike_encounter`, special missions = `covert_attempt`, platoon units = `unit_donated`, rogue actions = `disobey`, each per round for the phases. "Deployed" is Yes when a member deployed at least 95% of the most GP they deployed in any phase of that TB.
+
+If the game includes these results in the guild data it shares, each pull from the game adds finished TBs by itself, with no upload needed.
+
 ### Uploading a TB phase by phase
 
 On the upload page, a TB upload asks **Which territory battle is this?** Pick *Update the TB of …*
