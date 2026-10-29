@@ -184,6 +184,16 @@ def main() -> int:
     dry = "--dry-run" in args
     now = dt.datetime.now(dt.timezone.utc)
     site = os.getenv("SITE_URL", "").rstrip("/")
+    import discord_bot
+    bot = discord_bot.bot_token()
+    if bot and not dry:    # who has opted in to DMs (reacted ✅ in the assignments channel), and their matches
+        for gdir in sorted(p for p in GUILDS.iterdir() if p.is_dir() and not p.name.startswith(("_", "."))):
+            _, h = webhook(gdir.name)
+            if h:
+                try:
+                    discord_bot.sync_guild(gdir.name, h, bot)
+                except Exception as e:
+                    print(f"::warning::{gdir.name}: Discord DM set-up check failed: {e}")
     for gdir in sorted(p for p in GUILDS.iterdir() if p.is_dir() and not p.name.startswith(("_", "."))):
         slug = gdir.name
         sch = schedule(gdir)
@@ -227,6 +237,13 @@ def main() -> int:
         state["last"] = {"phase": phase, "posted_at": now.isoformat(timespec="seconds"), "messages": n}
         state_f.write_text(json.dumps(state, indent=1), encoding="utf-8")
         print(f"{slug}: posted phase {phase} assignments ({n_mem} members, {n_slots} units, {n} messages) [{sch['source']} schedule]")
+        if bot:                # and each opted-in member's own list by DM
+            try:
+                sent, bad = discord_bot.dm_phase(slug, phase, bot, f"{guild_name(slug)} · your RotE phase {phase} platoons",
+                                                 f"{site}/platoons.html?guild={slug}" if site else "")
+                print(f"{slug}: DM'd {sent} member{'s' if sent != 1 else ''} their phase {phase} platoons" + (f", {bad} couldn't be reached" if bad else ""))
+            except Exception as e:
+                print(f"::warning::{slug}: sending DMs failed: {e}")
     return 0
 
 

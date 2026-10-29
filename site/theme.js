@@ -85,7 +85,8 @@
       { id: "plat-data", label: "Planner data", page: PLAT, fn: "Platoon planner: data" },
       { id: "plat-ops", label: "Operations to fill", page: PLAT, fn: "Platoon planner: operations to fill" },
       { id: "plat-rules", label: "Rules", page: PLAT, fn: "Platoon planner: rules" },
-      { id: "plat-times", label: "TB phase times (auto-post)", page: PLAT, fn: "TB phase times" }] },
+      { id: "plat-times", label: "TB phase times (auto-post)", page: PLAT, fn: "TB phase times" },
+      { id: "plat-dms", label: "Discord DMs (who gets them)", page: PLAT, fn: "Discord DMs" }] },
   ];
   const OFF_FN = new Set(OFFICER.flatMap(g => g.kids).filter(k => k.fn).map(k => k.fn));
   const offReg = {};   // fn label -> the page's action
@@ -315,6 +316,7 @@
       const id = decodeURIComponent(m[1]), k = OFFICER.flatMap(g => g.kids).find(x => x.id === id);
       const strip = () => { try { history.replaceState(null, "", location.pathname + location.search.replace(/([?&])do=[^&#]*&?/, "$1").replace(/[?&]$/, "") + location.hash); } catch (e) {} };
       if (id === "pull") { strip(); const t0 = Date.now(); (function w() { if (window.Officer) pullNow(); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
+      if (id === "dms") { strip(); const t0 = Date.now(); (function w() { if (window.Officer && Officer.discordDms) Officer.discordDms(guildNow()); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
       if (id === "webhooks") { strip(); const t0 = Date.now(); (function w() { if (window.Officer && Officer.webhooks) Officer.webhooks(guildNow()); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
       if (!k || !kidHere(k)) { strip(); return; }
       const t0 = Date.now();
@@ -414,6 +416,10 @@
     menuItem("officer", "🔗 Discord webhooks", () => {
       if (window.Officer && Officer.webhooks) return Officer.webhooks(guildNow());
       const g = guildNow(); location.href = "./?" + (g ? "guild=" + encodeURIComponent(g) + "&" : "") + "do=webhooks";
+    });
+    menuItem("officer", "📬 Discord DMs", () => {
+      if (window.Officer && Officer.discordDms) return Officer.discordDms(guildNow());
+      const g = guildNow(); location.href = "./?" + (g ? "guild=" + encodeURIComponent(g) + "&" : "") + "do=dms";
     });
     menuItem("officer", "🔄 Pull from the game now", () => {
       if (window.Officer) return pullNow();

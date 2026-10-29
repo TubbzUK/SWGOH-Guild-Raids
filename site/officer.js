@@ -201,7 +201,12 @@
     const html = `<p style="margin:0 0 10px">Paste a Discord webhook for each channel. It's saved straight into the site's GitHub secrets (encrypted - nobody can read it back, not even here), so there's no need to go to GitHub. In Discord: channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL.</p>
       <label style="display:block;margin:6px 0 4px;font-weight:600;color:var(--text)">Guild</label>
       <select id="whGuild" style="${inp}">${guilds.map(g => `<option value="${esc(g.slug)}" ${g.slug === cur.slug ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select>
-      <div id="whRows" style="margin-top:6px"></div><div id="whNote" style="margin-top:10px;font-size:12.5px"></div>`;
+      <div id="whRows" style="margin-top:6px"></div>
+      <div style="border:1px dashed var(--border);border-radius:10px;padding:10px 12px;margin-top:14px">
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="color:var(--text)">Discord bot (for DMs, every guild)</b><span style="font-size:12px" id="botState"></span></div>
+        <div style="font-size:12.5px;margin:2px 0 6px">The bot that DMs members their own platoons. Developer Portal → your application → Bot → Reset Token → copy.</div>
+        <input type="password" autocomplete="off" spellcheck="false" id="whBot" placeholder="Leave empty to keep the current bot token" style="${inp}">
+      </div><div id="whNote" style="margin-top:10px;font-size:12.5px"></div>`;
     let existing = null;   // secret name -> updated_at (null = couldn't read)
     const drawRows = () => {
       const G = up(cur.slug);
@@ -211,6 +216,7 @@
           <div style="font-size:12.5px;margin:2px 0 6px">${esc(k.hint)}</div>
           <input type="password" autocomplete="off" spellcheck="false" data-wh="${k.k}" placeholder="${set ? "Leave empty to keep the current webhook" : "https://discord.com/api/webhooks/…"}" style="${inp}">
           <div style="display:flex;gap:12px;align-items:center;margin-top:6px;flex-wrap:wrap"><button type="button" data-test="${k.k}" style="font-size:12px;padding:4px 10px">Send a test message</button>${set ? `<label style="margin:0;font-size:12.5px"><input type="checkbox" data-del="${k.k}"> Remove this webhook</label>` : ""}<span data-msg="${k.k}" style="font-size:12.5px"></span></div></div>`; }).join("");
+      $("#botState").innerHTML = existing ? (existing.DISCORD_BOT_TOKEN ? `✓ set · <code>DISCORD_BOT_TOKEN</code>` : "not set · <code>DISCORD_BOT_TOKEN</code>") : "";
       $("#whRows").querySelectorAll("[data-test]").forEach(b => b.onclick = async () => {
         const k = b.dataset.test, url = $(`[data-wh="${k}"]`).value.trim(), m = $(`[data-msg="${k}"]`);
         if (!HOOK_RE.test(url)) { m.textContent = "Paste the webhook first."; return; }
@@ -238,6 +244,8 @@
           if (url && !HOOK_RE.test(url)) throw new Error(`the ${k.label.toLowerCase()} webhook doesn't look like a Discord webhook (it starts https://discord.com/api/webhooks/)`);
           if (url) jobs.push({ name: k.name(G), url }); else if (del) jobs.push({ name: k.name(G), del: true });
         }
+        const bot = $("#whBot").value.trim();
+        if (bot) { if (!/^[\w-]{20,}\.[\w-]{4,}\.[\w-]{20,}$/.test(bot)) throw new Error("that doesn't look like a Discord bot token (three parts separated by dots)"); jobs.push({ name: "DISCORD_BOT_TOKEN", url: bot }); }
         if (!jobs.length) throw new Error("nothing to save - paste a webhook, or tick Remove");
         const dels = jobs.filter(j => j.del).map(j => j.name);
         if (dels.length && !confirm(`Remove ${dels.join(", ")}? Posts that use it will stop until a new webhook is set.`)) throw new Error("cancelled");
@@ -260,5 +268,37 @@
       done: `🔗 Webhooks saved. Posts use them from now on.` });
   }
 
-  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; }, authToken: async () => TOKEN || await remembered(), webhooks };
+  // ---------- who gets their platoons by DM: members opt in by reacting ✅; officers confirm the in-game names ----------
+  async function discordDms(slug) {
+    let guilds = [];
+    try { guilds = await (await fetch("guilds.json", { cache: "no-store" })).json(); } catch (e) {}
+    const g = guilds.find(x => x.slug === slug) || guilds[0];
+    if (!g) { toast("No guilds found."); return; }
+    if (!TOKEN) TOKEN = await remembered();
+    let st = {}, saved = {}, sha = null, players = [];
+    for (const fn of ["platoon-roster.json", "rosters.json"]) { if (players.length) break;
+      try { const r = await fetch(`data/${encodeURIComponent(g.slug)}/${fn}`, { cache: "no-store" }); if (r.ok) players = ((await r.json()).players || []).map(p => typeof p === "string" ? p : p.name).filter(Boolean).sort((a, b) => a.localeCompare(b)); } catch (e) {} }
+    if (TOKEN) { try { st = (await getJSONFile(`guilds/${g.slug}/discord.json`)).data || {}; const l = await getJSONFile(`guilds/${g.slug}/discord-links.json`); saved = (l.data && l.data.links) || {}; sha = l.sha; } catch (e) {} }
+    const opt = Object.entries(st.optin || {}).sort((a, b) => (a[1].nick || a[1].name || "").localeCompare(b[1].nick || b[1].name || ""));
+    const auto = st.auto || {}, failed = st.dm_failed || {};
+    const sel = (uid, curName, sure) => `<select data-uid="${esc(uid)}" style="width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font:13px var(--font-ui)">
+      <option value="">— not linked (no DMs) —</option>${players.map(p => `<option value="${esc(p)}" ${p === curName ? "selected" : ""}>${esc(p)}${p === curName && !(uid in saved) ? (sure ? " (matched)" : " (best guess - check)") : ""}</option>`).join("")}</select>`;
+    const rows = opt.map(([uid, r]) => { const a = auto[uid] || {}, cur = uid in saved ? saved[uid] : (a.player || ""), who = [r.nick, r.name && r.name !== r.nick ? r.name : "", r.user ? "@" + r.user : ""].filter(Boolean).join(" · ");
+      return `<tr style="border-top:1px solid var(--border)"><td style="padding:7px 8px">${esc(who)}${failed[uid] ? `<div style="font-size:11.5px;color:var(--bad-ink)">Last DM failed: ${esc(failed[uid])}</div>` : ""}</td><td style="padding:7px 8px;min-width:180px">${sel(uid, cur, a.sure)}</td></tr>`; }).join("");
+    const html = `<p style="margin:0 0 8px">Members choose DMs themselves: the bot has put a message in the assignments channel, and anyone who reacts ✅ gets their own list by DM when each phase starts (removing the reaction stops it). Their Discord name is matched to an in-game name; confirm or fix the links below. Anyone left "not linked" gets no DMs.</p>
+      ${!TOKEN ? `<p style="color:var(--bad-ink)">Enter the officer password (Save below) to see who has opted in.</p>` : !st.optin_message_id ? `<p style="font-size:13px">The bot hasn't posted its opt-in message yet. It does that within 15 minutes of the bot token and the assignments webhook being set (Officers → Discord webhooks), once the bot is in the server.</p>` : ""}
+      ${opt.length ? `<div style="max-height:50vh;overflow:auto;border:1px solid var(--border);border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--surface-2)"><th style="text-align:left;padding:6px 8px">Opted in on Discord</th><th style="text-align:left;padding:6px 8px">In-game name</th></tr></thead><tbody>${rows}</tbody></table></div>` : st.optin_message_id ? `<p style="font-size:13px">Nobody has reacted ✅ yet.</p>` : ""}
+      <p style="margin:8px 0 0;font-size:12.5px">${opt.length} opted in · updated every 15 minutes.</p>`;
+    form({ title: `Discord DMs · ${g.name}`, wide: true, html, button: "Save links",
+      run: async ({ getJSONFile: gj, putFile }) => {
+        const cur = await gj(`guilds/${g.slug}/discord-links.json`), links = { ...((cur.data && cur.data.links) || {}) };
+        document.querySelectorAll("#offDlg select[data-uid]").forEach(s => { const uid = s.dataset.uid, a = auto[uid] || {};
+          if (s.value === (a.sure ? a.player : "") && !(uid in links)) return;   // unchanged from a sure automatic match
+          links[uid] = s.value; });
+        await putFile(`guilds/${g.slug}/discord-links.json`, JSON.stringify({ links }, null, 1), `Link ${g.name} Discord DMs to in-game names`, cur.sha);
+      },
+      done: "📬 Saved. DMs use these links from the next phase." });
+  }
+
+  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; }, authToken: async () => TOKEN || await remembered(), webhooks, discordDms };
 })();

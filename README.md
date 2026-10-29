@@ -305,6 +305,22 @@ of a phase starting, only once per phase. It uses the assignments saved with **S
   whole guild** posts every phase. Every platoon post goes to the `<GUILD>_ASSIGN` webhook (falling back
   to `DISCORD_WEBHOOK_<GUILD>_PLATOONS` if that isn't set).
 
+### Each member's own platoons by DM (optional, members opt in)
+
+A Discord bot can also DM each member just their own list when a phase starts. Members choose this themselves:
+
+1. **Create the bot once (it serves every guild).** Go to discord.com/developers/applications → New Application → **Bot** → Reset Token → copy the token. No privileged intents are needed.
+2. **Invite it to each guild's server:** open
+   `https://discord.com/oauth2/authorize?client_id=<APPLICATION ID>&scope=bot&permissions=68672`
+   (the Application ID is on the General Information page). 68672 = View Channel, Send Messages, Add Reactions, Read Message History. It must be able to use the assignments channel.
+3. **Give the site the token:** Officers → 🔗 Discord webhooks → *Discord bot* → paste → Save. It's stored as the GitHub secret `DISCORD_BOT_TOKEN`.
+
+Within 15 minutes the bot posts a message in the assignments channel: *react ✅ to get your platoon assignments by DM*. Anyone who reacts is DM'd their own list as each phase starts. Removing the reaction stops it.
+
+Discord names are matched to in-game names automatically (server nickname, display name or username equal to the in-game name). Officers → RotE platoons → **Discord DMs (who gets them)** lists everyone who opted in. There officers can confirm a best guess, link someone whose name doesn't match, or unlink someone; the links are saved in `guilds/<guild>/discord-links.json`. A member who isn't linked gets no DMs. The page also shows anyone whose last DM failed, usually because their DMs from server members are switched off.
+
+Only members who opted in are stored (`guilds/<guild>/discord.json`).
+
 ## Guild overview
 
 The **▦ Guild overview** page (`…/guild.html?guild=oanr`) shows every current member side by side,
