@@ -1,5 +1,5 @@
 {
-"date": "2026-10-29",
+"date": "2026-10-30",
 "players": [
 {
 "name": "Abercwmboi",
@@ -88,8 +88,8 @@
 },
 {
 "name": "Cdbdi",
-"gp": 13409468,
-"gp_char": 8609590,
+"gp": 13413863,
+"gp_char": 8613985,
 "gp_ship": 4799878,
 "skill": 2865,
 "league": "Aurodium",
@@ -224,19 +224,19 @@
 },
 {
 "name": "Dimes and Pennies",
-"gp": 14244038,
-"gp_char": 9286625,
-"gp_ship": 4957413,
+"gp": 14254068,
+"gp_char": 9294891,
+"gp_ship": 4959177,
 "skill": 2435,
 "league": "Chromium",
 "division": 4,
 "mods": {
-"s10": 895,
-"s15": 420,
-"s20": 146,
-"s25": 27,
-"six": 714,
-"mods": 1961
+"s10": 911,
+"s15": 431,
+"s20": 152,
+"s25": 28,
+"six": 737,
+"mods": 1984
 }
 },
 {
@@ -326,8 +326,8 @@
 },
 {
 "name": "Fleshstorm",
-"gp": 13954328,
-"gp_char": 9071746,
+"gp": 13954835,
+"gp_char": 9072253,
 "gp_ship": 4882582,
 "skill": 2890,
 "league": "Aurodium",
@@ -360,8 +360,8 @@
 },
 {
 "name": "HedaLeia",
-"gp": 14200841,
-"gp_char": 9313825,
+"gp": 14205191,
+"gp_char": 9318175,
 "gp_ship": 4887016,
 "skill": 2960,
 "league": "Aurodium",
@@ -411,8 +411,8 @@
 },
 {
 "name": "Iceman2781",
-"gp": 13893097,
-"gp_char": 9097184,
+"gp": 13893435,
+"gp_char": 9097522,
 "gp_ship": 4795913,
 "skill": 3134,
 "league": "Kyber",
@@ -479,8 +479,8 @@
 },
 {
 "name": "Lannavo",
-"gp": 13962106,
-"gp_char": 9080652,
+"gp": 13965241,
+"gp_char": 9083787,
 "gp_ship": 4881454,
 "skill": 2891,
 "league": "Aurodium",
@@ -496,19 +496,19 @@
 },
 {
 "name": "Locohoco",
-"gp": 15389819,
-"gp_char": 10240940,
-"gp_ship": 5148879,
+"gp": 15397346,
+"gp_char": 10248251,
+"gp_ship": 5149095,
 "skill": 3180,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 1411,
-"s15": 787,
-"s20": 330,
-"s25": 174,
-"six": 879,
-"mods": 2017
+"s10": 1429,
+"s15": 797,
+"s20": 335,
+"s25": 177,
+"six": 891,
+"mods": 2040
 }
 },
 {
@@ -547,8 +547,8 @@
 },
 {
 "name": "Nick",
-"gp": 14087989,
-"gp_char": 9290590,
+"gp": 14090266,
+"gp_char": 9292867,
 "gp_ship": 4797399,
 "skill": 3357,
 "league": "Kyber",
@@ -694,32 +694,32 @@
 "s15": 451,
 "s20": 154,
 "s25": 31,
-"six": 941,
+"six": 944,
 "mods": 1936
 }
 },
 {
 "name": "Sweens40",
-"gp": 16217192,
-"gp_char": 10829707,
+"gp": 16217270,
+"gp_char": 10829785,
 "gp_ship": 5387485,
 "skill": 3154,
 "league": "Kyber",
 "division": 3,
 "mods": {
 "s10": 1718,
-"s15": 1119,
+"s15": 1120,
 "s20": 545,
 "s25": 135,
-"six": 2017,
+"six": 2018,
 "mods": 2039
 }
 },
 {
 "name": "Taero",
-"gp": 14835301,
+"gp": 14836531,
 "gp_char": 9777593,
-"gp_ship": 5057708,
+"gp_ship": 5058938,
 "skill": 3277,
 "league": "Kyber",
 "division": 3,
@@ -785,8 +785,8 @@
 },
 {
 "name": "Viggen",
-"gp": 13873138,
-"gp_char": 9165586,
+"gp": 13875544,
+"gp_char": 9167992,
 "gp_ship": 4707552,
 "skill": 2684,
 "league": "Aurodium",
