@@ -394,8 +394,8 @@
 },
 {
 "name": "Holycrabe",
-"gp": 14565759,
-"gp_char": 9581088,
+"gp": 14568339,
+"gp_char": 9583668,
 "gp_ship": 4984671,
 "skill": 2917,
 "league": "Aurodium",
@@ -734,18 +734,18 @@
 },
 {
 "name": "TickTock",
-"gp": 14339010,
-"gp_char": 9474709,
+"gp": 14339071,
+"gp_char": 9474770,
 "gp_ship": 4864301,
 "skill": 3227,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 638,
-"s15": 253,
+"s10": 639,
+"s15": 254,
 "s20": 95,
 "s25": 18,
-"six": 482,
+"six": 483,
 "mods": 2034
 }
 },
@@ -836,17 +836,17 @@
 },
 {
 "name": "ZKylo Jiuter",
-"gp": 14023507,
-"gp_char": 9154316,
-"gp_ship": 4869191,
+"gp": 14025991,
+"gp_char": 9156726,
+"gp_ship": 4869265,
 "skill": 3349,
 "league": "Kyber",
 "division": 2,
 "mods": {
 "s10": 1484,
 "s15": 823,
-"s20": 531,
-"s25": 205,
+"s20": 532,
+"s25": 206,
 "six": 911,
 "mods": 2010
 }
