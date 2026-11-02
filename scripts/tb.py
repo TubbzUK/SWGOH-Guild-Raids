@@ -170,6 +170,19 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
 
     latest_i = len(tbs) - 1
     lt = tbs_out[-1]
+    # which phases count (officers' TB contribution settings): leaving out early phases nobody can fill
+    # completely makes "needs attention" fairer
+    try:
+        sp = json.loads((gdir / "tb-settings.json").read_text(encoding="utf-8")).get("phases") or []
+    except (OSError, ValueError, AttributeError):
+        sp = []
+    counted = sorted({int(p) for p in sp if str(p).isdigit() and 1 <= int(p) <= lt["phases"]}) or list(range(1, lt["phases"] + 1))
+    cmax = sum(lt["max_waves"][p - 1] for p in counted) or 1
+    cpct = lambda r: sum(x["waves"] for x in r["phases"] if x["p"] in counted) / cmax * 100  # noqa: E731
+    lrows = [v["hist"][latest_i] for v in people.values() if latest_i in v["hist"]]
+    c_med_wave = statistics.median([cpct(r) for r in lrows]) if lrows else 0
+    c_med_spec = statistics.median([sum(x["spec"] for x in r["phases"] if x["p"] in counted) for r in lrows]) if lrows else 0
+    lt["counted_phases"] = counted
     in_latest = {k for k, v in people.items() if latest_i in v["hist"]}
     players = []
     for key, pinfo in people.items():
@@ -181,13 +194,15 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
         tpct, tlabel = B.trend_of(played[-trend_n:], trend_thr)
         status, focus, tags = None, [], []
         if last_r:
-            n = lt["phases"]
-            missed = [x for x in last_r["phases"] if not x["dep"]]
+            cph = [x for x in last_r["phases"] if x["p"] in counted]
+            wpct = cpct(last_r)
+            spec = sum(x["spec"] for x in cph)
+            missed = [x for x in cph if not x["dep"]]
             none = [x["p"] for x in missed if x["gp"] <= 0]
             part = [x["p"] for x in missed if x["gp"] > 0]
-            if last_r["tp"] <= 0 or (last_r["full_deploys"] == 0 and last_r["waves"] == 0):
+            if last_r["tp"] <= 0 or (not any(x["dep"] for x in cph) and not any(x["waves"] for x in cph)):
                 status = "inactive"
-            elif len(missed) >= 2 or last_r["wave_pct"] < 0.5 * lt["median_wave_pct"]:
+            elif len(missed) >= 2 or wpct < 0.5 * c_med_wave:
                 status = "partial"
             else:
                 status = "active"
@@ -195,16 +210,16 @@ def build_tb(gdir: Path, cfg: dict, current_norm: set[str]) -> dict | None:
                 focus.append(f"Didn't deploy at all in {fmt_ph(none)}"); tags.append("No deploy " + ",".join(f"P{p}" for p in none))
             if part:
                 focus.append(f"Only partly deployed in {fmt_ph(part)}"); tags.append("Part deploy " + ",".join(f"P{p}" for p in part))
-            if last_r["wave_pct"] < 0.75 * lt["median_wave_pct"]:
-                worst = sorted(last_r["phases"], key=lambda x: x["waves"] / lt["max_waves"][x["p"] - 1])[:2]
-                focus.append(f"Combat missions: {int(last_r['waves'])} of {int(sum(lt['max_waves']))} waves "
-                             f"({last_r['wave_pct']:.0f}% vs guild median {lt['median_wave_pct']:.0f}%), weakest in {fmt_ph(sorted(x['p'] for x in worst))}")
-                tags.append(f"Combat {last_r['wave_pct']:.0f}%")
+            if wpct < 0.75 * c_med_wave:
+                worst = sorted(cph, key=lambda x: x["waves"] / (lt["max_waves"][x["p"] - 1] or 1))[:2]
+                focus.append(f"Combat missions: {int(sum(x['waves'] for x in cph))} of {int(cmax)} waves "
+                             f"({wpct:.0f}% vs guild median {c_med_wave:.0f}%), weakest in {fmt_ph(sorted(x['p'] for x in worst))}")
+                tags.append(f"Combat {wpct:.0f}%")
             if last_r["platoons"] == 0:
                 focus.append("No platoon units placed"); tags.append("No platoons")
             elif lt["median_platoons"] and last_r["platoons"] < lt["median_platoons"] / 2:
                 focus.append(f"Few platoon units ({int(last_r['platoons'])} vs guild median {int(lt['median_platoons'])})"); tags.append("Few platoons")
-            if last_r["spec"] == 0 and lt["median_spec"] > 0:
+            if spec == 0 and c_med_spec > 0:
                 focus.append("No special missions attempted"); tags.append("No specials")
             if tlabel == "declining":
                 focus.append(f"Territory points falling {abs(tpct):.0f}% per TB"); tags.append("Falling")

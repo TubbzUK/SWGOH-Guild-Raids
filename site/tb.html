@@ -166,7 +166,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <div class="grid2">
       <div class="card">
         <h2>Needs attention</h2>
-        <p class="hint">Current members marked Partial or Inactive in this TB, with the main thing to work on</p>
+        <p class="hint" id="attHint">Current members marked Partial or Inactive in this TB, with the main thing to work on</p>
         <ol class="list" id="attention"></ol>
       </div>
       <div class="card">
@@ -347,6 +347,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const p = t.phase[c.dataIndex]; return [` ${p.wave_pct}% of possible waves`, ` ${p.waves} waves · ${p.att} CM attempts`, ` ${p.deployed} fully deployed · ${p.partial} partly · ${p.none} not at all`]; } } } }, scales: { y: { ...axisY(v => v + "%"), max: 100 }, x: axisX() } }
     });
     const att = isLatest ? cur.filter(p => p.status === "partial" || p.status === "inactive").sort((a, b) => (a.status === "inactive" ? -1 : 0) - (b.status === "inactive" ? -1 : 0) || (a.last || 0) - (b.last || 0)) : [];
+    { const cp = t.counted_phases || [], all = cp.length === t.phases;
+      $("#attHint").innerHTML = "Current members marked Partial or Inactive in this TB, with the main thing to work on" + (cp.length && !all ? ` · counting ${cp.map(p => "P" + p).join(", ")} only (TB contribution settings)` : ""); }
     $("#attention").innerHTML = !isLatest ? `<li class="who"><small>Shown for the latest TB only.</small></li>` : att.length ? att.slice(0, 12).map(p => `<li class="click" data-pid="${esc(p.id)}" tabindex="0"><span class="who">${esc(p.name)}<small>${esc(p.focus[0] || "")}</small></span>${badge(STATUS, p.status)}</li>`).join("") + (att.length > 12 ? `<li><span class="who"><small>and ${att.length - 12} more on the Members tab</small></span></li>` : "") : `<li class="who"><small>Everyone took a full part. 🎉</small></li>`;
     const top = players.map(p => ({ p, r: rowOf(p, sel) })).filter(x => x.r).sort((a, b) => b.r.tp - a.r.tp).slice(0, 10);
     $("#topHint").textContent = dfmt(t.date);
