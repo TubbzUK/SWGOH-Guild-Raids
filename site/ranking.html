@@ -205,7 +205,8 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
   </div>
 
   <div class="card" style="margin-bottom:12px">
-    <h2>Score trend by member</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Score trend by member</h2>
+      <div class="sortby" role="group" aria-label="Sort members by" style="display:flex;gap:6px;font-size:12.5px;align-items:center"><span style="color:var(--muted)">Sort by</span><button type="button" class="btn" data-tsort="score">Score</button><button type="button" class="btn" data-tsort="trend">Trend</button></div></div>
     <p class="hint" id="trendHint"></p>
     <div class="legend" id="trendLegend"></div>
     <div class="chart rank" id="trendBox"><canvas id="trendChart" aria-label="Score trend by member"></canvas></div>
@@ -417,7 +418,9 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     const pts = v.map((y, i) => [2 + i * sx, h - 2 - (y - mn) * sy]);
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true" style="vertical-align:middle"><polyline fill="none" stroke="${css("--series-1")}" stroke-width="1.5" points="${pts.map(p => p.join(",")).join(" ")}"/><circle cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="2.3" fill="${css("--series-1")}"/></svg>`;
   };
-  let charts = [];
+  let charts = [], trendSort = "score";
+  try { if (localStorage.getItem("rankTrendSort") === "trend") trendSort = "trend"; } catch (e) {}
+  document.querySelectorAll("[data-tsort]").forEach(b => b.onclick = () => { trendSort = b.dataset.tsort; try { localStorage.setItem("rankTrendSort", trendSort); } catch (e) {} render(); });
 
   function render() {
     charts.forEach(c => c.destroy()); charts = [];
@@ -510,10 +513,18 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
     };
     const histOf = p => cache.map(c => c.out.get(p.id)?.overall ?? null);
     const members = players.filter(p => (!curOnly || p.current) && cache.some(c => c.out.has(p.id)));
-    const trends = members.map(p => ({ p, h: histOf(p), f: slopeOf(histOf(p)) })).filter(x => x.f).sort((a, b) => b.f.slope - a.f.slope);
+    // the bar is how well they score (average overall score, last N TBs); the colour and the number by their name is
+    // which way it's heading - so a top scorer slipping a couple of points still sits near the top
+    const avgOf = h => { const v = h.filter(x => x != null).slice(-N); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; };
+    const trends = members.map(p => { const h = histOf(p); return { p, h, f: slopeOf(h), avg: avgOf(h) }; }).filter(x => x.f)
+      .sort((a, b) => trendSort === "trend" ? b.f.slope - a.f.slope || b.avg - a.avg : b.avg - a.avg || b.f.slope - a.f.slope);
+    document.querySelectorAll("[data-tsort]").forEach(b => { const on = b.dataset.tsort === trendSort; b.setAttribute("aria-pressed", on); b.classList.toggle("primary", on); });
     const up = trends.filter(x => x.f.slope >= TH).length, down = trends.filter(x => x.f.slope <= -TH).length;
     $("#trendHint").textContent = trends.length
-      ? `Points gained or lost per TB (line of best fit through each member's overall score, last ${N} TBs). ${up} getting better, ${down} declining, ${trends.length - up - down} steady. Click a member to see their TBs below.`
+      ? (trendSort === "trend"
+        ? `Points gained or lost per TB (line of best fit through each member's overall score, last ${N} TBs), biggest gains first. `
+        : `Each member's average overall score over their last ${N} TBs, highest first. The colour and the number after the name show the trend: points gained or lost per TB. `)
+        + `${up} getting better, ${down} declining, ${trends.length - up - down} steady. Click a member to see their TBs below.`
       : "Needs at least two TBs for a member before a trend can be shown.";
     $("#trendLegend").innerHTML = `<span><i class="sq" style="background:${css("--good")}"></i>Getting better (+${TH} or more per TB)</span><span><i class="sq" style="background:${css("--muted")}"></i>Steady</span><span><i class="sq" style="background:${css("--bad")}"></i>Declining (−${TH} or more per TB)</span>`;
     $("#trendBox").style.height = trends.length ? Math.max(160, trends.length * 20 + 40) + "px" : "60px";
@@ -522,12 +533,13 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
       const tc = trends.map(x => x.f.slope >= TH ? css("--good") : x.f.slope <= -TH ? css("--bad") : css("--muted"));
       const tchart = new Chart($("#trendChart"), {
         type: "bar",
-        data: { labels: trends.map(x => x.p.name), datasets: [{ label: "Points per TB", data: trends.map(x => +x.f.slope.toFixed(1)), backgroundColor: tc, borderColor: trends.map(x => x.p.id === selId ? css("--text") : "transparent"), borderWidth: trends.map(x => x.p.id === selId ? 2 : 0), barThickness: 13 }] },
+        data: { labels: trends.map(x => trendSort === "trend" ? x.p.name : `${x.p.name}  ${x.f.slope >= TH ? "▲" : x.f.slope <= -TH ? "▼" : "•"} ${x.f.slope > 0 ? "+" : ""}${x.f.slope.toFixed(1)}`),
+          datasets: [{ label: trendSort === "trend" ? "Points per TB" : "Average score", data: trends.map(x => trendSort === "trend" ? +x.f.slope.toFixed(1) : +x.avg.toFixed(1)), backgroundColor: tc, borderColor: trends.map(x => x.p.id === selId ? css("--text") : "transparent"), borderWidth: trends.map(x => x.p.id === selId ? 2 : 0), barThickness: 13 }] },
         options: { indexAxis: "y",
           onClick: (e, els) => { if (els.length) { const id = trends[els[0].index].p.id; setTimeout(() => selectMember(id, true)); } },
           onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
-          plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => trends[i[0].dataIndex].p.name, label: c => { const x = trends[c.dataIndex]; return [` ${c.raw > 0 ? "+" : ""}${c.raw} points per TB over ${x.f.n} TBs`, ` Latest ${P(x.h.filter(v => v != null).slice(-1)[0])}`, " Click for their TBs"]; } } } },
-          scales: { x: { grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => (v > 0 ? "+" : "") + v } }, y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 11.5 } } } } },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => trends[i[0].dataIndex].p.name, label: c => { const x = trends[c.dataIndex], sl = +x.f.slope.toFixed(1); return [` Average ${P(x.avg)} over their last ${Math.min(N, x.h.filter(v => v != null).length)} TBs`, ` Trend ${sl > 0 ? "+" : ""}${sl} points per TB over ${x.f.n} TBs`, ` Latest ${P(x.h.filter(v => v != null).slice(-1)[0])}`, " Click for their TBs"]; } } } },
+          scales: { x: trendSort === "trend" ? { grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => (v > 0 ? "+" : "") + v } } : { min: 0, max: 100, grid: { color: css("--grid") }, border: { display: false }, ticks: { callback: v => v + "%" } }, y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 11.5 } } } } },
       });
       charts.push(tchart);
     }
