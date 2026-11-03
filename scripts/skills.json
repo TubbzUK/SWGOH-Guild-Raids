@@ -41,6 +41,12 @@
 "kind": "Basic",
 "zeta": 1
 },
+"basicskill_GLMANDOGROGU": {
+"unit": "GLMANDOGROGU",
+"name": "Twin Strike",
+"kind": "Basic",
+"zeta": 1
+},
 "basicskill_GLREY": {
 "unit": "GLREY",
 "name": "Relentless Advance",
@@ -415,6 +421,12 @@
 "leaderskill_GLLEIA": {
 "unit": "GLLEIA",
 "name": "I Know",
+"kind": "Leader",
+"zeta": 1
+},
+"leaderskill_GLMANDOGROGU": {
+"unit": "GLMANDOGROGU",
+"name": "Clan of Two",
 "kind": "Leader",
 "zeta": 1
 },
@@ -1153,6 +1165,18 @@
 "specialskill_GLLEIA02": {
 "unit": "GLLEIA",
 "name": "Tactical Offensive",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLMANDOGROGU01": {
+"unit": "GLMANDOGROGU",
+"name": "The Old Protect the Young",
+"kind": "Special",
+"zeta": 1
+},
+"specialskill_GLMANDOGROGU02": {
+"unit": "GLMANDOGROGU",
+"name": "Bring You In Warm or Cold",
 "kind": "Special",
 "zeta": 1
 },
@@ -2560,6 +2584,12 @@
 "uniqueskill_GLLEIA01": {
 "unit": "GLLEIA",
 "name": "Forever Our Princess",
+"kind": "Unique",
+"zeta": 1
+},
+"uniqueskill_GLMANDOGROGU01": {
+"unit": "GLMANDOGROGU",
+"name": "Bound by Creed",
 "kind": "Unique",
 "zeta": 1
 },

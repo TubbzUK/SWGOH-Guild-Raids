@@ -1,5 +1,5 @@
 {
-"_fetched": "2026-10-27T05:18:05+00:00",
+"_fetched": "2026-11-03T12:06:26+00:00",
 "_v": 2,
 "4LOM": {
 "name": "4-LOM",
@@ -861,6 +861,12 @@
 "GLLEIA": {
 "name": "Leia Organa",
 "img": "textures/tex.charui_leiaendor.png",
+"gl": true,
+"side": "L"
+},
+"GLMANDOGROGU": {
+"name": "The Mandalorian and Grogu",
+"img": "textures/tex.charui_glmandogrogu.png",
 "gl": true,
 "side": "L"
 },
