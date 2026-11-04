@@ -60,6 +60,6 @@ readiness:
     - JAXXON
     - THERONIN
     - DARTHJARJAR
-    - MANDALORIANANDGROGU
+    - GLMANDOGROGU          # The Mandalorian and Grogu (GL)
     - B1MERCDROID          # Mercenary Guard Droid (B1), the new B1 from the Era event (not the original B1BATTLEDROIDV2)
     - ADELPHIRANGER
