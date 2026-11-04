@@ -73,5 +73,11 @@
   "their_score": 20591,
   "source": "game",
   "opponent": "Grand Jury"
+ },
+ "2026-11-05": {
+  "result": "win",
+  "our_score": null,
+  "their_score": null,
+  "opponent": "Grand Jury"
  }
 }
