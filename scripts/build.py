@@ -658,7 +658,7 @@ def unit_names() -> dict[str, str]:
 
 # Galactic Legends, in case the unit list from the game hasn't got its flags yet
 KNOWN_GLS = {"GLREY", "SUPREMELEADERKYLOREN", "GRANDMASTERLUKE", "SITHPALPATINE", "JEDIMASTERKENOBI", "LORDVADER",
-             "JABBATHEHUTT", "GLLEIA", "GLAHSOKATANO", "GLHONDO"}
+             "JABBATHEHUTT", "GLLEIA", "GLAHSOKATANO", "GLHONDO", "GLMANDOGROGU"}
 
 
 def conquest_units() -> set[str]:

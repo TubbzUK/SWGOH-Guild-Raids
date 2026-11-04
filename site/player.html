@@ -551,7 +551,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   }
 
   // ---------- full roster (characters and ships) ----------
-  const GLS = new Set(["SUPREMELEADERKYLOREN", "GLREY", "GRANDMASTERLUKE", "SITHPALPATINE", "JEDIMASTERKENOBI", "LORDVADER", "JABBATHEHUTT", "GLLEIA", "GLAHSOKATANO", "GLHONDO"]);
+  const GLS = new Set(["SUPREMELEADERKYLOREN", "GLREY", "GRANDMASTERLUKE", "SITHPALPATINE", "JEDIMASTERKENOBI", "LORDVADER", "JABBATHEHUTT", "GLLEIA", "GLAHSOKATANO", "GLHONDO", "GLMANDOGROGU"]);
+  const isGL = u => !u.ship && (u.gl || GLS.has(u.id));   // the game marks new GLs itself (u.gl), the list is a fallback
   let RD = null, SK = {}, rdLoading = null, rType = "chars", rSort = "power", rQ = "", rSide = "", rAll = false, rMode = "";
   const loadRosters = () => rdLoading || (rdLoading = Promise.all([getJSON(`data/${G}/rosters.json`), getJSON("data/skills.json")])
     .then(([d, sk]) => { RD = d || { units: [], players: [] }; SK = sk || {}; return RD; }));
@@ -566,7 +567,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     const chars = U.filter(u => !u.ship), ships = U.filter(u => u.ship), hasPow = U.some(u => u.power);
     if (!hasPow && rSort === "power") rSort = "relic";   // rosters pulled from the game have no per-unit power
     const cnt = f => chars.filter(f).length;
-    const gls = chars.filter(u => GLS.has(u.id));
+    const gls = chars.filter(u => isGL(u));
     box.innerHTML = `<div class="rhead"><h2>◆ Roster</h2><span class="hint" style="margin:0">${RD.updated ? "As of " + dfmt(RD.updated) : ""}</span></div>
       <div class="rchips">
         <span><b>${fmt(pr.gp)}</b>GP</span><span><b>${chars.length}</b>characters</span><span><b>${ships.length}</b>ships</span>
@@ -586,17 +587,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       if (rType === "zetas" || rType === "omis") return drawAbilities(q, lvlRank);
       const list = (rType === "ships" ? ships : chars).filter(u => (!q || u.name.toLowerCase().includes(q) || u.id.toLowerCase().includes(q)) && (rType === "ships" || !rSide || u.side === rSide))
         .sort((a, b) => rSort === "name" ? a.name.localeCompare(b.name) : rSort === "stars" ? (b.stars || 0) - (a.stars || 0) || lvlRank(b) - lvlRank(a)
-          : rSort === "relic" ? lvlRank(b) - lvlRank(a) || (b.power || 0) - (a.power || 0) : (b.power || 0) - (a.power || 0) || lvlRank(b) - lvlRank(a));
+          : rSort === "relic" ? isGL(b) - isGL(a) || lvlRank(b) - lvlRank(a) || (b.power || 0) - (a.power || 0) : isGL(b) - isGL(a) || (b.power || 0) - (a.power || 0) || lvlRank(b) - lvlRank(a));   // GLs first
       const first = innerWidth < 600 ? 24 : 60, shown = rAll || list.length <= first ? list : list.slice(0, first);
       const lvl = u => u.ship ? "" : u.gear >= 13 ? `<span class="lvl ${u.relic >= 9 ? "r9" : u.relic >= 7 ? "r7" : u.relic >= 5 ? "r5" : u.relic >= 1 ? "r1" : ""}">R${u.relic ?? 0}</span>` : `<span class="lvl">G${u.gear ?? "?"}</span>`;
       const stars = n => n == null ? "" : `<span class="st" title="${n} stars">${"★".repeat(n)}<i>${"★".repeat(Math.max(0, 7 - n))}</i></span>`;
       const tier = u => u.ship || u.gear < 13 ? "" : u.relic >= 9 ? "r9" : u.relic >= 7 ? "r7" : u.relic >= 5 ? "r5" : u.relic >= 1 ? "r1" : "";
       const ini = s => String(s).split(/[\s()'-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
-      const pf = u => { const cls = `pf ${u.ship ? "ship" : ""} ${tier(u)} ${GLS.has(u.id) ? "gl" : ""}`;
+      const pf = u => { const cls = `pf ${u.ship ? "ship" : ""} ${tier(u)} ${isGL(u) ? "gl" : ""}`;
         return u.img ? `<img class="${cls}" src="${esc(u.img.startsWith("http") ? u.img : "https://game-assets.swgoh.gg/" + u.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-ini="${esc(ini(u.name))}">` : `<span class="${cls}">${esc(ini(u.name))}</span>`; };
-      $("#units").innerHTML = shown.map(u => `<div class="unit ${u.side || ""} ${GLS.has(u.id) ? "gl" : ""}" title="${esc(u.name)}${u.level && u.level < 85 ? " · level " + u.level : ""}">${pf(u)}<div class="ub">
+      $("#units").innerHTML = shown.map(u => `<div class="unit ${u.side || ""} ${isGL(u) ? "gl" : ""}" title="${esc(u.name)}${u.level && u.level < 85 ? " · level " + u.level : ""}">${pf(u)}<div class="ub">
         <span class="un">${esc(u.name)}</span><span class="um">${stars(u.stars)}${lvl(u)}</span>
-        <span class="um"><span>${u.power ? "Power " + int(u.power) : u.level ? "Level " + u.level : ""}</span><span class="zo">${u.zc ? `<i class="zb" title="${u.zc} zeta${u.zc > 1 ? "s" : ""}">Z${u.zc > 1 ? u.zc : ""}</i>` : ""}${u.oc ? `<i class="ob" title="${u.oc} omicron${u.oc > 1 ? "s" : ""}">O${u.oc > 1 ? u.oc : ""}</i>` : ""}${GLS.has(u.id) ? '<span style="color:#f5c542;font-weight:700">GL</span>' : ""}</span></span></div></div>`).join("") || `<div class="empty" style="grid-column:1/-1">Nothing matches.</div>`;
+        <span class="um"><span>${u.power ? "Power " + int(u.power) : u.level ? "Level " + u.level : ""}</span><span class="zo">${u.zc ? `<i class="zb" title="${u.zc} zeta${u.zc > 1 ? "s" : ""}">Z${u.zc > 1 ? u.zc : ""}</i>` : ""}${u.oc ? `<i class="ob" title="${u.oc} omicron${u.oc > 1 ? "s" : ""}">O${u.oc > 1 ? u.oc : ""}</i>` : ""}${isGL(u) ? '<span style="color:#f5c542;font-weight:700">GL</span>' : ""}</span></span></div></div>`).join("") || `<div class="empty" style="grid-column:1/-1">Nothing matches.</div>`;
       $("#units").querySelectorAll("img.pf").forEach(im => im.onerror = () => { const s = document.createElement("span"); s.className = im.className; s.textContent = im.dataset.ini; im.replaceWith(s); });
       $("#rMore").innerHTML = shown.length < list.length ? `<button type="button" id="rAllBtn">Show all ${list.length}</button>` : "";
       if ($("#rAllBtn")) $("#rAllBtn").onclick = () => { rAll = true; draw(); };
