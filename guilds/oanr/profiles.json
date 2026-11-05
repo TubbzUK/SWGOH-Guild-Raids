@@ -1,5 +1,5 @@
 {
-"date": "2026-11-04",
+"date": "2026-11-05",
 "players": [
 {
 "name": "Abercwmboi",
@@ -105,8 +105,8 @@
 },
 {
 "name": "Cdbdi",
-"gp": 13428839,
-"gp_char": 8628961,
+"gp": 13429901,
+"gp_char": 8630023,
 "gp_ship": 4799878,
 "skill": 2849,
 "league": "Aurodium",
@@ -326,8 +326,8 @@
 },
 {
 "name": "Figrin Pinhead",
-"gp": 16564937,
-"gp_char": 11035624,
+"gp": 16566455,
+"gp_char": 11037142,
 "gp_ship": 5529313,
 "skill": 3270,
 "league": "Kyber",
@@ -819,18 +819,18 @@
 },
 {
 "name": "Zarseem Dyartes",
-"gp": 14511442,
-"gp_char": 9568622,
-"gp_ship": 4942820,
+"gp": 14516620,
+"gp_char": 9570385,
+"gp_ship": 4946235,
 "skill": 3109,
 "league": "Kyber",
 "division": 4,
 "mods": {
-"s10": 1079,
-"s15": 477,
+"s10": 1080,
+"s15": 479,
 "s20": 148,
 "s25": 16,
-"six": 1328,
+"six": 1332,
 "mods": 2002
 }
 },
