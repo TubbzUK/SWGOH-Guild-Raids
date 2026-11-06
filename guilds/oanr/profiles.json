@@ -1,5 +1,5 @@
 {
-"date": "2026-11-05",
+"date": "2026-11-06",
 "players": [
 {
 "name": "Abercwmboi",
@@ -105,8 +105,8 @@
 },
 {
 "name": "Cdbdi",
-"gp": 13441695,
-"gp_char": 8637274,
+"gp": 13443690,
+"gp_char": 8639269,
 "gp_ship": 4804421,
 "skill": 2849,
 "league": "Aurodium",
@@ -139,8 +139,8 @@
 },
 {
 "name": "Chelli",
-"gp": 14672275,
-"gp_char": 9680515,
+"gp": 14677686,
+"gp_char": 9685926,
 "gp_ship": 4991760,
 "skill": 2844,
 "league": "Aurodium",
@@ -241,25 +241,25 @@
 },
 {
 "name": "Dimes and Pennies",
-"gp": 14257679,
-"gp_char": 9298205,
-"gp_ship": 4959474,
+"gp": 14259480,
+"gp_char": 9300303,
+"gp_ship": 4959177,
 "skill": 2453,
 "league": "Chromium",
 "division": 4,
 "mods": {
-"s10": 907,
-"s15": 429,
-"s20": 150,
+"s10": 911,
+"s15": 431,
+"s20": 152,
 "s25": 28,
-"six": 731,
-"mods": 1978
+"six": 737,
+"mods": 1984
 }
 },
 {
 "name": "Din Al",
-"gp": 16663634,
-"gp_char": 11219043,
+"gp": 16663729,
+"gp_char": 11219138,
 "gp_ship": 5444591,
 "skill": 3111,
 "league": "Kyber",
@@ -292,8 +292,8 @@
 },
 {
 "name": "EmperorArteta",
-"gp": 15170962,
-"gp_char": 10069862,
+"gp": 15171023,
+"gp_char": 10069923,
 "gp_ship": 5101100,
 "skill": 3293,
 "league": "Kyber",
@@ -377,8 +377,8 @@
 },
 {
 "name": "HedaLeia",
-"gp": 14230567,
-"gp_char": 9343443,
+"gp": 14235673,
+"gp_char": 9348549,
 "gp_ship": 4887124,
 "skill": 2946,
 "league": "Aurodium",
@@ -411,8 +411,8 @@
 },
 {
 "name": "Holycrabe",
-"gp": 14597990,
-"gp_char": 9613319,
+"gp": 14599736,
+"gp_char": 9615065,
 "gp_ship": 4984671,
 "skill": 2902,
 "league": "Aurodium",
@@ -496,9 +496,9 @@
 },
 {
 "name": "Lannavo",
-"gp": 14032637,
-"gp_char": 9136898,
-"gp_ship": 4895739,
+"gp": 14040037,
+"gp_char": 9139175,
+"gp_ship": 4900862,
 "skill": 2876,
 "league": "Aurodium",
 "division": 2,
@@ -632,8 +632,8 @@
 },
 {
 "name": "Ozy Man Dias",
-"gp": 15259697,
-"gp_char": 10022361,
+"gp": 15260204,
+"gp_char": 10022868,
 "gp_ship": 5237336,
 "skill": 2970,
 "league": "Kyber",
@@ -734,8 +734,8 @@
 },
 {
 "name": "Taero",
-"gp": 14857529,
-"gp_char": 9799747,
+"gp": 14859275,
+"gp_char": 9801493,
 "gp_ship": 5057782,
 "skill": 3276,
 "league": "Kyber",
@@ -751,9 +751,9 @@
 },
 {
 "name": "TickTock",
-"gp": 14377541,
-"gp_char": 9510142,
-"gp_ship": 4867399,
+"gp": 14377941,
+"gp_char": 9510265,
+"gp_ship": 4867676,
 "skill": 3231,
 "league": "Kyber",
 "division": 3,
