@@ -79,5 +79,12 @@
   "our_score": null,
   "their_score": null,
   "opponent": "Grand Jury"
+ },
+ "2026-11-08": {
+  "result": "loss",
+  "our_score": 14056,
+  "their_score": 29397,
+  "source": "game",
+  "opponent": "The Smoking Krayt"
  }
 }
