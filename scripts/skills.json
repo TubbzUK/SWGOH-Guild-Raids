@@ -147,6 +147,13 @@
 "kind": "Basic",
 "zeta": 6
 },
+"basicskill_generalmerrick": {
+"unit": "GENERALMERRICK",
+"name": "Twenty-four and Counting",
+"kind": "Basic",
+"omicron": 6,
+"mode": "TB"
+},
 "leaderskill_50RT": {
 "unit": "50RT",
 "name": "Spare Parts",
@@ -887,6 +894,12 @@
 "kind": "Special",
 "zeta": 6
 },
+"specialskill_BAILORGANA02": {
+"unit": "BAILORGANA",
+"name": "Alderaanian Resolve",
+"kind": "Special",
+"zeta": 6
+},
 "specialskill_BATCHERS302": {
 "unit": "BATCHERS3",
 "name": "Ferocious Bite",
@@ -1374,6 +1387,14 @@
 "name": "That Looks Pretty Bad",
 "kind": "Special",
 "zeta": 6
+},
+"specialskill_JYNERSOUNDERCOVER01": {
+"unit": "JYNERSOUNDERCOVER",
+"name": "Get This Over With",
+"kind": "Special",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
 },
 "specialskill_KANANJARRUSS302": {
 "unit": "KANANJARRUSS3",
@@ -1948,6 +1969,13 @@
 "kind": "Unique",
 "zeta": 6
 },
+"uniqueskill_BAILORGANA01": {
+"unit": "BAILORGANA",
+"name": "Hope for a Better Dawn",
+"kind": "Unique",
+"omicron": 6,
+"mode": "GAC"
+},
 "uniqueskill_BARRISSOFFEE01": {
 "unit": "BARRISSOFFEE",
 "name": "Swift Recovery",
@@ -2431,6 +2459,14 @@
 "omicron": 7,
 "mode": "TW"
 },
+"uniqueskill_EDRIOTWOTUBES01": {
+"unit": "EDRIOTWOTUBES",
+"name": "No Pain All Gain",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
+},
 "uniqueskill_EMBO01": {
 "unit": "EMBO",
 "name": "Way of the Kyuzo",
@@ -2530,6 +2566,14 @@
 "zeta": 5,
 "omicron": 6,
 "mode": "TB"
+},
+"uniqueskill_GENERALDRAVEN02": {
+"unit": "GENERALDRAVEN",
+"name": "Active Operation",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
 },
 "uniqueskill_GENERALHUX01": {
 "unit": "GENERALHUX",
@@ -2846,6 +2890,22 @@
 "omicron": 7,
 "mode": "TW"
 },
+"uniqueskill_JYNERSOUNDERCOVER01": {
+"unit": "JYNERSOUNDERCOVER",
+"name": "Rebellions are Built on Hope",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
+"uniqueskill_JYNERSOUNDERCOVER02": {
+"unit": "JYNERSOUNDERCOVER",
+"name": "Time To Fight Is Now",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC"
+},
 "uniqueskill_K2SO02": {
 "unit": "K2SO",
 "name": "Reprogrammed Imperial Droid",
@@ -3073,6 +3133,14 @@
 "name": "Preordained Destiny",
 "kind": "Unique",
 "zeta": 6
+},
+"uniqueskill_MOROFF01": {
+"unit": "MOROFF",
+"name": "Hired Gun's Honor",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "GAC 3v3"
 },
 "uniqueskill_MOTHERTALZIN01": {
 "unit": "MOTHERTALZIN",
@@ -3328,6 +3396,14 @@
 "name": "Everyone is Expendable",
 "kind": "Unique",
 "zeta": 6
+},
+"uniqueskill_SERGEANTMELSHI01": {
+"unit": "SERGEANTMELSHI",
+"name": "Shadow Operations",
+"kind": "Unique",
+"zeta": 5,
+"omicron": 6,
+"mode": "TW"
 },
 "uniqueskill_SHAAKTI01": {
 "unit": "SHAAKTI",
@@ -3677,6 +3753,12 @@
 "uniqueskill_ct21040802": {
 "unit": "CT210408",
 "name": "Domino Squad",
+"kind": "Unique",
+"zeta": 6
+},
+"uniqueskill_generalmerrick01": {
+"unit": "GENERALMERRICK",
+"name": "Rarefied Air Cavalry of Virujansi",
 "kind": "Unique",
 "zeta": 6
 },

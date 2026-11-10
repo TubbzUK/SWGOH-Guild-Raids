@@ -1,5 +1,5 @@
 {
-"_fetched": "2026-11-03T12:06:26+00:00",
+"_fetched": "2026-11-10T12:48:33+00:00",
 "_v": 2,
 "4LOM": {
 "name": "4-LOM",
@@ -136,6 +136,11 @@
 "BADBATCHWRECKER": {
 "name": "Wrecker",
 "img": "textures/tex.charui_bb_wrecker.png",
+"side": "L"
+},
+"BAILORGANA": {
+"name": "Bail Organa",
+"img": "textures/tex.charui_bailorgana.png",
 "side": "L"
 },
 "BARRISSOFFEE": {
@@ -641,6 +646,11 @@
 "ship": true,
 "side": "L"
 },
+"EDRIOTWOTUBES": {
+"name": "Edrio Two Tubes",
+"img": "textures/tex.charui_edriotwotubes.png",
+"side": "L"
+},
 "EETHKOTH": {
 "name": "Eeth Koth",
 "img": "textures/tex.charui_eethkoth.png",
@@ -787,6 +797,11 @@
 "ship": true,
 "side": "D"
 },
+"GENERALDRAVEN": {
+"name": "General Draven",
+"img": "textures/tex.charui_generaldraven.png",
+"side": "L"
+},
 "GENERALHUX": {
 "name": "General Hux",
 "img": "textures/tex.charui_generalhux.png",
@@ -795,6 +810,11 @@
 "GENERALKENOBI": {
 "name": "General Kenobi",
 "img": "textures/tex.charui_obiwangeneral.png",
+"side": "L"
+},
+"GENERALMERRICK": {
+"name": "General Merrick",
+"img": "textures/tex.charui_generalmerrick.png",
 "side": "L"
 },
 "GENERALSKYWALKER": {
@@ -1176,6 +1196,11 @@
 "img": "textures/tex.charui_jyn.png",
 "side": "L"
 },
+"JYNERSOUNDERCOVER": {
+"name": "Jyn Erso (Undercover)",
+"img": "textures/tex.charui_jynersoundercover.png",
+"side": "L"
+},
 "K2SO": {
 "name": "K-2SO",
 "img": "textures/tex.charui_k2so.png",
@@ -1416,6 +1441,11 @@
 "name": "Morgan Elsbeth",
 "img": "textures/tex.charui_morganelsbeth.png",
 "side": "D"
+},
+"MOROFF": {
+"name": "Moroff",
+"img": "textures/tex.charui_moroff.png",
+"side": "L"
 },
 "MOTHERTALZIN": {
 "name": "Mother Talzin",
@@ -1700,6 +1730,11 @@
 "name": "Second Sister",
 "img": "textures/tex.charui_secondsister.png",
 "side": "D"
+},
+"SERGEANTMELSHI": {
+"name": "Sergeant Melshi",
+"img": "textures/tex.charui_sergeantmelshi.png",
+"side": "L"
 },
 "SEVENTHSISTER": {
 "name": "Seventh Sister",
