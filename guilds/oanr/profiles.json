@@ -1,21 +1,21 @@
 {
-"date": "2026-11-10",
+"date": "2026-11-11",
 "players": [
 {
 "name": "Abercwmboi",
-"gp": 14884091,
-"gp_char": 9873186,
+"gp": 14884480,
+"gp_char": 9873575,
 "gp_ship": 5010905,
-"skill": 3195,
+"skill": 3235,
 "league": "Kyber",
 "division": 3,
 "mods": {
 "s10": 1031,
-"s15": 512,
+"s15": 515,
 "s20": 195,
 "s25": 35,
-"six": 1275,
-"mods": 2038
+"six": 1280,
+"mods": 2039
 }
 },
 {
@@ -23,7 +23,7 @@
 "gp": 13879891,
 "gp_char": 9445322,
 "gp_ship": 4434569,
-"skill": 3371,
+"skill": 3411,
 "league": "Kyber",
 "division": 2,
 "mods": {
@@ -37,10 +37,10 @@
 },
 {
 "name": "Azz01",
-"gp": 14531408,
-"gp_char": 9619550,
+"gp": 14533457,
+"gp_char": 9621599,
 "gp_ship": 4911858,
-"skill": 3113,
+"skill": 3073,
 "league": "Kyber",
 "division": 4,
 "mods": {
@@ -57,7 +57,7 @@
 "gp": 14455799,
 "gp_char": 9528093,
 "gp_ship": 4927706,
-"skill": 3021,
+"skill": 2981,
 "league": "Kyber",
 "division": 4,
 "mods": {
@@ -71,19 +71,19 @@
 },
 {
 "name": "Bongbishop",
-"gp": 15828618,
-"gp_char": 10565147,
-"gp_ship": 5263471,
-"skill": 3183,
+"gp": 15867331,
+"gp_char": 10604705,
+"gp_ship": 5262626,
+"skill": 3223,
 "league": "Kyber",
 "division": 3,
 "mods": {
 "s10": 568,
-"s15": 283,
-"s20": 124,
-"s25": 20,
-"six": 994,
-"mods": 2040
+"s15": 282,
+"s20": 122,
+"s25": 19,
+"six": 985,
+"mods": 2046
 }
 },
 {
@@ -91,7 +91,7 @@
 "gp": 14545564,
 "gp_char": 9638094,
 "gp_ship": 4907470,
-"skill": 3219,
+"skill": 3259,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -105,12 +105,12 @@
 },
 {
 "name": "Cdbdi",
-"gp": 13447768,
-"gp_char": 8643347,
+"gp": 13458577,
+"gp_char": 8654156,
 "gp_ship": 4804421,
-"skill": 2848,
+"skill": 2808,
 "league": "Aurodium",
-"division": 2,
+"division": 3,
 "mods": {
 "s10": 783,
 "s15": 334,
@@ -122,10 +122,10 @@
 },
 {
 "name": "cheeks",
-"gp": 14537726,
-"gp_char": 9445887,
+"gp": 14538233,
+"gp_char": 9446394,
 "gp_ship": 5091839,
-"skill": 3073,
+"skill": 3033,
 "league": "Kyber",
 "division": 4,
 "mods": {
@@ -139,19 +139,19 @@
 },
 {
 "name": "Chelli",
-"gp": 14694049,
-"gp_char": 9701661,
-"gp_ship": 4992388,
-"skill": 2845,
+"gp": 14688011,
+"gp_char": 9695501,
+"gp_ship": 4992510,
+"skill": 2885,
 "league": "Aurodium",
 "division": 2,
 "mods": {
-"s10": 1054,
+"s10": 1043,
 "s15": 463,
 "s20": 201,
 "s25": 62,
-"six": 1067,
-"mods": 2033
+"six": 1061,
+"mods": 2011
 }
 },
 {
@@ -159,7 +159,7 @@
 "gp": 14167211,
 "gp_char": 9327137,
 "gp_ship": 4840074,
-"skill": 3254,
+"skill": 3294,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -176,9 +176,9 @@
 "gp": 13882305,
 "gp_char": 9009108,
 "gp_ship": 4873197,
-"skill": 2731,
+"skill": 2691,
 "league": "Aurodium",
-"division": 3,
+"division": 4,
 "mods": {
 "s10": 298,
 "s15": 125,
@@ -193,9 +193,9 @@
 "gp": 12769147,
 "gp_char": 8443785,
 "gp_ship": 4325362,
-"skill": 3140,
+"skill": 3100,
 "league": "Kyber",
-"division": 3,
+"division": 4,
 "mods": {
 "s10": 276,
 "s15": 137,
@@ -207,18 +207,18 @@
 },
 {
 "name": "DarthVenatus",
-"gp": 14535321,
-"gp_char": 9640990,
+"gp": 14535484,
+"gp_char": 9641153,
 "gp_ship": 4894331,
-"skill": 3233,
+"skill": 3272,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 653,
+"s10": 654,
 "s15": 325,
 "s20": 138,
 "s25": 18,
-"six": 624,
+"six": 626,
 "mods": 1895
 }
 },
@@ -227,7 +227,7 @@
 "gp": 13281761,
 "gp_char": 8885378,
 "gp_ship": 4396383,
-"skill": 2770,
+"skill": 2730,
 "league": "Aurodium",
 "division": 3,
 "mods": {
@@ -241,19 +241,19 @@
 },
 {
 "name": "Dimes and Pennies",
-"gp": 14260390,
-"gp_char": 9301213,
+"gp": 14260638,
+"gp_char": 9301461,
 "gp_ship": 4959177,
-"skill": 2455,
+"skill": 2494,
 "league": "Chromium",
-"division": 4,
+"division": 3,
 "mods": {
 "s10": 911,
 "s15": 431,
 "s20": 152,
 "s25": 28,
 "six": 737,
-"mods": 1984
+"mods": 1985
 }
 },
 {
@@ -261,7 +261,7 @@
 "gp": 16674138,
 "gp_char": 11229547,
 "gp_ship": 5444591,
-"skill": 3110,
+"skill": 3070,
 "league": "Kyber",
 "division": 4,
 "mods": {
@@ -269,20 +269,20 @@
 "s15": 493,
 "s20": 122,
 "s25": 15,
-"six": 739,
+"six": 740,
 "mods": 2046
 }
 },
 {
 "name": "Dulce Periculum",
-"gp": 15361296,
-"gp_char": 10304529,
+"gp": 15363899,
+"gp_char": 10307132,
 "gp_ship": 5056767,
-"skill": 3182,
+"skill": 3222,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 685,
+"s10": 686,
 "s15": 248,
 "s20": 66,
 "s25": 10,
@@ -292,31 +292,31 @@
 },
 {
 "name": "EmperorArteta",
-"gp": 15214588,
-"gp_char": 10090513,
+"gp": 15210510,
+"gp_char": 10086435,
 "gp_ship": 5124075,
-"skill": 3294,
+"skill": 3334,
 "league": "Kyber",
-"division": 3,
+"division": 2,
 "mods": {
-"s10": 1434,
-"s15": 842,
-"s20": 428,
-"s25": 165,
-"six": 1544,
-"mods": 2040
+"s10": 1423,
+"s15": 839,
+"s20": 426,
+"s25": 164,
+"six": 1532,
+"mods": 2028
 }
 },
 {
 "name": "Everton Jabb",
-"gp": 13304539,
-"gp_char": 8817851,
-"gp_ship": 4486688,
-"skill": 2925,
+"gp": 13308374,
+"gp_char": 8819483,
+"gp_ship": 4488891,
+"skill": 2885,
 "league": "Aurodium",
 "division": 2,
 "mods": {
-"s10": 771,
+"s10": 770,
 "s15": 373,
 "s20": 121,
 "s25": 21,
@@ -326,27 +326,27 @@
 },
 {
 "name": "Figrin Pinhead",
-"gp": 16580262,
-"gp_char": 11048902,
-"gp_ship": 5531360,
-"skill": 3271,
+"gp": 16580855,
+"gp_char": 11050640,
+"gp_ship": 5530215,
+"skill": 3232,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 1422,
-"s15": 774,
+"s10": 1421,
+"s15": 775,
 "s20": 302,
 "s25": 50,
-"six": 1408,
+"six": 1406,
 "mods": 2040
 }
 },
 {
 "name": "Fleshstorm",
-"gp": 13985434,
-"gp_char": 9100272,
+"gp": 13985451,
+"gp_char": 9100289,
 "gp_ship": 4885162,
-"skill": 2874,
+"skill": 2834,
 "league": "Aurodium",
 "division": 2,
 "mods": {
@@ -360,44 +360,44 @@
 },
 {
 "name": "FØAL",
-"gp": 14383877,
-"gp_char": 9491081,
-"gp_ship": 4892796,
-"skill": 3165,
+"gp": 14382124,
+"gp_char": 9489938,
+"gp_ship": 4892186,
+"skill": 3126,
 "league": "Kyber",
-"division": 3,
+"division": 4,
 "mods": {
-"s10": 755,
-"s15": 363,
-"s20": 137,
+"s10": 754,
+"s15": 361,
+"s20": 138,
 "s25": 25,
-"six": 621,
-"mods": 1983
+"six": 618,
+"mods": 1978
 }
 },
 {
 "name": "HedaLeia",
-"gp": 14264756,
-"gp_char": 9377494,
-"gp_ship": 4887262,
-"skill": 2945,
+"gp": 14267243,
+"gp_char": 9379611,
+"gp_ship": 4887632,
+"skill": 2984,
 "league": "Aurodium",
 "division": 1,
 "mods": {
-"s10": 904,
-"s15": 361,
+"s10": 908,
+"s15": 362,
 "s20": 115,
 "s25": 22,
-"six": 584,
+"six": 585,
 "mods": 2040
 }
 },
 {
 "name": "Hello there",
-"gp": 13470284,
-"gp_char": 8718656,
+"gp": 13470704,
+"gp_char": 8719076,
 "gp_ship": 4751628,
-"skill": 3146,
+"skill": 3186,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -411,33 +411,33 @@
 },
 {
 "name": "Holycrabe",
-"gp": 14608088,
-"gp_char": 9623417,
+"gp": 14610726,
+"gp_char": 9626055,
 "gp_ship": 4984671,
-"skill": 2901,
+"skill": 2940,
 "league": "Aurodium",
-"division": 2,
+"division": 1,
 "mods": {
-"s10": 441,
-"s15": 193,
+"s10": 442,
+"s15": 194,
 "s20": 79,
-"s25": 12,
+"s25": 13,
 "six": 914,
 "mods": 1991
 }
 },
 {
 "name": "Iceman2781",
-"gp": 13950047,
-"gp_char": 9142629,
+"gp": 13953929,
+"gp_char": 9146511,
 "gp_ship": 4807418,
-"skill": 3063,
+"skill": 3103,
 "league": "Kyber",
 "division": 4,
 "mods": {
-"s10": 1038,
-"s15": 598,
-"s20": 261,
+"s10": 1039,
+"s15": 600,
+"s20": 262,
 "s25": 51,
 "six": 960,
 "mods": 1518
@@ -445,36 +445,36 @@
 },
 {
 "name": "IceMerlin",
-"gp": 13139934,
-"gp_char": 8560995,
-"gp_ship": 4578939,
-"skill": 3104,
+"gp": 13137980,
+"gp_char": 8553155,
+"gp_ship": 4584825,
+"skill": 3064,
 "league": "Kyber",
 "division": 4,
 "mods": {
-"s10": 628,
-"s15": 255,
-"s20": 99,
+"s10": 608,
+"s15": 247,
+"s20": 98,
 "s25": 30,
-"six": 255,
-"mods": 1320
+"six": 254,
+"mods": 1290
 }
 },
 {
 "name": "JAYBIRD",
-"gp": 14081311,
-"gp_char": 9383049,
-"gp_ship": 4698262,
-"skill": 3004,
+"gp": 14083179,
+"gp_char": 9385572,
+"gp_ship": 4697607,
+"skill": 3044,
 "league": "Kyber",
 "division": 4,
 "mods": {
-"s10": 1367,
-"s15": 599,
-"s20": 330,
-"s25": 106,
-"six": 678,
-"mods": 2034
+"s10": 1362,
+"s15": 595,
+"s20": 327,
+"s25": 104,
+"six": 674,
+"mods": 2028
 }
 },
 {
@@ -482,7 +482,7 @@
 "gp": 13102345,
 "gp_char": 8453804,
 "gp_ship": 4648541,
-"skill": 2810,
+"skill": 2770,
 "league": "Aurodium",
 "division": 3,
 "mods": {
@@ -496,10 +496,10 @@
 },
 {
 "name": "Lannavo",
-"gp": 14101734,
-"gp_char": 9201052,
+"gp": 14108763,
+"gp_char": 9208081,
 "gp_ship": 4900682,
-"skill": 2959,
+"skill": 2999,
 "league": "Aurodium",
 "division": 1,
 "mods": {
@@ -516,7 +516,7 @@
 "gp": 15433223,
 "gp_char": 10285113,
 "gp_ship": 5148110,
-"skill": 3187,
+"skill": 3147,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -533,7 +533,7 @@
 "gp": 13426605,
 "gp_char": 8489176,
 "gp_ship": 4937429,
-"skill": 2364,
+"skill": 2324,
 "league": "Bronzium",
 "division": 2,
 "mods": {
@@ -547,10 +547,10 @@
 },
 {
 "name": "Nevets Nekobi",
-"gp": 14661254,
-"gp_char": 9654731,
+"gp": 14664140,
+"gp_char": 9657617,
 "gp_ship": 5006523,
-"skill": 3072,
+"skill": 3111,
 "league": "Kyber",
 "division": 4,
 "mods": {
@@ -567,7 +567,7 @@
 "gp": 14132127,
 "gp_char": 9334728,
 "gp_ship": 4797399,
-"skill": 3266,
+"skill": 3305,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -581,12 +581,12 @@
 },
 {
 "name": "Nikodaemus",
-"gp": 14566186,
-"gp_char": 9613342,
+"gp": 14569982,
+"gp_char": 9617138,
 "gp_ship": 4952844,
-"skill": 3286,
+"skill": 3325,
 "league": "Kyber",
-"division": 3,
+"division": 2,
 "mods": {
 "s10": 840,
 "s15": 411,
@@ -598,19 +598,19 @@
 },
 {
 "name": "Obo Nâm",
-"gp": 14112892,
-"gp_char": 9298433,
-"gp_ship": 4814459,
-"skill": 3159,
+"gp": 14115995,
+"gp_char": 9302087,
+"gp_ship": 4813908,
+"skill": 3119,
 "league": "Kyber",
-"division": 3,
+"division": 4,
 "mods": {
-"s10": 1024,
+"s10": 1030,
 "s15": 462,
 "s20": 159,
-"s25": 33,
-"six": 1032,
-"mods": 1736
+"s25": 34,
+"six": 1038,
+"mods": 1748
 }
 },
 {
@@ -618,9 +618,9 @@
 "gp": 15700778,
 "gp_char": 10507441,
 "gp_ship": 5193337,
-"skill": 3273,
+"skill": 3312,
 "league": "Kyber",
-"division": 3,
+"division": 2,
 "mods": {
 "s10": 1397,
 "s15": 854,
@@ -632,15 +632,15 @@
 },
 {
 "name": "Ozy Man Dias",
-"gp": 15257306,
-"gp_char": 10027557,
+"gp": 15257322,
+"gp_char": 10027573,
 "gp_ship": 5229749,
-"skill": 3054,
+"skill": 3014,
 "league": "Kyber",
 "division": 4,
 "mods": {
 "s10": 966,
-"s15": 415,
+"s15": 416,
 "s20": 173,
 "s25": 41,
 "six": 697,
@@ -652,7 +652,7 @@
 "gp": 15366013,
 "gp_char": 10282722,
 "gp_ship": 5083291,
-"skill": 2899,
+"skill": 2860,
 "league": "Aurodium",
 "division": 2,
 "mods": {
@@ -669,7 +669,7 @@
 "gp": 15369972,
 "gp_char": 10161329,
 "gp_ship": 5208643,
-"skill": 3220,
+"skill": 3180,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -683,27 +683,27 @@
 },
 {
 "name": "Rikie1",
-"gp": 13066627,
-"gp_char": 8683479,
+"gp": 13068024,
+"gp_char": 8684876,
 "gp_ship": 4383148,
-"skill": 2883,
+"skill": 2923,
 "league": "Aurodium",
 "division": 2,
 "mods": {
-"s10": 722,
-"s15": 309,
+"s10": 724,
+"s15": 310,
 "s20": 137,
 "s25": 37,
 "six": 483,
-"mods": 1586
+"mods": 1592
 }
 },
 {
 "name": "spudgun187 ren",
-"gp": 13526569,
-"gp_char": 9050800,
+"gp": 13526585,
+"gp_char": 9050816,
 "gp_ship": 4475769,
-"skill": 3120,
+"skill": 3036,
 "league": "Kyber",
 "division": 4,
 "mods": {
@@ -720,7 +720,7 @@
 "gp": 16243724,
 "gp_char": 10856239,
 "gp_ship": 5387485,
-"skill": 3166,
+"skill": 3206,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -737,9 +737,9 @@
 "gp": 14859308,
 "gp_char": 9801526,
 "gp_ship": 5057782,
-"skill": 3275,
+"skill": 3314,
 "league": "Kyber",
-"division": 3,
+"division": 2,
 "mods": {
 "s10": 1033,
 "s15": 561,
@@ -751,53 +751,53 @@
 },
 {
 "name": "TickTock",
-"gp": 14377941,
-"gp_char": 9510265,
-"gp_ship": 4867676,
-"skill": 3232,
+"gp": 14376846,
+"gp_char": 9509935,
+"gp_ship": 4866911,
+"skill": 3272,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 643,
-"s15": 255,
-"s20": 95,
-"s25": 18,
-"six": 495,
+"s10": 645,
+"s15": 257,
+"s20": 96,
+"s25": 19,
+"six": 492,
 "mods": 2034
 }
 },
 {
 "name": "TigerMan",
-"gp": 14883340,
-"gp_char": 9844605,
+"gp": 14917000,
+"gp_char": 9878265,
 "gp_ship": 5038735,
-"skill": 3392,
+"skill": 3432,
 "league": "Kyber",
 "division": 2,
 "mods": {
-"s10": 1370,
-"s15": 899,
-"s20": 449,
+"s10": 1385,
+"s15": 912,
+"s20": 452,
 "s25": 82,
-"six": 1098,
-"mods": 1709
+"six": 1111,
+"mods": 1727
 }
 },
 {
 "name": "Viggen",
-"gp": 13942103,
-"gp_char": 9228312,
-"gp_ship": 4713791,
-"skill": 2668,
+"gp": 13966536,
+"gp_char": 9241342,
+"gp_ship": 4725194,
+"skill": 2708,
 "league": "Aurodium",
 "division": 4,
 "mods": {
-"s10": 641,
-"s15": 273,
-"s20": 111,
+"s10": 645,
+"s15": 275,
+"s20": 114,
 "s25": 28,
-"six": 544,
-"mods": 1965
+"six": 557,
+"mods": 1966
 }
 },
 {
@@ -805,7 +805,7 @@
 "gp": 14471999,
 "gp_char": 9519985,
 "gp_ship": 4952014,
-"skill": 3263,
+"skill": 3223,
 "league": "Kyber",
 "division": 3,
 "mods": {
@@ -819,16 +819,16 @@
 },
 {
 "name": "Zarseem Dyartes",
-"gp": 14529248,
-"gp_char": 9583013,
+"gp": 14530876,
+"gp_char": 9584641,
 "gp_ship": 4946235,
-"skill": 3110,
+"skill": 3150,
 "league": "Kyber",
-"division": 4,
+"division": 3,
 "mods": {
 "s10": 1082,
-"s15": 479,
-"s20": 149,
+"s15": 480,
+"s20": 150,
 "s25": 16,
 "six": 1337,
 "mods": 2002
@@ -836,17 +836,17 @@
 },
 {
 "name": "ZKylo Jiuter",
-"gp": 14070419,
-"gp_char": 9201154,
+"gp": 14070436,
+"gp_char": 9201171,
 "gp_ship": 4869265,
-"skill": 3425,
+"skill": 3385,
 "league": "Kyber",
 "division": 2,
 "mods": {
 "s10": 1484,
 "s15": 830,
 "s20": 537,
-"s25": 212,
+"s25": 213,
 "six": 916,
 "mods": 2010
 }
