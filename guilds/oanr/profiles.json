@@ -105,8 +105,8 @@
 },
 {
 "name": "Cdbdi",
-"gp": 13489667,
-"gp_char": 8685246,
+"gp": 13490729,
+"gp_char": 8686308,
 "gp_ship": 4804421,
 "skill": 2809,
 "league": "Aurodium",
@@ -258,8 +258,8 @@
 },
 {
 "name": "Din Al",
-"gp": 16679214,
-"gp_char": 11234623,
+"gp": 16681721,
+"gp_char": 11237130,
 "gp_ship": 5444591,
 "skill": 3146,
 "league": "Kyber",
@@ -275,9 +275,9 @@
 },
 {
 "name": "Dulce Periculum",
-"gp": 15434115,
-"gp_char": 10374479,
-"gp_ship": 5059636,
+"gp": 15434167,
+"gp_char": 10374501,
+"gp_ship": 5059666,
 "skill": 3223,
 "league": "Kyber",
 "division": 3,
@@ -377,9 +377,9 @@
 },
 {
 "name": "Hello there",
-"gp": 13503490,
-"gp_char": 8751862,
-"gp_ship": 4751628,
+"gp": 13509524,
+"gp_char": 8754139,
+"gp_ship": 4755385,
 "skill": 3262,
 "league": "Kyber",
 "division": 3,
@@ -547,19 +547,19 @@
 },
 {
 "name": "Nikodaemus",
-"gp": 14533541,
-"gp_char": 9585750,
-"gp_ship": 4947791,
+"gp": 14580001,
+"gp_char": 9627157,
+"gp_ship": 4952844,
 "skill": 3249,
 "league": "Kyber",
 "division": 3,
 "mods": {
-"s10": 786,
-"s15": 385,
-"s20": 150,
-"s25": 33,
-"six": 720,
-"mods": 1926
+"s10": 840,
+"s15": 411,
+"s20": 158,
+"s25": 35,
+"six": 780,
+"mods": 2040
 }
 },
 {
@@ -699,6 +699,23 @@
 }
 },
 {
+"name": "Talyn Stormborn",
+"gp": 14069460,
+"gp_char": 9179608,
+"gp_ship": 4889852,
+"skill": 2638,
+"league": "Aurodium",
+"division": 4,
+"mods": {
+"s10": 914,
+"s15": 420,
+"s20": 142,
+"s25": 31,
+"six": 909,
+"mods": 1977
+}
+},
+{
 "name": "TickTock",
 "gp": 14392440,
 "gp_char": 9519551,
@@ -734,8 +751,8 @@
 },
 {
 "name": "Viggen",
-"gp": 14028985,
-"gp_char": 9276239,
+"gp": 14036557,
+"gp_char": 9283811,
 "gp_ship": 4752746,
 "skill": 2632,
 "league": "Aurodium",
