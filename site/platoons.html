@@ -155,6 +155,16 @@ dialog.drawer::backdrop{background:rgba(10,14,22,.55)}
 .task ul{list-style:none;margin:0;padding:0;font-size:14px}
 .task li{padding:3px 0;border-top:1px dashed var(--line)}
 .task li small{color:var(--text-2)}
+/* a member's own list: unit pictures like the player roster */
+.utiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.utile{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);min-width:0}
+.utile .pic{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--border);background:var(--surface-2);display:grid;place-items:center;font:700 13px var(--font-ui);color:var(--text-2)}
+.utile .pic.ship{border-radius:10px}
+.utile .pic.gl{border-color:#f5c542;box-shadow:0 0 0 2px rgba(245,197,66,.35)}
+.utile .pic.r9{border-color:#e05656}.utile .pic.r7{border-color:#b06cf0}.utile .pic.r5{border-color:#4c9ef0}
+.utile .nm{font-weight:600;color:var(--text);line-height:1.25}
+.utile .meta{font-size:12px;color:var(--text-2);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.utile .lv{font:700 11px var(--font-ui);padding:1px 6px;border-radius:999px;background:var(--surface-2);color:var(--text)}
 .gate{border:1px solid var(--line);border-radius:6px;padding:20px;width:min(380px,calc(100% - 32px));background:var(--panel);color:var(--ink)}
 .gate::backdrop{background:rgba(10,14,22,.55)}
 .gate h2{margin-bottom:8px}
@@ -524,7 +534,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
       <div class="who"><label for="who">Find your name</label><select id="who"><option value="">Everyone</option></select></div></div>
     <div class="toolbar">
       <button class="btn primary" id="postDiscord">📣 Post phase to Discord</button>
-      <button class="btn" id="postAll" title="Every member's platoons for every phase, as one list per member">📣 Post whole guild to Discord</button>
+      <button class="btn" id="postAll" hidden title="Every member's platoons for every phase, as one list per member">📣 Post whole guild to Discord</button>
       <button class="btn" id="copyDiscord" hidden>Copy phase for Discord</button>
       <button class="btn" id="dlCsv" hidden>Download all as CSV</button>
       <button class="btn" id="copyTsv" hidden>Copy all for Sheets</button>
@@ -1073,7 +1083,29 @@ const tags=s=>(s.carried?`<span class="tier" title="Part of a two-pass operation
 const carry=s=>s.zone&&s.zone!==s.phase?`<span class="carry">phase ${s.zone} planet</span>`:'';
 const where=s=>`${s.planet}, op ${s.op}${s.row!=null?`, row ${s.row}`:''}`;
 function capFor(p){const c=+$('#cap').value||Infinity;const t=RESULT&&RESULT.tiers&&RESULT.tiers.get(p);return t?Math.max(1,Math.round(c*TIER_W[t])):c}
+// unit pictures and each member's levels, from the guild's roster (loaded the first time someone picks their name)
+let UIMG=null,UIMGload=null;
+function loadUnitPics(){
+  if(UIMGload)return UIMGload;
+  UIMGload=fetch(`data/${encodeURIComponent(GUILD)}/rosters.json`,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null).then(d=>{
+    const img=new Map(),lv=new Map();
+    ((d&&d.units)||[]).forEach(u=>{{const x={img:u.img,ship:!!u.ship};img.set(norm(u.id),x);img.set(norm(u.name),x)}});
+    ((d&&d.players)||[]).forEach(p=>{const m=new Map();(p.u||[]).forEach(([i,stars,gear,relic])=>{const u=d.units[i];if(u){const v={stars,gear,relic};m.set(norm(u.id),v);m.set(norm(u.name),v)}});lv.set(norm(p.name),m)});
+    UIMG={img,lv};if(WHO)render();return UIMG});
+  return UIMGload;
+}
+function unitTile(s,who){
+  const m=UIMG||{img:new Map(),lv:new Map()},ux=m.img.get(s.key)||m.img.get(s.nameKey)||m.img.get(norm(s.unit))||{},src=ux.img,ship=s.ship||ux.ship;
+  const v=(m.lv.get(norm(who))||new Map()),l=v.get(s.key)||v.get(s.nameKey)||v.get(norm(s.unit));
+  const ini=String(s.unit).split(/[\s()'-]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const tier=!l||ship||l.gear<13?'':l.relic>=9?'r9':l.relic>=7?'r7':l.relic>=5?'r5':'';
+  const cls=`pic ${ship?'ship':''} ${s.gl?'gl':tier}`;
+  const pic=src?`<img class="${cls}" src="${esc(src.startsWith('http')?src:'https://game-assets.swgoh.gg/'+src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=&quot;${cls}&quot;>${esc(ini)}</span>'">`:`<span class="${cls}">${esc(ini)}</span>`;
+  const lvl=l?(ship?`${l.stars}★`:l.gear>=13?`R${l.relic??0}`:`G${l.gear}`):'';
+  return `<div class="utile">${pic}<div style="min-width:0"><div class="nm">${esc(s.unit)}</div><div class="meta">${lvl?`<span class="lv">${lvl}</span>`:''}${s.gl?'<span class="gl">GL</span>':''}${tags(s)}${s.row!=null?`<span>row ${s.row}</span>`:''}</div></div></div>`;
+}
 function renderMember(){
+  loadUnitPics();
   const p=WHO,cap=capFor(WHO);
   const mine=RESULT.slots.filter(s=>s.player===p);
   const ss=mine.filter(s=>s.phase===PHASE).sort(slotSort);
@@ -1088,7 +1120,7 @@ function renderMember(){
   const g=new Map();ss.forEach(s=>{const k=s.planet+'\u0000'+s.op;if(!g.has(k))g.set(k,[]);g.get(k).push(s)});
   if(!ss.length)html+=`<p>Nothing for ${esc(p)} to place in phase ${PHASE}.</p>`;
   for(const[k,a]of g){const[pl,op]=k.split('\u0000');
-    html+=`<div class="task"><h3>${esc(pl)}, operation ${esc(op)}${carry(a[0])}</h3><ul>${a.map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${tags(s)}${s.row!=null?` <small>row ${s.row}</small>`:''}</li>`).join('')}</ul></div>`}
+    html+=`<div class="task"><h3>${esc(pl)}, operation ${esc(op)}${carry(a[0])}</h3><div class="utiles">${a.map(s=>unitTile(s,p)).join('')}</div></div>`}
   $('#view').innerHTML=html;
   $('#view').querySelectorAll('.phchip').forEach(b=>b.addEventListener('click',()=>{PHASE=+b.dataset.ph;render()}));
 }
