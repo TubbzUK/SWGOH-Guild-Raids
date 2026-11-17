@@ -252,7 +252,23 @@ dialog.drawer::backdrop,.gate::backdrop{background:rgba(2,4,10,.7);backdrop-filt
 .reqph{font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:12px}
 .reqplanet{margin-bottom:18px;padding-left:10px;border-left:2px solid var(--saber)}
 /* missing: requirements and sign-ups */
-.reqcards{display:grid;gap:14px}
+.reqcards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,470px),1fr));align-items:start}
+.mc-h{display:flex;gap:12px;align-items:center;padding:12px 14px;background:var(--surface-2);flex-wrap:wrap}
+.mc-h .pic.big{width:58px;height:58px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--border);background:var(--surface);display:grid;place-items:center;font:700 15px var(--font-ui);color:var(--text-2)}
+.mc-h .pic.big.ship{border-radius:12px}.mc-h .pic.big.gl{border-color:#f5c542;box-shadow:0 0 0 2px rgba(245,197,66,.35)}
+.mc-t{flex:1;min-width:160px}.mc-t b{font-size:16.5px;color:var(--text)}
+.mc-sub{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;align-items:center}
+.mc-sub .op{border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:12px;background:var(--surface)}
+.mc-pills{display:flex;gap:6px}
+.mc-b{padding:12px 14px;display:grid;gap:10px}
+.mc-b .rq-pl{background:none;border:0;padding:0}
+.mc-cl>summary{cursor:pointer;font-size:13px;color:var(--accent);list-style:none;display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+.mc-cl>summary::-webkit-details-marker{display:none}
+.mc-cl>summary b{background:var(--surface-2);border-radius:999px;padding:0 7px;color:var(--text)}
+.mc-cl .rq-cl{margin-top:8px;border-radius:8px;padding:10px}
+.mc-cl .utiles{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.mc-ops{margin-top:18px}.mc-ops>summary{cursor:pointer;font:700 13px var(--f-head);letter-spacing:.08em;text-transform:uppercase;padding:8px 0}
+.mc-ops>summary b{font-family:var(--font-ui);background:var(--surface-2);border-radius:999px;padding:1px 8px;margin-left:4px}
 /* each missing requirement: the unit, the operations it's for, who's closest, who's signed up - one band each */
 .reqcard{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
 .rq-band{padding:12px 14px}
@@ -468,6 +484,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
 
   <div class="track" id="track" role="group" aria-label="Phases"></div>
   <div class="stats statbar" id="stats" hidden></div>
+  <div class="stats statbar" id="mStats" hidden></div>
 
   <section class="panel" id="empty">
     <h2>No assignments yet</h2>
@@ -525,7 +542,6 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
       <button class="phchip" data-scope="all" aria-pressed="false">All operations</button>
     </div>
     <div class="phrow" id="mPhase" role="group" aria-label="Phase"></div>
-    <div class="stats" id="mStats"></div>
     <div id="mView"></div>
   </section>
 
@@ -1091,16 +1107,20 @@ function loadUnitPics(){
     const img=new Map(),lv=new Map();
     ((d&&d.units)||[]).forEach(u=>{{const x={img:u.img,ship:!!u.ship};img.set(norm(u.id),x);img.set(norm(u.name),x)}});
     ((d&&d.players)||[]).forEach(p=>{const m=new Map();(p.u||[]).forEach(([i,stars,gear,relic])=>{const u=d.units[i];if(u){const v={stars,gear,relic};m.set(norm(u.id),v);m.set(norm(u.name),v)}});lv.set(norm(p.name),m)});
-    UIMG={img,lv};if(WHO)render();return UIMG});
+    UIMG={img,lv};if(WHO)render();if(!$('#missing').hidden)renderMissing();return UIMG});
   return UIMGload;
 }
-function unitTile(s,who){
+function unitPic(s,l,extra){
   const m=UIMG||{img:new Map(),lv:new Map()},ux=m.img.get(s.key)||m.img.get(s.nameKey)||m.img.get(norm(s.unit))||{},src=ux.img,ship=s.ship||ux.ship;
-  const v=(m.lv.get(norm(who))||new Map()),l=v.get(s.key)||v.get(s.nameKey)||v.get(norm(s.unit));
   const ini=String(s.unit).split(/[\s()'-]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
   const tier=!l||ship||l.gear<13?'':l.relic>=9?'r9':l.relic>=7?'r7':l.relic>=5?'r5':'';
-  const cls=`pic ${ship?'ship':''} ${s.gl?'gl':tier}`;
-  const pic=src?`<img class="${cls}" src="${esc(src.startsWith('http')?src:'https://game-assets.swgoh.gg/'+src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=&quot;${cls}&quot;>${esc(ini)}</span>'">`:`<span class="${cls}">${esc(ini)}</span>`;
+  const cls=`pic ${ship?'ship':''} ${s.gl?'gl':tier} ${extra||''}`;
+  return src?`<img class="${cls}" src="${esc(src.startsWith('http')?src:'https://game-assets.swgoh.gg/'+src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=&quot;${cls}&quot;>${esc(ini)}</span>'">`:`<span class="${cls}">${esc(ini)}</span>`;
+}
+function unitTile(s,who){
+  const m=UIMG||{img:new Map(),lv:new Map()},ux=m.img.get(s.key)||m.img.get(s.nameKey)||m.img.get(norm(s.unit))||{},ship=s.ship||ux.ship;
+  const v=(m.lv.get(norm(who))||new Map()),l=v.get(s.key)||v.get(s.nameKey)||v.get(norm(s.unit));
+  const pic=unitPic(s,l);
   const lvl=l?(ship?`${l.stars}★`:l.gear>=13?`R${l.relic??0}`:`G${l.gear}`):'';
   return `<div class="utile">${pic}<div style="min-width:0"><div class="nm">${esc(s.unit)}</div><div class="meta">${lvl?`<span class="lv">${lvl}</span>`:''}${s.gl?'<span class="gl">GL</span>':''}${tags(s)}${s.row!=null?`<span>row ${s.row}</span>`:''}</div></div></div>`;
 }
@@ -1174,7 +1194,7 @@ let MODE='assign';
 function setMode(m,scroll=true){
   MODE=m;MISSING=m==='missing';
   $('#assignBtn').setAttribute('aria-pressed',m==='assign');$('#missingBtn').setAttribute('aria-pressed',m==='missing');$('#summaryBtn').setAttribute('aria-pressed',m==='summary');$('#reqBtn').setAttribute('aria-pressed',m==='req');$('#simBtn').setAttribute('aria-pressed',m==='sim');$('#sim').hidden=m!=='sim';$('#toonBtn').setAttribute('aria-pressed',m==='toon');$('#toon').hidden=m!=='toon';
-  $('#missing').hidden=m!=='missing';$('#summary').hidden=m!=='summary';$('#req').hidden=m!=='req';$('#results').hidden=m!=='assign';$('#stats').hidden=m!=='assign';
+  $('#missing').hidden=m!=='missing';$('#mStats').hidden=m!=='missing';$('#summary').hidden=m!=='summary';$('#req').hidden=m!=='req';$('#results').hidden=m!=='assign';$('#stats').hidden=m!=='assign';
   if(m==='missing')renderMissing();if(m==='summary')renderSummary();if(m==='req')renderReq();if(m==='sim')renderSim();if(m==='toon')renderToon();
   if(scroll)$('#'+(m==='assign'?'results':m)).scrollIntoView({behavior:'smooth'});
 }
@@ -1493,8 +1513,10 @@ $('#simApply').addEventListener('click',()=>{
   saveDeploy();run();if(OK){setMode('assign');showMsg('#runMsg','ok','Schedule applied from the simulation. Check it, then Save and share.')}
 });
 
+const MOPEN=new Set();   // which "Who's close" lists are open, kept across redraws
 function renderMissing(){
   if(!RESULT)return;
+  loadUnitPics();
   if(!PLEDGES_LOADED)loadPledges();
   let res=RESULT;
   if(MSCOPE==='all'){if(!RESULT.all)RESULT.all=assign(RESULT.roster,RESULT.plan,RESULT.o,true);res=RESULT.all}
@@ -1538,22 +1560,22 @@ function renderMissing(){
       ${c.own.length?`<optgroup label="Own it - closest first">${c.own.map(o=>`<option value="${esc(o.p)}" ${o.p===cur?'selected':''}>${esc(o.p)} · ${lvlText(o.u)} (${esc(o.t)})</option>`).join('')}</optgroup>`:''}
       ${c.none.length?`<optgroup label="Not unlocked yet">${c.none.map(p=>`<option value="${esc(p)}" ${p===cur?'selected':''}>${esc(p)}</option>`).join('')}</optgroup>`:''}
       ${cur&&!c.own.some(o=>o.p===cur)&&!c.none.includes(cur)?`<option value="${esc(cur)}" selected>${esc(cur)}${ready(cur)?' ✓ done':''}</option>`:''}</select>${cur&&ready(cur)?'<span class="done">✓ done</span>':''}`};
-    const closest=c.own.length?`<div class="grid">${c.own.slice(0,8).map(o=>`<div class="cl"><b title="${esc(o.p)}">${esc(o.p)}</b><span>${lvlText(o.u)}</span><em>${esc(o.t)}</em></div>`).join('')}</div>`+(c.own.length>8?`<div class="note" style="margin-top:6px">and ${c.own.length-8} more in the sign-up lists</div>`:''):'<span class="note">Nobody owns it below the requirement yet - anyone who unlocks it can sign up.</span>';
-    return`<div class="reqcard">
-      <div class="rq-band rq-h"><span class="rq-ph">Phase ${x.s.phase}</span><b>${esc(x.s.unit)}${x.s.gl?' <span class="gl">GL</span>':''}</b>
-        <span class="rq-pill rq-need"><small>Needs</small><strong>${need(x.s)}</strong></span><span class="rq-pill rq-short"><small>Short by</small><strong>${x.count}</strong></span></div>
-      <div class="rq-band rq-ops"><span class="rq-lbl">Needed for</span><div class="chips">${ops.map(o=>`<span class="op">${esc(o)}</span>`).join('')}</div></div>
-      <div class="rq-band rq-cl"><span class="rq-lbl">Closest to it</span>${closest}</div>
-      <div class="rq-band rq-pl"><span class="rq-lbl">Who will do it</span><div class="stack">${Array.from({length:x.count},(_,i)=>`<div class="slot"><span class="n">${i+1}</span>${sel(i)}</div>`).join('')}</div></div></div>`}).join('');
+    const closest=c.own.length?`<div class="utiles">${c.own.slice(0,8).map(o=>`<div class="utile">${unitPic(x.s,o.u)}<div style="min-width:0"><div class="nm" title="${esc(o.p)}">${esc(o.p)}</div><div class="meta"><span class="lv">${esc(lvlText(o.u))}</span><span style="color:var(--warn-ink);font-weight:600">${esc(o.t)}</span></div></div></div>`).join('')}</div>`+(c.own.length>8?`<div class="note" style="margin-top:6px">and ${c.own.length-8} more in the sign-up lists</div>`:''):'<span class="note">Nobody owns it below the requirement yet - anyone who unlocks it can sign up.</span>';
+    return`<div class="reqcard mc">
+      <div class="mc-h">${unitPic(x.s,null,'big')}<div class="mc-t"><b>${esc(x.s.unit)}${x.s.gl?' <span class="gl">GL</span>':''}</b>
+          <div class="mc-sub"><span class="rq-ph">Phase ${x.s.phase}</span>${ops.map(o=>`<span class="op">${esc(o)}</span>`).join('')}</div></div>
+        <div class="mc-pills"><span class="rq-pill rq-need"><small>Needs</small><strong>${need(x.s)}</strong></span><span class="rq-pill rq-short"><small>Short by</small><strong>${x.count}</strong></span></div></div>
+      <div class="mc-b"><div class="rq-pl"><span class="rq-lbl">Who will do it</span><div class="stack">${Array.from({length:x.count},(_,i)=>`<div class="slot"><span class="n">${i+1}</span>${sel(i)}</div>`).join('')}</div></div>
+        <details class="mc-cl"${MOPEN.has(k)?' open':''} data-k="${esc(k)}"><summary>${c.own.length?`👥 Who's close <b>${c.own.length}</b>`:'👥 Nobody close yet'}</summary><div class="rq-cl">${closest}</div></details></div></div>`}).join('');
   const nPicked=rows.reduce((a,x)=>a+(P[pk(x)]||[]).filter(Boolean).length,0),nNeed=rows.reduce((a,x)=>a+x.count,0);
-  let html=`<h3 style="margin-bottom:6px">Everything missing</h3>
-    <p class="note">Each unit the guild is short on, how many more members need it at the required level, the members closest to getting there, and a box for each one needed so people can sign up for it. ${unlocked?'Press <b>Save sign-ups</b> to share them with the guild.':'Pick your name, then ask an officer to save the sign-ups (officers: Save sign-ups asks for the officer password).'}</p>
+  let html=`<p class="note">Each unit the guild is short of. Sign up to get one to the level needed; open <b>Who's close</b> to see who's nearest. ${unlocked?'Press <b>Save sign-ups</b> to share them.':'An officer saves the sign-ups (Save sign-ups asks for the officer password).'}</p>
     <div class="toolbar"><button class="btn primary" id="pledgeSave">Save sign-ups</button><button class="btn" id="pledgeCopy">Copy sign-ups for Discord</button><span class="note" id="pledgeState" style="margin:0">${nPicked}/${nNeed} signed up${PLEDGE_DIRTY?' · <b>not saved yet</b>':PLEDGES_SAVED_AT?` · saved ${esc(new Date(PLEDGES_SAVED_AT).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}`:''}</span></div>
     <div id="pledgeMsg"></div>
     <div class="reqcards">${reqHtml}</div>
-    <h3 style="margin:20px 0 8px">Incomplete operations</h3>`;
-  html+=broken.map(o=>`<div class="task"><h3>${MPHASE?'':`Phase ${o.phase}, `}${esc(o.planet)}, operation ${esc(o.op)} <span class="note">${o.total-o.missing.length}/${o.total} filled</span></h3><ul>${o.missing.sort(slotSort).map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${s.row!=null?` <small>row ${s.row}</small>`:''}<br><small>${esc(s.reason||'')}</small></li>`).join('')}</ul></div>`).join('');
+    <details class="mc-ops"><summary>Incomplete operations <b>${broken.length}</b></summary>`;
+  html+=broken.map(o=>`<div class="task"><h3>${MPHASE?'':`Phase ${o.phase}, `}${esc(o.planet)}, operation ${esc(o.op)} <span class="note">${o.total-o.missing.length}/${o.total} filled</span></h3><ul>${o.missing.sort(slotSort).map(s=>`<li>${esc(s.unit)}${s.gl?'<span class="gl">GL</span>':''}${s.row!=null?` <small>row ${s.row}</small>`:''}<br><small>${esc(s.reason||'')}</small></li>`).join('')}</ul></div>`).join('')+'</details>';
   $('#mView').innerHTML=html;
+  $('#mView').querySelectorAll('details.mc-cl').forEach(d=>d.addEventListener('toggle',()=>{d.open?MOPEN.add(d.dataset.k):MOPEN.delete(d.dataset.k)}));
   $('#mView').querySelectorAll('select.pledge').forEach(el=>el.onchange=()=>{
     const k=el.dataset.k,i=+el.dataset.i,cur=pledges();const arr=(cur[k]||[]).slice();
     if(el.value&&arr.some((v,j)=>v===el.value&&j!==i)){showMsg('#pledgeMsg','err',`${esc(el.value)} is already down for this one.`);el.value=arr[i]||'';return}
