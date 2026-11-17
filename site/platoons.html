@@ -136,7 +136,15 @@ dialog.drawer::backdrop{background:rgba(10,14,22,.55)}
 .reshead h2{margin:0}
 .who{display:flex;align-items:center;gap:8px}
 .who label{margin:0}
-.who select{min-width:180px}
+.who select{min-width:260px}
+#results .who label{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap}
+#results .who select{font-size:16px;padding:11px 14px;min-height:46px;border-radius:10px;min-width:min(320px,70vw)}
+.statbar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;margin:-6px 0 16px;justify-content:space-around}
+.planets:not([open]){display:inline-block;padding:0!important;border:0!important;background:none!important}
+.planets>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--border);border-radius:9px;background:var(--surface);font-size:12.5px}
+.planets>summary::-webkit-details-marker{display:none}
+.planets[open]>summary{margin-bottom:8px}
+.planets .flag{color:var(--amber);font-size:12px;text-transform:none;letter-spacing:0}
 .phrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .phchip{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:4px;padding:4px 10px;background:var(--bg);color:var(--ink);cursor:pointer}
 .phchip[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-bg)}
@@ -449,6 +457,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
   <p class="lede">Every operation slot, assigned across the guild as evenly as possible. Officers pick the operations and set the rules from the Officers section of the side menu; everyone else sees the saved assignments.</p>
 
   <div class="track" id="track" role="group" aria-label="Phases"></div>
+  <div class="stats statbar" id="stats" hidden></div>
 
   <section class="panel" id="empty">
     <h2>No assignments yet</h2>
@@ -456,7 +465,7 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
     <button class="btn" data-open="ops">Open the planner</button>
   </section>
 
-  <details class="planets" id="planetSum" hidden open><summary id="planetSumTitle">Planets this guild is filling</summary><div id="planetSumBody"></div></details>
+  <details class="planets" id="planetSum" hidden><summary id="planetSumTitle">🪐 Planets to fill</summary><div id="planetSumBody"></div></details>
   <div class="savebar" id="savedInfo" hidden=""></div>
   <div class="row" id="mainbar" hidden="" style="margin-bottom:12px"><button class="btn" id="assignBtn" aria-pressed="true">Assignments</button><button class="btn" id="summaryBtn" aria-pressed="false">Summary</button><button class="btn" id="reqBtn" aria-pressed="false">Requirements</button><button class="btn" id="missingBtn" aria-pressed="false">Missing platoons</button><button class="btn" id="simBtn" aria-pressed="false">Simulate</button><button class="btn" id="toonBtn" aria-pressed="false">Toon lookup</button></div>
 
@@ -512,14 +521,13 @@ html.cardmode .lede,html.cardmode #mainbar,html.cardmode #savedInfo,html.cardmod
 
   <section class="panel" id="results" hidden="">
     <div class="reshead"><h2 id="resTitle">Assignments</h2>
-      <div class="who"><label for="who">Show</label><select id="who"><option value="">Everyone</option></select></div></div>
-    <div class="stats" id="stats"></div>
+      <div class="who"><label for="who">Find your name</label><select id="who"><option value="">Everyone</option></select></div></div>
     <div class="toolbar">
       <button class="btn primary" id="postDiscord">📣 Post phase to Discord</button>
       <button class="btn" id="postAll" title="Every member's platoons for every phase, as one list per member">📣 Post whole guild to Discord</button>
-      <button class="btn" id="copyDiscord">Copy phase for Discord</button>
-      <button class="btn" id="dlCsv">Download all as CSV</button>
-      <button class="btn" id="copyTsv">Copy all for Sheets</button>
+      <button class="btn" id="copyDiscord" hidden>Copy phase for Discord</button>
+      <button class="btn" id="dlCsv" hidden>Download all as CSV</button>
+      <button class="btn" id="copyTsv" hidden>Copy all for Sheets</button>
     </div>
     <div id="toolMsg"></div>
     <div class="tabs" role="tablist" id="tabs">
@@ -1086,6 +1094,7 @@ function renderMember(){
 }
 function render(){
   renderTrack();
+  $('#stats').hidden=$('#results').hidden;
   if(WHO){renderMember();return}
   $('#tabs').hidden=false;
   $('#copyDiscord').textContent='Copy phase for Discord';$('#postDiscord').textContent='📣 Post phase '+PHASE+' to Discord';
@@ -1096,7 +1105,6 @@ function render(){
   $('#resTitle').textContent=`Phase ${PHASE} assignments`;
   $('#stats').innerHTML=`<div class="stat"><b>${filled.length}/${ss.length}</b><span>slots filled</span></div>
     <div class="stat"><b>${[...fullOps.values()].filter(Boolean).length}/${fullOps.size}</b><span>operations complete</span></div>
-    <div class="stat"><b>${ss.filter(s=>s.overCap||s.extraGL).length}</b><span>refilled past a limit</span></div>
     <div class="stat"><b>${active.length}</b><span>members placing</span></div>
     <div class="stat"><b>${active.length?Math.min(...loads.values()):0}–${active.length?Math.max(...active):0}</b><span>units per member</span></div>`;
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===VIEW));
@@ -1134,7 +1142,7 @@ let MODE='assign';
 function setMode(m,scroll=true){
   MODE=m;MISSING=m==='missing';
   $('#assignBtn').setAttribute('aria-pressed',m==='assign');$('#missingBtn').setAttribute('aria-pressed',m==='missing');$('#summaryBtn').setAttribute('aria-pressed',m==='summary');$('#reqBtn').setAttribute('aria-pressed',m==='req');$('#simBtn').setAttribute('aria-pressed',m==='sim');$('#sim').hidden=m!=='sim';$('#toonBtn').setAttribute('aria-pressed',m==='toon');$('#toon').hidden=m!=='toon';
-  $('#missing').hidden=m!=='missing';$('#summary').hidden=m!=='summary';$('#req').hidden=m!=='req';$('#results').hidden=m!=='assign';
+  $('#missing').hidden=m!=='missing';$('#summary').hidden=m!=='summary';$('#req').hidden=m!=='req';$('#results').hidden=m!=='assign';$('#stats').hidden=m!=='assign';
   if(m==='missing')renderMissing();if(m==='summary')renderSummary();if(m==='req')renderReq();if(m==='sim')renderSim();if(m==='toon')renderToon();
   if(scroll)$('#'+(m==='assign'?'results':m)).scrollIntoView({behavior:'smooth'});
 }
@@ -1867,6 +1875,7 @@ function renderPlanets(){
   let html=phases.map(ph=>`<div class="prow"><b>Phase ${ph}</b><span>${[...byPh.get(ph).values()].sort((a,b)=>a.planet.localeCompare(b.planet)||(a.fin?1:0)-(b.fin?1:0)).map(x=>`<span class="pp">${esc(x.planet)} <small>${ppTxt(x,ph)}</small></span>`).join('')}</span></div>`).join('')||'<p class="note">No operations chosen yet.</p>';
   if((SELNEWER||SELDIRTY)&&SHARED)html+=`<p class="stale">These selections were changed after the assignments below were made. Officers: run Assign platoons, then Save and share, to update them.</p>`;
   $('#planetSumBody').innerHTML=html;box.hidden=false;
+  $('#planetSumTitle').innerHTML='🪐 Planets to fill'+((SELNEWER||SELDIRTY)&&SHARED?' <span class="flag">· changed since the assignments</span>':'');
 }
 $('#selSave').addEventListener('click',async()=>{
   if(!unlocked||!TOKEN){openMenu('ops');return}
