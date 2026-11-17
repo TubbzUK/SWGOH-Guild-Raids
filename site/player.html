@@ -232,7 +232,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 
   // ---------- data ----------
   const index = await getJSON("guilds.json");
-  (function art() { if (!window.RaidTheme) return setTimeout(art, 30); RaidTheme.banner($("#bannerArt"), { slug: "player" }); })();
+  (function art() { if (!window.RaidTheme) return setTimeout(art, 30); RaidTheme.banner($("#bannerArt"), { slug: "player" }, "player"); })();
   const guilds = (index || []).filter(g => (g.tb && g.tb.count) || (g.tw && g.tw.count) || (g.raids || []).some(r => r.raids));
   let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
   if (!guilds.length) { $("#updated").textContent = "No results uploaded yet."; return; }

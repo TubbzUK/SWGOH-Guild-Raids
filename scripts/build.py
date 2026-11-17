@@ -999,7 +999,9 @@ def build_guild(gdir: Path, defs: list[dict]) -> dict:
                             "banner": f"banners/{d['banner_file'].name}" if d["banner_file"] else None})
 
     with_scores = [r for r in raids_index if r["latest"]]
-    default = max(with_scores, key=lambda r: r["latest"])["slug"] if with_scores else \
+    # the raid shown first: one marked "default: true" in raids/<raid>.yml, else the one with the newest scores
+    marked = [d["slug"] for d in defs if d["cfg"].get("default") and any(r["slug"] == d["slug"] and r["latest"] for r in raids_index)]   # (once it has scores)
+    default = marked[0] if marked else max(with_scores, key=lambda r: r["latest"])["slug"] if with_scores else \
         (raids_index[0]["slug"] if raids_index else None)
     return {"slug": gdir.name, "name": cfg.get("guild_name", gdir.name), "members": len(current),
             "raids": raids_index, "default_raid": default,
@@ -1032,6 +1034,17 @@ def main() -> int:
             print(f"Banner: {d['banner_file'].name}")
     if not defs:
         print("No raid definitions found in raids/", file=sys.stderr)
+    # Page banners: site/img/banners/<page>.jpg, chosen by officers on the site (Officers -> Page banners).
+    # Keys: raids, raid-<raid>, tb, tw, guild, platoons, player, effectiveness. A raid's raids/<raid>.jpg is used
+    # for raid-<raid> when no officer has chosen one. ?v= changes with the picture so browsers don't keep the old one.
+    import hashlib
+    ver = lambda p: hashlib.sha1(p.read_bytes()).hexdigest()[:10]  # noqa: E731
+    banners = {f"raid-{d['slug']}": f"banners/{d['banner_file'].name}?v={ver(d['banner_file'])}" for d in defs if d["banner_file"]}
+    for p in sorted((SITE_DIR / "img" / "banners").glob("*")):
+        if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+            banners[p.stem.lower()] = f"img/banners/{p.name}?v={ver(p)}"
+    (SITE_DIR / "data").mkdir(parents=True, exist_ok=True)
+    (SITE_DIR / "data" / "banners.json").write_text(json.dumps(banners, indent=1), encoding="utf-8")
     guilds = [build_guild(g, defs) for g in guild_dirs()]
     if not guilds:
         print("No guild folders found in guilds/", file=sys.stderr)

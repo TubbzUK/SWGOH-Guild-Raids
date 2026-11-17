@@ -1775,7 +1775,7 @@ const guildName=()=>(SITE.guilds.find(g=>g.slug===GUILD)||{}).name||GUILD;
 const getJSON=u=>fetch(u,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
 function rosterFromJSON(d){return{players:new Map(d.players.map((p,i)=>[p,new Map(Object.entries(d.roster[i]||{}))])),names:new Map(),raw:!!d.raw,gp:new Map(d.players.map((p,i)=>[p,(d.gp||[])[i]||0]))}}
 // banner art (theme.js loads after this script)
-(function art(){if(window.RaidTheme)RaidTheme.banner(document.getElementById('bannerArt'),{slug:'tb'});else setTimeout(art,30)})();
+(function art(){if(window.RaidTheme)RaidTheme.banner(document.getElementById('bannerArt'),{slug:'tb'},'platoons');else setTimeout(art,30)})();
 window.addEventListener('themechange',()=>{});
 $('#clearPaste').addEventListener('click',()=>{$('#rText').value='';$('#pText').value='';showMsg('#rMsg');showMsg('#pMsg');renderOps()});
 $('#planFile').addEventListener('change',()=>{

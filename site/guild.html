@@ -114,7 +114,7 @@ details.how ul { margin: 10px 0 0; padding-left: 20px; color: var(--text-2); fon
   const int = n => n == null ? "–" : Math.round(n).toLocaleString("en-GB");
   const dec = (n, d = 2) => n == null ? "–" : n.toFixed(d);
 
-  (function art() { if (!window.RaidTheme) return setTimeout(art, 30); RaidTheme.banner($("#bannerArt"), { slug: "player" }); })();
+  (function art() { if (!window.RaidTheme) return setTimeout(art, 30); RaidTheme.banner($("#bannerArt"), { slug: "player" }, "guild"); })();
   const index = await getJSON("guilds.json");
   let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
   const guilds = index || [];

@@ -317,6 +317,7 @@
       const strip = () => { try { history.replaceState(null, "", location.pathname + location.search.replace(/([?&])do=[^&#]*&?/, "$1").replace(/[?&]$/, "") + location.hash); } catch (e) {} };
       if (id === "pull") { strip(); const t0 = Date.now(); (function w() { if (window.Officer) pullNow(); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
       if (id === "dms") { strip(); const t0 = Date.now(); (function w() { if (window.Officer && Officer.discordDms) Officer.discordDms(guildNow()); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
+      if (id === "banners") { strip(); const t0 = Date.now(); (function w() { if (window.Officer && Officer.banners) Officer.banners(guildNow()); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
       if (id === "webhooks") { strip(); const t0 = Date.now(); (function w() { if (window.Officer && Officer.webhooks) Officer.webhooks(guildNow()); else if (Date.now() - t0 < 10000) setTimeout(w, 150); })(); return; }
       if (!k || !kidHere(k)) { strip(); return; }
       const t0 = Date.now();
@@ -416,6 +417,10 @@
     menuItem("officer", "🔗 Discord webhooks", () => {
       if (window.Officer && Officer.webhooks) return Officer.webhooks(guildNow());
       const g = guildNow(); location.href = "./?" + (g ? "guild=" + encodeURIComponent(g) + "&" : "") + "do=webhooks";
+    });
+    menuItem("officer", "🖼 Page banners", () => {
+      if (window.Officer && Officer.banners) return Officer.banners(guildNow());
+      const g = guildNow(); location.href = "./?" + (g ? "guild=" + encodeURIComponent(g) + "&" : "") + "do=banners";
     });
     menuItem("officer", "📬 Discord DMs", () => {
       if (window.Officer && Officer.discordDms) return Officer.discordDms(guildNow());
@@ -654,15 +659,30 @@
     },
   };
   function hash(s) { let h = 2166136261; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
-  function banner(el, raid) {
+  // Page banners chosen by officers (data/banners.json: raids, raid-<raid>, tb, tw, guild, platoons, player, effectiveness).
+  // The last list seen is kept so the picture shows straight away; the drawn artwork is the fallback.
+  let bannerMap = null, bannerLoad = null;
+  try { bannerMap = JSON.parse(localStorage.getItem("gsBanners") || "null"); } catch (e) {}
+  const loadBanners = () => bannerLoad || (bannerLoad = fetch("data/banners.json", { cache: "no-store" }).then(r => r.ok ? r.json() : {}).catch(() => bannerMap || {})
+    .then(m => { bannerMap = m || {}; try { localStorage.setItem("gsBanners", JSON.stringify(bannerMap)); } catch (e) {} return bannerMap; }));
+  // which banner a page uses: a raid page tries its own raid's, then the general raids one
+  const bannerKeys = (raid, key) => key ? [key] : raid && raid.slug && !["tb", "tw", "player"].includes(raid.slug) ? ["raid-" + raid.slug, "raids"] : [];
+  function banner(el, raid, key) {
     if (!el) return;
-    if (raid && raid.banner) {
-      el.innerHTML = `<img src="${raid.banner}" alt="" loading="eager">`;
-      return;
+    const keys = bannerKeys(raid, key), pick = m => keys.map(k => m && m[k]).find(Boolean);
+    const show = src => { if (el.dataset.src === src) return; el.dataset.src = src; el.innerHTML = `<img src="${src}" alt="" loading="eager">`; };
+    const first = pick(bannerMap);
+    if (first) show(first);
+    else if (raid && raid.banner) show(raid.banner);
+    else {
+      const slug = raid && raid.slug, draw = ART[slug] || ART.default;
+      el.dataset.src = "";
+      el.innerHTML = `<svg viewBox="0 0 1200 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${draw(seeded(hash(slug || "raid")))}</svg>`;
     }
-    const slug = raid && raid.slug, draw = ART[slug] || ART.default;
-    el.innerHTML = `<svg viewBox="0 0 1200 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${draw(seeded(hash(slug || "raid")))}</svg>`;
+    if (keys.length) loadBanners().then(m => { const src = pick(m) || (raid && raid.banner); if (src) show(src); else if (first) banner.redraw(el, raid); });
   }
+  banner.redraw = (el, raid) => { const slug = raid && raid.slug, draw = ART[slug] || ART.default; el.dataset.src = "";
+    el.innerHTML = `<svg viewBox="0 0 1200 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${draw(seeded(hash(slug || "raid")))}</svg>`; };
 
   // wordmark emblem (generic targeting reticle)
   const emblem = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 0v6M12 18v6M0 12h6M18 12h6" stroke="currentColor" stroke-width="1.5"/></svg>`;
@@ -817,7 +837,7 @@
     follow(job);
   }
 
-  window.RaidTheme = { banner, isDark, emblem, cardReady, menuItem, mountToggle, track };
+  window.RaidTheme = { banner, loadBanners, isDark, emblem, cardReady, menuItem, mountToggle, track };
   // card mode: no chart animations, and a small footer with the site address
   const cardMode = document.documentElement.classList.contains("cardmode");
   if (cardMode && window.Chart) Chart.defaults.animation = false;

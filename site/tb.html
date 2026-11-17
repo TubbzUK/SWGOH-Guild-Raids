@@ -287,7 +287,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   $("#guild").textContent = guild.name;
   if (data.warnings?.length) $("#warnings").innerHTML = `<details class="warnings"><summary>Data notes (${data.warnings.length})</summary><ul>${data.warnings.map(w => `<li>${esc(w)}</li>`).join("")}</ul></details>`;
   $("#footer").textContent = `Updated ${new Date(data.generated_at).toLocaleString("en-GB")} · ${tbs.length} territory battle${tbs.length > 1 ? "s" : ""} tracked`;
-  const ready = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tb" }) : setTimeout(ready, 30);
+  const ready = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tb" }, "tb") : setTimeout(ready, 30);
   ready();
 
   const players = data.players;

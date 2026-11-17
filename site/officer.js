@@ -191,6 +191,96 @@
     { k: "officers", name: g => `OFFICER_${g}`, label: "Officers' channel", hint: "guild effectiveness (falls back to the main channel)" },
     { k: "assign", name: g => `${g}_ASSIGN`, label: "Platoon assignments", hint: "each TB phase's platoons, posted automatically" },
   ];
+  // ---------- page banners: the picture at the top of each page (site/img/banners/<page>.jpg, for every guild) ----------
+  async function repoFile(path) {      // {sha} of a file in the repository, or null
+    const st = await loadSite();
+    const r = await gh(`/repos/${st.repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(st.branch)}`);
+    return r.ok ? await r.json() : null;
+  }
+  async function putBinary(path, b64, message) {
+    const st = await loadSite(), cur = await repoFile(path);
+    const res = await gh(`/repos/${st.repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`, { method: "PUT", body: JSON.stringify({ message, content: b64, branch: st.branch, ...(cur && cur.sha ? { sha: cur.sha } : {}) }) });
+    if (!res.ok) throw new Error(res.status === 401 ? "GitHub didn't accept the login" : res.status === 422 ? "GitHub refused the picture (too large?)" : `GitHub said ${res.status}`);
+    try { return lastSha = (await res.json()).commit.sha; } catch (e) { return null; }
+  }
+  async function removeFile(path, message) {
+    const st = await loadSite(), cur = await repoFile(path);
+    if (!cur || !cur.sha) return null;
+    const res = await gh(`/repos/${st.repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`, { method: "DELETE", body: JSON.stringify({ message, sha: cur.sha, branch: st.branch }) });
+    if (!res.ok) throw new Error(`GitHub said ${res.status}`);
+    try { return lastSha = (await res.json()).commit.sha; } catch (e) { return null; }
+  }
+  // a picture, scaled to at most 2400 pixels wide, as a JPEG (base64)
+  function toJpeg(file) {
+    return new Promise((ok, fail) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => {
+        const w = Math.min(2400, im.naturalWidth), h = Math.round(im.naturalHeight * w / im.naturalWidth);
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        const x = c.getContext("2d"); x.fillStyle = "#05070d"; x.fillRect(0, 0, w, h); x.drawImage(im, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        ok({ b64: c.toDataURL("image/jpeg", 0.86).split(",")[1], w, h });
+      };
+      im.onerror = () => { URL.revokeObjectURL(url); fail(new Error(`${file.name} isn't a picture this browser can open`)); };
+      im.src = url;
+    });
+  }
+  async function banners() {
+    let guilds = [], map = {};
+    try { guilds = await (await fetch("guilds.json", { cache: "no-store" })).json(); } catch (e) {}
+    try { map = await (await fetch("data/banners.json", { cache: "no-store" })).json(); } catch (e) {}
+    const raids = []; guilds.forEach(g => (g.raids || []).forEach(r => { if (!raids.some(x => x.slug === r.slug)) raids.push({ slug: r.slug, name: r.name }); }));
+    const rows = [
+      { key: "raids", label: "Raids", note: "Any raid without a picture of its own" },
+      ...raids.map(r => ({ key: "raid-" + r.slug, label: r.name, note: "Raid results for " + r.name, indent: true })),
+      { key: "tb", label: "Territory battles", note: "TB pages and TB contribution" },
+      { key: "tw", label: "Territory wars", note: "TW page" },
+      { key: "guild", label: "Guild overview", note: "Guild overview page" },
+      { key: "platoons", label: "RotE platoons", note: "Platoon planner" },
+      { key: "effectiveness", label: "Guild effectiveness", note: "Effectiveness page" },
+      { key: "player", label: "Player stats", note: "Each member's own page" },
+    ];
+    const src = k => map[k] || "";
+    const repoPath = p => p.startsWith("img/") ? "site/" + p.split("?")[0] : p.startsWith("banners/") ? "raids/" + p.split("?")[0].slice(8) : "";
+    const thumb = (k) => src(k) ? `<img src="${esc(src(k))}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">` : `<span style="display:grid;place-items:center;height:100%;font-size:11.5px;color:var(--muted)">Drawn artwork</span>`;
+    const html = `<p style="margin:0 0 8px">Choose the picture across the top of each page. It's used for every guild. Wide pictures work best (about 5 × 1): the middle is kept and the left side is darkened for the title. Pictures are resized to 2400 pixels wide.</p>
+      <div style="max-height:56vh;overflow:auto;border:1px solid var(--border);border-radius:10px">${rows.map(r => `
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px;align-items:center;padding:9px 12px;border-top:1px solid var(--border)${r.indent ? ";padding-left:28px" : ""}">
+          <div style="min-width:0"><b style="color:var(--text)">${esc(r.label)}</b><div style="font-size:12px">${esc(r.note)}</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:5px;font-size:12.5px">
+              <label style="cursor:pointer;color:var(--accent)"><input type="file" accept="image/*" data-bkey="${r.key}" style="display:none">📁 Choose picture…</label>
+              ${src(r.key) ? `<label style="display:flex;gap:5px;align-items:center"><input type="checkbox" data-bdel="${r.key}"> Use drawn artwork instead</label>` : ""}
+              <span data-bname="${r.key}" style="color:var(--muted)"></span></div></div>
+          <div data-bthumb="${r.key}" style="height:40px;border-radius:7px;overflow:hidden;border:1px solid var(--border);background:var(--surface-2)">${thumb(r.key)}</div>
+        </div>`).join("")}</div>`;
+    form({ title: "Page banners", wide: true, html, button: "Save banners", trackLabel: "Page banners",
+      ready: () => {
+        document.querySelectorAll("#offDlg [data-bkey]").forEach(inp => inp.onchange = () => {
+          const k = inp.dataset.bkey, f = inp.files[0]; if (!f) return;
+          document.querySelector(`#offDlg [data-bname="${k}"]`).textContent = f.name;
+          document.querySelector(`#offDlg [data-bthumb="${k}"]`).innerHTML = `<img src="${URL.createObjectURL(f)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+          const del = document.querySelector(`#offDlg [data-bdel="${k}"]`); if (del) del.checked = false;
+        });
+      },
+      run: async () => {
+        const jobs = [];
+        document.querySelectorAll("#offDlg [data-bkey]").forEach(inp => { if (inp.files[0]) jobs.push({ key: inp.dataset.bkey, file: inp.files[0] }); });
+        const dels = [...document.querySelectorAll("#offDlg [data-bdel]:checked")].map(c => c.dataset.bdel).filter(k => !jobs.some(j => j.key === k));
+        if (!jobs.length && !dels.length) throw new Error("nothing to save - choose a picture, or tick \"Use drawn artwork\"");
+        const label = k => (rows.find(r => r.key === k) || {}).label || k;
+        for (const j of jobs) {
+          msg("info", `Saving the ${esc(label(j.key))} picture…`);
+          const { b64 } = await toJpeg(j.file);
+          if (b64.length > 5.5e6) throw new Error(`the ${label(j.key)} picture is too large even after resizing`);
+          await putBinary(`site/img/banners/${j.key}.jpg`, b64, `Banner for ${label(j.key)}`);
+          const old = src(j.key);   // a picture saved under another name (e.g. .png) would otherwise win
+          if (old && old.startsWith("img/") && !old.startsWith(`img/banners/${j.key}.jpg`)) await removeFile(repoPath(old), `Replace the ${label(j.key)} banner`);
+        }
+        for (const k of dels) { msg("info", `Removing the ${esc(label(k))} picture…`); await removeFile(repoPath(src(k)), `Use the drawn banner for ${label(k)}`); }
+      },
+      done: "🖼 Saved. The new banners show once the site has updated." });
+  }
+
   async function webhooks(slug) {
     let guilds = [];
     try { guilds = await (await fetch("guilds.json", { cache: "no-store" })).json(); } catch (e) {}
@@ -300,5 +390,5 @@
       done: "📬 Saved. DMs use these links from the next phase." });
   }
 
-  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; }, authToken: async () => TOKEN || await remembered(), webhooks, discordDms };
+  window.Officer = { post, postButton, requestPost, form, setToken: t => { TOKEN = t; }, authToken: async () => TOKEN || await remembered(), webhooks, discordDms, banners };
 })();

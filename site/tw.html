@@ -227,7 +227,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 
   const index = (await getJSON("guilds.json") || []).filter(g => g.tw && g.tw.count);
   let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
-  const art = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tw" }) : setTimeout(art, 30);
+  const art = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tw" }, "tw") : setTimeout(art, 30);
   art();
   if (!index.length) {
     $("#updated").textContent = "No territory war results uploaded yet. Upload a WookieeBot TW export from the upload page.";

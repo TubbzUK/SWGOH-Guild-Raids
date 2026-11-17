@@ -319,7 +319,7 @@ tr.sel td { background: var(--surface-2); } tr.sel td:first-child { box-shadow: 
 
   // ---------- data ----------
   const [index, cfg, keyBlob] = await Promise.all([getJSON("guilds.json"), getJSON("upload-config.json"), getJSON("upload-key.json")]);
-  const ready = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tb" }) : setTimeout(ready, 30);
+  const ready = () => window.RaidTheme ? RaidTheme.banner($("#bannerArt"), { slug: "tb" }, "effectiveness") : setTimeout(ready, 30);
   ready();
   const guilds = (index || []).filter(g => (g.tb && g.tb.count) || (g.tw && g.tw.count) || (g.raids || []).some(r => r.raids));
   let params = {}; try { params = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}

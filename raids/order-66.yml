@@ -6,7 +6,7 @@
 name: "Order 66"
 
 # Order in the site's raid switcher (lowest first)
-order: 1
+order: 2
 
 # Words that identify this raid's WookieeBot file name (e.g. Order66_Raid_1.csv),
 # used when a file is uploaded into the guild folder instead of the raid folder

@@ -6,7 +6,10 @@
 name: "Droid Destruction"
 
 # Order in the site's raid switcher (lowest first)
-order: 2
+order: 1
+
+# Shown first when someone opens the raids page (only one raid should have this)
+default: true
 
 # Words that identify this raid's WookieeBot file name (e.g. DroidDestruction_Raid_1.csv),
 # used when a file is uploaded into the guild folder instead of the raid folder
