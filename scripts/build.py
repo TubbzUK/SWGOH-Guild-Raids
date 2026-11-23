@@ -778,6 +778,14 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
     target = raid_target(gdir, cfg, rdef)
     rconf = load_readiness_config(rdef["cfg"])
     pconf = raid_potential.load_config(rdef["cfg"])
+    if pconf and rconf["teams"]:      # squads only use characters on the readiness list
+        allowed = {k.upper() for t in rconf["teams"] for c in t["characters"] for k in [c["id"]]}
+        allowed = {raid_potential._norm(k) for k in allowed}
+        pconf["squads"] = [{**sq, "pool": [k for k in sq["pool"] if k in allowed]} for sq in pconf["squads"] if sq["lead"] in allowed]
+        for sq in rdef["cfg"]["potential"]["squads"]:
+            for k in [sq.get("lead"), *(sq.get("pool") or [])]:
+                if k and raid_potential._norm(k) not in allowed:
+                    warn(f"{rdef['name']}: {k} is in a potential-score squad but not the readiness list - not counted")
     for cid in unknown_characters(roster, rconf):
         if UNIT_INFO and str(cid).upper() not in UNIT_INFO:
             warn(f"{rdef['name']} readiness character '{cid}' isn't a unit the game knows - check the ID in raids/{rdef['slug']}.yml")
@@ -785,6 +793,8 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
             warn(f"{rdef['name']} readiness character '{cid}' isn't in anyone's roster yet - new unit nobody has unlocked, "
                  f"or check the ID in raids/{rdef['slug']}.yml")
 
+    # each current member's potential score (best their roster could do), worked out once
+    pots = {k: raid_potential.potential_for(LEVELS.get(k), pconf) for k in current} if roster and pconf else {}
     raids_out = []
     for i, r in enumerate(raids):
         listed = r["scores"]
@@ -802,6 +812,14 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
             "median": statistics.median(vals) if vals else 0,
             "max": max(vals) if vals else 0,
         }
+        if pots:     # what the members in this raid could have scored, from today's rosters
+            pv = [pots[k]["score"] for k in listed if pots.get(k)]
+            if pv:
+                # members who have since left have no roster now: their actual score stands in for their potential
+                gone = sum(v for k, v in listed.items() if not pots.get(k) and v and v > 0)
+                out["potential"] = sum(pv) + gone
+                out["potential_members"] = len(pv)
+                out["potential_actual"] = total
         if i == len(raids) - 1:
             out["no_score"] = sorted((players.info[k]["name"] for k, v in listed.items() if not v and k in current),
                                      key=str.lower)
@@ -853,7 +871,7 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
             "below_pct": round((target - (last or 0)) / target * 100, 1) if target and last is not None and last < target else None,
             "below_count": below_n,
             "readiness": readiness_for(roster.get(key), rconf) if roster else None,
-            "potential": raid_potential.potential_for(LEVELS.get(key), pconf) if roster and pconf and key in current else None,
+            "potential": pots.get(key),
         })
         if players_out[-1]["potential"] and target:
             pt = players_out[-1]["potential"]

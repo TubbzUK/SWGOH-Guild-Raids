@@ -209,7 +209,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     <div class="grid2">
       <div class="card">
         <h2>Guild total by raid</h2>
-        <p class="hint">Sum of every member's actual score</p>
+        <p class="hint" id="totalHint">Sum of every member's actual score</p>
         <div class="chart"><canvas id="totalChart" aria-label="Guild total by raid"></canvas></div>
       </div>
       <div class="card">
@@ -369,6 +369,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     const ts = data.trend_summary;
     $("#kpis").innerHTML = [
       ["Guild total", fmt(latest.total), prev ? `<span class="${dcls(dtp)}">${signedPct(dtp)}</span> vs ${dfmt(prev.date, prev.date.slice(0, 4) !== latest.date.slice(0, 4))}` : "First raid tracked"],
+      ...(latest.potential ? [["Potential", fmt(latest.potential), `Got ${(latest.potential_actual / latest.potential * 100).toFixed(0)}% of what the rosters could score`]] : []),
       ["Participation", `${latest.participants}<span class="sub"> / ${latest.members}</span>`, `${latest.no_attempt} blank · ${latest.zero} zero`],
       ["Average score", fmt(latest.average), `Median ${fmt(latest.median)} · best ${fmt(latest.max)}`],
       ["Below target", target ? `${latest.below_target}` : "–", target ? `Scored under ${fmt(target)}` + (latest.zero ? ` · ${latest.zero} on zero` : "") : "Set target_score in config"],
@@ -377,9 +378,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 
     new Chart($("#totalChart"), {
       type: "bar",
-      data: { labels: raidLabels, datasets: [{ label: "Guild total", data: raids.map(r => r.total), backgroundColor: css("--series-1"), borderRadius: 4, maxBarThickness: 40 }] },
-      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true), label: c => ` Total ${c.parsed.y.toLocaleString("en-GB")}`, afterLabel: c => ` ${raids[c.dataIndex].participants} of ${raids[c.dataIndex].members} scored` } } }, scales: { y: axisY(), x: axisX() } }
+      // the guild's total in front; behind it, paler, what those members could have scored (their potential)
+      data: { labels: raidLabels, datasets: [
+        { label: "Guild total", data: raids.map(r => r.total), backgroundColor: css("--series-1"), borderRadius: 4, maxBarThickness: 40, order: 0 },
+        ...(raids.some(r => r.potential) ? [{ label: "Potential", data: raids.map(r => r.potential ?? null), backgroundColor: css("--series-1") + "38", borderColor: css("--series-1"), borderWidth: { top: 2, left: 0, right: 0, bottom: 0 }, borderSkipped: false, borderRadius: 4, maxBarThickness: 40, order: 1 }] : [])] },
+      options: { datasets: { bar: { grouped: false } }, interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: raids.some(r => r.potential), labels: { boxWidth: 12, color: css("--muted") } }, tooltip: { callbacks: { title: i => dfmt(raids[i[0].dataIndex].date, true),
+          label: c => c.dataset.label === "Potential" ? ` Potential ${c.parsed.y.toLocaleString("en-GB")}` : ` Total ${c.parsed.y.toLocaleString("en-GB")}`,
+          afterBody: i => { const r = raids[i[0].dataIndex]; return [` ${r.participants} of ${r.members} scored`, ...(r.potential ? [` Got ${(r.potential_actual / r.potential * 100).toFixed(0)}% of potential`] : [])]; } } } }, scales: { y: axisY(), x: axisX() } }
     });
+    if (raids.some(r => r.potential)) $("#totalHint").textContent = "Sum of every member's actual score. The pale bar behind is what those members could have scored (their potential, from today's rosters).";
     new Chart($("#partChart"), {
       type: "line",
       data: { labels: raidLabels, datasets: [{ label: "Scored", data: raids.map(r => r.participants), borderColor: css("--series-1"), backgroundColor: css("--series-1"), borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, tension: 0.25 }] },
@@ -405,7 +413,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       : bt.length ? `${bt.length} current member${bt.length > 1 ? "s" : ""} under ${fmt(target)} in the latest raid (${dfmt(latest.date)}), furthest below first. "Times below" counts every raid they were in where they finished under the target (a blank or zero counts).`
       : `Everyone hit ${fmt(target)} in the latest raid. 🎉`;
     $("#btWrap").hidden = !bt.length;
-    $("#btTable").innerHTML = bt.length ? `<thead><tr><th>Player</th><th class="r">Latest</th><th class="r">Below target</th><th class="r">Times below</th></tr></thead><tbody>${bt.map(p => `<tr class="click" data-id="${esc(p.id)}" tabindex="0"><td class="name">${esc(p.name)}</td><td class="r num">${p.last ? fmt(p.last) : '<span class="sub">no score</span>'}</td>
+    $("#btTable").innerHTML = bt.length ? `<thead><tr><th>Player</th><th class="r">Latest</th>${data.potential_config ? '<th class="r">Potential</th>' : ""}<th class="r">Below target</th><th class="r">Times below</th></tr></thead><tbody>${bt.map(p => `<tr class="click" data-id="${esc(p.id)}" tabindex="0"><td class="name">${esc(p.name)}</td><td class="r num">${p.last ? fmt(p.last) : '<span class="sub">no score</span>'}</td>${data.potential_config ? `<td class="r num" title="${p.potential && target ? (p.potential.score >= target ? "Target within reach of their roster" : "Target out of reach with their roster") : ""}">${p.potential ? fmt(p.potential.score) + (target ? (p.potential.score >= target ? "" : ' <span class="sub">✗</span>') : "") : "–"}</td>` : ""}
       <td class="r num"><span class="below-pct"><span class="bar"><i style="width:${Math.min(100, p.below_pct ?? 0)}%"></i></span>${(p.below_pct ?? 0).toFixed(0)}%</span></td><td class="r num">${p.below_count ?? 0}<span class="sub"> of ${p.listed}</span></td></tr>`).join("")}</tbody>` : "";
     $("#btTable").querySelectorAll("tr[data-id]").forEach(tr => { const go = () => { document.querySelector('nav button[data-tab="players"]').click(); selected = openPlayerId = tr.dataset.id; renderPlayers(); showPlayer(players.find(p => p.id === selected)); }; tr.onclick = go; tr.onkeydown = e => { if (e.key === "Enter") go(); }; });
   }
@@ -416,6 +424,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     ["rank", "#", "r", p => p.rank ?? "–"],
     ["name", "Player", "", p => `${esc(p.name)}${p.current ? "" : '<span class="former">left</span>'}`],
     ["last", "Latest", "r", p => `<span class="${target && p.last != null && p.last < target ? "below" : ""}" title="${target && p.last != null && p.last < target ? "Below target" : ""}">${fmt(p.last)}</span>`],
+    ...(data.potential_config ? [["potential", "Potential", "r", p => p.potential ? `<span title="Best their roster could score${p.potential.vs_last != null ? ` · latest is ${p.potential.vs_last.toFixed(0)}% of it` : ""}">${fmt(p.potential.score)}${p.potential.vs_last != null ? `<span class="sub"> ${p.potential.vs_last.toFixed(0)}%</span>` : ""}</span>` : '<span class="sub">–</span>']] : []),
     ...(target ? [["target", "Target", "", p => p.on_target == null ? '<span class="sub">–</span>' : p.on_target ? '<span class="badge b-good">✓ On target</span>' : `<span class="badge b-bad" title="${fmt(p.last)} against a target of ${fmt(target)}">✗ ${(p.below_pct ?? 0).toFixed(0)}% below</span>`],
       ["below_count", "Times below", "r", p => p.below_count == null ? "–" : `${p.below_count}<span class="sub"> of ${p.listed}</span>`]] : []),
     ["delta_pct", "vs prev", "r", p => `<span class="${dcls(p.delta)}">${signedPct(p.delta_pct)}</span>`],
@@ -427,7 +436,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     ["readiness", "Readiness", "", p => rCell(p.readiness)],
   ];
   let pSort = { key: "last", dir: -1 }, selected = null, detailChart = null;
-  const sortVal = (p, k) => k === "readiness" ? (p.readiness?.score ?? -1) : k === "name" ? p.name.toLowerCase() : k === "target" ? (p.on_target == null ? -Infinity : p.on_target ? 1 : -(p.below_pct ?? 0)) : (p[k] ?? -Infinity);
+  const sortVal = (p, k) => k === "readiness" ? (p.readiness?.score ?? -1) : k === "potential" ? (p.potential?.score ?? -1) : k === "name" ? p.name.toLowerCase() : k === "target" ? (p.on_target == null ? -Infinity : p.on_target ? 1 : -(p.below_pct ?? 0)) : (p[k] ?? -Infinity);
   function renderPlayers() {
     const q = $("#pSearch").value.toLowerCase(), cur = $("#pCurrent").checked, tr = $("#pTrend").value;
     const rows = players.filter(p => (!cur || p.current) && (!tr || p.trend === tr) && p.name.toLowerCase().includes(q))
@@ -634,17 +643,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       const q = $("#rSearch").value.toLowerCase();
       const rows = current.filter(p => p.readiness && p.name.toLowerCase().includes(q))
         .sort((a, b) => rSort.key === "name" ? a.name.localeCompare(b.name) * rSort.dir
+          : rSort.key === "last" ? (((a.last ?? -1) - (b.last ?? -1)) * rSort.dir || a.name.localeCompare(b.name))
           : rSort.key === "pot" ? (((a.potential?.score ?? -1) - (b.potential?.score ?? -1)) * rSort.dir || a.name.localeCompare(b.name))
           : rSort.key === "reach" ? (((a.potential?.vs_last ?? -1) - (b.potential?.vs_last ?? -1)) * rSort.dir || a.name.localeCompare(b.name))
           : ((a.readiness.score - b.readiness.score) * rSort.dir || a.name.localeCompare(b.name)));
-      const head1 = multiTeam ? `<tr><th colspan="${3 + (pconf ? 2 : 0)}"></th>${rconf.teams.map(t => `<th class="team" colspan="${t.characters.length}">${esc(t.name)}</th>`).join("")}</tr>` : "";
-      const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${pconf ? `<th data-sort="pot" class="r ${rSort.key === "pot" ? (rSort.dir > 0 ? "asc" : "desc") : ""}" title="Best score their roster could reach">Potential</th><th data-sort="reach" class="${rSort.key === "reach" ? (rSort.dir > 0 ? "asc" : "desc") : ""}" title="Last score as a share of potential">Last / potential</th>` : ""}${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}"><span class="vt">${esc(c.label)}</span>${pf(c)}</th>`).join("")}</tr>`;
+      const head1 = multiTeam ? `<tr><th colspan="${3 + (pconf ? 3 : 0)}"></th>${rconf.teams.map(t => `<th class="team" colspan="${t.characters.length}">${esc(t.name)}</th>`).join("")}</tr>` : "";
+      const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${pconf ? `<th data-sort="last" class="r ${rSort.key === "last" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Last score</th><th data-sort="pot" class="r ${rSort.key === "pot" ? (rSort.dir > 0 ? "asc" : "desc") : ""}" title="Best score their roster could reach">Potential</th><th data-sort="reach" class="${rSort.key === "reach" ? (rSort.dir > 0 ? "asc" : "desc") : ""}" title="Last score as a share of potential">Last / potential</th>` : ""}${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}"><span class="vt">${esc(c.label)}</span>${pf(c)}</th>`).join("")}</tr>`;
       const body = rows.map(p => {
         const r = p.readiness, st = ST[r.status];
-        return `<tr class="click ${p.name === window.__rWho ? "sel" : ""}" data-name="${esc(p.name)}" tabindex="0" title="Show ${esc(p.name)} on the character cards"><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${pconf ? (() => { const t = p.potential, pb = potBand(p); return `<td class="r num">${t ? fmt(t.score) : "–"}</td><td>${t && t.vs_last != null ? `<span class="num">${t.vs_last.toFixed(0)}%</span> <span class="badge ${pb[0]}">${pb[1]}</span>` : `<span class="hint">${p.last == null ? "no score" : "–"}</span>`}</td>`; })() : ""}${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;
+        return `<tr class="click ${p.name === window.__rWho ? "sel" : ""}" data-name="${esc(p.name)}" tabindex="0" title="Show ${esc(p.name)} on the character cards"><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${pconf ? (() => { const t = p.potential, pb = potBand(p); return `<td class="r num">${p.last != null ? fmt(p.last) : '<span class="hint">–</span>'}</td><td class="r num">${t ? fmt(t.score) : "–"}</td><td>${t && t.vs_last != null ? `<span class="num">${t.vs_last.toFixed(0)}%</span> <span class="badge ${pb[0]}">${pb[1]}</span>` : `<span class="hint">${p.last == null ? "no score" : "–"}</span>`}</td>`; })() : ""}${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;
       }).join("");
       const missing = current.filter(p => !p.readiness).map(p => esc(p.name));
-      $("#rTable").innerHTML = `<thead>${head1}${head2}</thead><tbody>${body}${missing.length ? `<tr><td colspan="${chars.length + 3 + (pconf ? 2 : 0)}" class="sub" style="white-space:normal">Not in the roster export yet: ${missing.join(", ")}</td></tr>` : ""}</tbody>`;
+      $("#rTable").innerHTML = `<thead>${head1}${head2}</thead><tbody>${body}${missing.length ? `<tr><td colspan="${chars.length + 3 + (pconf ? 3 : 0)}" class="sub" style="white-space:normal">Not in the roster export yet: ${missing.join(", ")}</td></tr>` : ""}</tbody>`;
       syncTopScroll();
       $("#rTable").querySelectorAll("tbody tr[data-name]").forEach(tr => { const go = () => setWho(tr.dataset.name === window.__rWho ? "" : tr.dataset.name, true); tr.onclick = go; tr.onkeydown = e => { if (e.key === "Enter") go(); }; });
       $("#rTable").querySelectorAll("th[data-sort]").forEach(th => th.onclick = () => { const k = th.dataset.sort; rSort = { key: k, dir: rSort.key === k ? -rSort.dir : (k === "name" ? 1 : -1) }; renderReady(); });

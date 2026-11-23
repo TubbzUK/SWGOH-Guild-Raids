@@ -72,6 +72,7 @@ readiness:
 #  Each character counts at the highest tier it meets; a squad is only as good as its weakest
 #  character; no character is used twice; the best 5 attempts are added up.
 #  The points are each tier's clear figure (from raid-planner.fyi), so the potential is a ceiling.
+#  Only characters in the readiness list above are counted, so the squads use the same characters.
 #  Change them here if the game's figures change.
 # ------------------------------------------------------------------
 potential:
@@ -96,16 +97,16 @@ potential:
       pool: [GOPHERANTS, RANGERZEB, MARAJADESKYWALKER, YODACHEWBACCA]
     - name: "Carson Teva"
       lead: CARSONTEVA
-      pool: [ADELPHIRANGER, BISHOP, R5D4, RACCOON]
+      pool: [ADELPHIRANGER, BISHOP, R5D4]
     - name: "Darth Jar Jar"
       lead: DARTHJARJAR
       pool: [THERONIN, YODADSV, VADERDUELSEND, INQUISITORBARRISS]
     - name: "Cassian (Undercover)"
       lead: CASSIANUNDERCOVER
-      pool: [KLEYA, VEL, CINTA, LUKESTARKILLER, STORMTROOPERLUKE]
+      pool: [KLEYA, VEL, CINTA, STORMTROOPERLUKE]
     - name: "Stormtrooper Luke"
       lead: STORMTROOPERLUKE
-      pool: [KLEYA, VEL, CINTA, LUKESTARKILLER, CASSIANUNDERCOVER]
+      pool: [KLEYA, VEL, CINTA, CASSIANUNDERCOVER]
     - name: "Major Partagaz"
       lead: MAJORPARTAGAZ
       pool: [KXSECURITYDROID, DEDRAMEERO, STORMTROOPERCONCEPT, REMNANTSNOWCOMMANDER, MAULHATEFUELED]
