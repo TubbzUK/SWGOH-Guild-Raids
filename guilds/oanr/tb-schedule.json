@@ -4,5 +4,6 @@
   "every_days": 14,
   "phases": 6,
   "hours": 24
- }
+ },
+ "post_after_minutes": 55
 }

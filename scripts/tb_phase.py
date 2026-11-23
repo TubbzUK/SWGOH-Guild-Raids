@@ -31,6 +31,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 GUILDS = ROOT / "guilds"
 LATE_HOURS = 20          # don't post a phase that started more than this long ago (missed runs, old TBs)
+WAIT_MINUTES = 300       # --wait: a run that starts up to this long before a post is due waits for it
+# GitHub starts scheduled runs late, sometimes by hours, so the workflow also starts runs well before the
+# usual phase times; one of them waits here and posts on the minute.
 
 
 def load(p: Path, default=None):
@@ -60,9 +63,10 @@ def schedule(gdir: Path) -> dict | None:
     s = load(gdir / "tb-schedule.json", {}) or {}
     m = s.get("manual") or {}
     now = dt.datetime.now(dt.timezone.utc)
+    after = float(s.get("post_after_minutes") or 0)       # post this long after each phase starts
     if when(m.get("start")) and now < when(m["start"]) + dt.timedelta(hours=float(m.get("hours") or 24) * int(m.get("phases") or 6)):
         return {"start": when(m["start"]), "phases": int(m.get("phases") or 6), "hours": float(m.get("hours") or 24),
-                "source": "officer", "id": "manual:" + when(m["start"]).isoformat()}
+                "source": "officer", "id": "manual:" + when(m["start"]).isoformat(), "after": after}
     r = s.get("repeat") or {}
     if when(r.get("start")) and float(r.get("every_days") or 0) > 0:   # a TB every N days from a known start
         first, period = when(r["start"]), dt.timedelta(days=float(r["every_days"]))
@@ -70,23 +74,43 @@ def schedule(gdir: Path) -> dict | None:
         k = max(0, int((now - first) / period)) if now >= first else 0
         start = first + k * period
         return {"start": start, "phases": phases, "hours": hours, "source": "every %g days" % float(r["every_days"]),
-                "id": "repeat:" + start.isoformat()}
+                "id": "repeat:" + start.isoformat(), "after": after, "period": period}
     g = s.get("game") or {}
     if when(g.get("start")):
         start, end = when(g["start"]), when(g.get("end"))
         phases = int(g.get("phases") or 6)
         hours = float(g.get("hours") or ((end - start).total_seconds() / 3600 / phases if end else 24))
-        return {"start": start, "phases": phases, "hours": hours, "source": "game", "id": str(g.get("id") or start.isoformat())}
+        return {"start": start, "phases": phases, "hours": hours, "source": "game", "id": str(g.get("id") or start.isoformat()), "after": after}
     return None
 
 
 def current_phase(sch: dict, now: dt.datetime) -> tuple[int, dt.datetime] | None:
-    if not sch or now < sch["start"]:
+    """The phase whose post is due now (its start + post_after_minutes has passed), and when it started."""
+    if not sch:
         return None
-    n = int((now - sch["start"]).total_seconds() // (sch["hours"] * 3600)) + 1
+    t = now - dt.timedelta(minutes=sch.get("after") or 0)
+    if t < sch["start"]:
+        return None
+    n = int((t - sch["start"]).total_seconds() // (sch["hours"] * 3600)) + 1
     if n > sch["phases"]:
         return None
     return n, sch["start"] + dt.timedelta(hours=sch["hours"] * (n - 1))
+
+
+def next_post(sch: dict, now: dt.datetime) -> tuple[str, int, dt.datetime] | None:
+    """The next phase post after now: (schedule id, phase, when)."""
+    if not sch:
+        return None
+    starts = [(sch["id"], sch["start"])]
+    if sch.get("period"):                                   # and the next TB of a repeating schedule
+        nxt = sch["start"] + sch["period"]
+        starts.append(("repeat:" + nxt.isoformat(), nxt))
+    for sid, st in starts:
+        for n in range(1, sch["phases"] + 1):
+            t = st + dt.timedelta(hours=sch["hours"] * (n - 1), minutes=sch.get("after") or 0)
+            if t > now:
+                return sid, n, t
+    return None
 
 
 def phase_text(gdir: Path, phase: int, who: str = "") -> tuple[str, int, int] | None:
@@ -183,6 +207,20 @@ def main() -> int:
         return 0
     dry = "--dry-run" in args
     now = dt.datetime.now(dt.timezone.utc)
+    if "--wait" in args and not dry:      # a post due soon: wait for it here, then post it on time
+        soon = []
+        for gdir in sorted(p for p in GUILDS.iterdir() if p.is_dir() and not p.name.startswith(("_", "."))):
+            nx = next_post(schedule(gdir), now)
+            if nx and phase_text(gdir, nx[1]) and nx[1] not in ((load(gdir / "tb-posts.json", {}) or {}).get(nx[0]) or []):
+                soon.append((nx[2], gdir.name, nx[1]))
+        soon = [x for x in soon if (x[0] - now).total_seconds() <= WAIT_MINUTES * 60]
+        if soon:
+            due, slug, ph = min(soon)
+            print(f"Waiting until {due:%d %b %H:%M} UTC to post {slug} phase {ph}", flush=True)
+            time.sleep(max(0, (due - now).total_seconds()) + 5)
+            now = dt.datetime.now(dt.timezone.utc)
+            import subprocess        # assignments saved while waiting: post the newest ones
+            subprocess.run(["git", "pull", "-q", "--rebase", "--autostash"], cwd=ROOT, check=False)
     site = os.getenv("SITE_URL", "").rstrip("/")
     import discord_bot
     bot = discord_bot.bot_token()
