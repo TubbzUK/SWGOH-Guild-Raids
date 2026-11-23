@@ -66,6 +66,7 @@ readiness:
     - GLMANDOGROGU          # The Mandalorian and Grogu (GL)
     - B1MERCDROID          # Mercenary Guard Droid (B1), the new B1 from the Era event (not the original B1BATTLEDROIDV2)
     - ADELPHIRANGER
+    - RACCOON              # Rotta the Hutt
 
 # ------------------------------------------------------------------
 #  Potential score: the best each member's roster could score, shown on the Readiness tab.
@@ -97,7 +98,7 @@ potential:
       pool: [GOPHERANTS, RANGERZEB, MARAJADESKYWALKER, YODACHEWBACCA]
     - name: "Carson Teva"
       lead: CARSONTEVA
-      pool: [ADELPHIRANGER, BISHOP, R5D4]
+      pool: [ADELPHIRANGER, BISHOP, R5D4, RACCOON]
     - name: "Darth Jar Jar"
       lead: DARTHJARJAR
       pool: [THERONIN, YODADSV, VADERDUELSEND, INQUISITORBARRISS]
