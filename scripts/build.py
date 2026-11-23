@@ -26,6 +26,9 @@ import re
 import shutil
 import statistics
 import sys
+
+sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent))
+import raid_potential  # noqa: E402
 import unicodedata
 from collections import Counter
 from pathlib import Path
@@ -401,7 +404,11 @@ def load_raids(players: Players, cfg: dict, raid_dir: Path, label: str) -> list[
 
 
 # ---------------------------------------------------------------- roster
+LEVELS: dict[str, dict[str, tuple]] = {}   # player key -> {unit: (stars, gear, relic)}, for potential raid scores
+
+
 def load_roster(players: Players):
+    LEVELS.clear()
     files = data_files(ROSTER_DIR)
     if not files:
         warn("No roster export uploaded for this guild yet - readiness scores will be empty")
@@ -425,11 +432,19 @@ def load_roster(players: Players):
         allies = df[ally_c].map(clean_ally) if ally_c else pd.Series([None] * len(df))
         units = df[unit_c].map(norm)
         relics = df[relic_c].map(parse_relic)
-        for name, ally, unit, relic in zip(names, allies, units, relics):
+        cols = {norm(c): c for c in df.columns}
+        st_c = next((cols[k] for k in ("stars", "rarity") if k in cols), None)
+        ge_c = next((cols[k] for k in ("gearlevel", "gear") if k in cols), None)
+        stars = df[st_c].map(to_number) if st_c else pd.Series([None] * len(df))
+        gears = df[ge_c].map(to_number) if ge_c else pd.Series([None] * len(df))
+        bases = df[unit_c].map(lambda v: cell(v).upper())
+        for name, ally, unit, relic, sv, gv, base in zip(names, allies, units, relics, stars, gears, bases):
             if not name or norm(name) in SKIP_NAMES:
                 continue
             key = players.resolve(name, ally, update_name=False)
             roster.setdefault(key, {})[unit] = relic
+            gear = int(gv) if gv is not None and not pd.isna(gv) else (13 if relic and relic > 0 else None)
+            LEVELS.setdefault(key, {})[base] = (int(sv) if sv is not None and not pd.isna(sv) else 7, gear, relic)
     else:                           # wide format: one row per player, a column per character
         char_cols = [c for c in df.columns if c not in (name_c, ally_c)]
         for _, r in df.iterrows():
@@ -762,6 +777,7 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
     trend_thr = float(cfg.get("trend_threshold_pct", 3))
     target = raid_target(gdir, cfg, rdef)
     rconf = load_readiness_config(rdef["cfg"])
+    pconf = raid_potential.load_config(rdef["cfg"])
     for cid in unknown_characters(roster, rconf):
         if UNIT_INFO and str(cid).upper() not in UNIT_INFO:
             warn(f"{rdef['name']} readiness character '{cid}' isn't a unit the game knows - check the ID in raids/{rdef['slug']}.yml")
@@ -837,7 +853,13 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
             "below_pct": round((target - (last or 0)) / target * 100, 1) if target and last is not None and last < target else None,
             "below_count": below_n,
             "readiness": readiness_for(roster.get(key), rconf) if roster else None,
+            "potential": raid_potential.potential_for(LEVELS.get(key), pconf) if roster and pconf and key in current else None,
         })
+        if players_out[-1]["potential"] and target:
+            pt = players_out[-1]["potential"]
+            pt["vs_target"] = round(pt["score"] / target * 100, 1)      # can the roster reach the target at all?
+        if players_out[-1]["potential"] and last:
+            players_out[-1]["potential"]["vs_last"] = round(last / players_out[-1]["potential"]["score"] * 100, 1) if players_out[-1]["potential"]["score"] else None
     # Former members only matter where they have scores in this raid
     players_out = [p for p in players_out if p["current"] or p["played"] or p["listed"]]
     players_out.sort(key=lambda p: (-(p["last"] or 0), -((p["readiness"] or {}).get("score") or 0), p["name"].lower()))
@@ -885,6 +907,10 @@ def raid_view(gdir: Path, cfg: dict, rdef: dict, raids: list[dict], roster: dict
                       for t in rconf["teams"]],
         },
         "readiness_summary": ready_summary,
+        "potential_config": ({"attempts": pconf["attempts"], "max": int(pconf["max"]), "good_pct": pconf["good_pct"], "ok_pct": pconf["ok_pct"], "short_max_tier": pconf["short_max_tier"],
+                              "tiers": [{"tier": t["tier"], "points": int(t["points"]), "need": f"R{t['relic']}" if t["relic"] is not None else f"G{t['gear']}" if t["gear"] else f"{t['stars']}★"} for t in pconf["tiers"]],
+                              "names": {k: UNIT_NAMES.get(k) or k for sq in pconf["squads"] for k in [sq["lead"], *sq["pool"]]},
+                              "imgs": {k: unit_img(k) for sq in pconf["squads"] for k in [sq["lead"], *sq["pool"]] if unit_img(k)}} if pconf else None),
         "warnings": list(WARNINGS),
     }
 

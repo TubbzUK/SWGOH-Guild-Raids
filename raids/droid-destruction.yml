@@ -66,3 +66,49 @@ readiness:
     - GLMANDOGROGU          # The Mandalorian and Grogu (GL)
     - B1MERCDROID          # Mercenary Guard Droid (B1), the new B1 from the Era event (not the original B1BATTLEDROIDV2)
     - ADELPHIRANGER
+
+# ------------------------------------------------------------------
+#  Potential score: the best each member's roster could score, shown on the Readiness tab.
+#  Each character counts at the highest tier it meets; a squad is only as good as its weakest
+#  character; no character is used twice; the best 5 attempts are added up.
+#  The points are each tier's clear figure (from raid-planner.fyi), so the potential is a ceiling.
+#  Change them here if the game's figures change.
+# ------------------------------------------------------------------
+potential:
+  attempts: 5
+  squad_size: 5
+  short_max_tier: 1      # squads of fewer than 5 only count on Tier 0 and 1
+  good_pct: 75           # last score at 75%+ of potential -> "On track"
+  ok_pct: 50             # 50-74% -> "Room to grow", below -> "Well below"
+  tiers:
+    - { tier: 0, stars: 4,  points: 300000 }
+    - { tier: 1, gear: 12,  points: 450000 }
+    - { tier: 2, relic: 2,  points: 600000 }
+    - { tier: 3, relic: 4,  points: 900000 }
+    - { tier: 4, relic: 6,  points: 1200000 }
+    - { tier: 5, relic: 8,  points: 1800000 }
+    - { tier: 6, relic: 9,  points: 2700000 }
+    - { tier: 7, relic: 10, points: 3600000 }
+  # Lead, then the characters that go with them (the best four available are used)
+  squads:
+    - name: "Mando & Grogu"
+      lead: GLMANDOGROGU
+      pool: [GOPHERANTS, RANGERZEB, MARAJADESKYWALKER, YODACHEWBACCA]
+    - name: "Carson Teva"
+      lead: CARSONTEVA
+      pool: [ADELPHIRANGER, BISHOP, R5D4, RACCOON]
+    - name: "Darth Jar Jar"
+      lead: DARTHJARJAR
+      pool: [THERONIN, YODADSV, VADERDUELSEND, INQUISITORBARRISS]
+    - name: "Cassian (Undercover)"
+      lead: CASSIANUNDERCOVER
+      pool: [KLEYA, VEL, CINTA, LUKESTARKILLER, STORMTROOPERLUKE]
+    - name: "Stormtrooper Luke"
+      lead: STORMTROOPERLUKE
+      pool: [KLEYA, VEL, CINTA, LUKESTARKILLER, CASSIANUNDERCOVER]
+    - name: "Major Partagaz"
+      lead: MAJORPARTAGAZ
+      pool: [KXSECURITYDROID, DEDRAMEERO, STORMTROOPERCONCEPT, REMNANTSNOWCOMMANDER, MAULHATEFUELED]
+    - name: "IG-90"
+      lead: IG90
+      pool: [ASAJJDARKDISCIPLE, 4LOM, ZUCKUSS, JAXXON, B1MERCDROID]

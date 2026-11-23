@@ -21,6 +21,19 @@ nav { display: flex; gap: 4px; background: var(--surface); border: 1px solid var
 nav button { border: 0; background: transparent; color: var(--text-2); font: 700 11.5px var(--font-display); letter-spacing: .14em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
 nav button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent); }
 button:focus-visible, input:focus-visible, select:focus-visible, tr.click:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.potrow { display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); }
+.potrow:first-of-type { border-top: 0; }
+.potrow .sq b { display: block; color: var(--text); }
+.potrow .sq span { font-size: 12px; color: var(--muted); }
+.potrow .mem { display: flex; gap: 6px; flex-wrap: wrap; }
+.potrow .mem .pf { width: 38px; height: 38px; }
+.potrow .mem .pf.weak { outline: 2px solid var(--bad); outline-offset: 1px; }
+.potrow .pts { text-align: right; font-variant-numeric: tabular-nums; }
+.potrow .pts b { display: block; font-size: 16px; color: var(--text); }
+.tierchip { display: inline-block; font: 700 11px var(--font-ui); padding: 2px 7px; border-radius: 999px; background: var(--surface-2); color: var(--text); }
+.potbar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); margin: 6px 0 2px; }
+.potbar i { display: block; height: 100%; }
+@media (max-width: 640px) { .potrow { grid-template-columns: 1fr auto; } .potrow .mem { grid-column: 1 / -1; grid-row: 2; } }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
 .card { padding: 16px 18px; min-width: 0; }
 .kpi .label { color: var(--text-2); font: 700 10.5px var(--font-display); text-transform: uppercase; letter-spacing: .16em; }
@@ -268,6 +281,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
         <div class="seg no-card" id="charOrder" role="group" aria-label="Order"><button type="button" data-o="weak" aria-pressed="true">Weakest first</button><button type="button" data-o="list" aria-pressed="false">List order</button></div></div>
       <div class="chars" id="charGrid"></div>
     </div>
+    <div class="card" id="potCard" style="margin-bottom:12px" hidden></div>
     <div class="toolbar">
       <input type="search" id="rSearch" placeholder="Search players&hellip;" aria-label="Search players">
       <button type="button" class="scheme-btn" id="schemeBtn" title="Change the relic colours"></button>
@@ -471,7 +485,21 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
     const chars = rconf.teams.flatMap((t, ti) => t.characters.map((c, i) => ({ ...c, team: t.name, first: ti > 0 && i === 0 })));
     const multiTeam = rconf.teams.length > 1;
     const weakest = rsum.characters.filter(c => c.relicked > 0 || c.average > 0 || rsum.characters.every(x => !x.relicked)).sort((a, b) => a.average - b.average).slice(0, 3);
+    // potential score: the best each member's roster could score (squads + tiers in the raid file)
+    const pconf = data.potential_config;
+    const potBand = p => { const t = p.potential; if (!t || t.vs_last == null) return null;
+      return t.vs_last >= pconf.good_pct ? ["b-good", "On track"] : t.vs_last >= pconf.ok_pct ? ["b-warn", "Room to grow"] : ["b-bad", "Well below"]; };
+    const withPot = current.filter(p => p.potential);
+    const potSum = withPot.reduce((a, p) => a + p.potential.score, 0);
+    const potPlayed = withPot.filter(p => p.potential.vs_last != null);
+    const potReach = potPlayed.length ? potPlayed.reduce((a, p) => a + p.last, 0) / potPlayed.reduce((a, p) => a + p.potential.score, 0) * 100 : null;
+    const unreachable = target ? withPot.filter(p => p.potential.score < target).length : 0;
     $("#rKpis").innerHTML = [
+      ...(pconf && withPot.length ? [
+        ["Guild potential", fmt(potSum), `Best the current rosters could score · ${withPot.length} members`],
+        ["Reaching", potReach == null ? "–" : potReach.toFixed(0) + "%", `Last scores as a share of potential${potPlayed.length ? ` · ${potPlayed.filter(p => p.potential.vs_last >= pconf.good_pct).length} on track` : ""}`],
+        ...(target ? [["Can't reach target yet", `${unreachable}`, `Potential below the ${fmt(target)} target`]] : []),
+      ] : []),
       ["Guild average", rsum.average.toFixed(0) + "%", `${rconf.title} · ${chars.length} characters`],
       ["Ready", `${rsum.status.ready}`, `${rconf.ready_pct}%+`],
       ["Close", `${rsum.status.close}`, `${rconf.close_pct}–${rconf.ready_pct - 1}%`],
@@ -500,7 +528,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
       if (me) {
         const r = me.readiness, st = { ready: ["b-good", "✓ Ready"], close: ["b-warn", "● Close"], building: ["b-bad", "○ Building"] }[r.status];
         const at = rsum.characters.filter(c => (r.relics[c.id] ?? -1) >= c.relic).length;
-        $("#rWhoInfo").innerHTML = `<b>${r.score.toFixed(0)}%</b> <span class="badge ${st[0]}">${st[1]}</span><span>${r.relicked}/${r.characters} relicked</span><span>${at} at target</span>`;
+        const pb = potBand(me);
+        $("#rWhoInfo").innerHTML = `<b>${r.score.toFixed(0)}%</b> <span class="badge ${st[0]}">${st[1]}</span><span>${r.relicked}/${r.characters} relicked</span><span>${at} at target</span>` +
+          (me.potential ? `<span>Potential <b>${fmt(me.potential.score)}</b></span>${pb ? `<span class="badge ${pb[0]}">${pb[1]} · ${me.potential.vs_last.toFixed(0)}%</span>` : ""}` : "");
+        drawPot(me);
         $("#charTitle").textContent = `${me.name}'s raid characters`;
         $("#charHint").textContent = `Their relic on each character, against its target. The small figure is the guild average.`;
         const have = c => r.relics[c.id];
@@ -517,6 +548,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
         return;
       }
       $("#rWhoInfo").innerHTML = `<span>Pick a member, or click a row in the table below, to see their own progress.</span>`;
+      drawPot(null);
       $("#charTitle").textContent = "Raid characters";
       $("#charHint").textContent = `Average relic across ${rsum.players} current members, against each character's target. Not unlocked counts as 0.`;
       const list = order === "weak" ? rsum.characters.slice().sort((a, b) => a.average / a.relic - b.average / b.relic || a.label.localeCompare(b.label)) : rsum.characters;
@@ -529,6 +561,28 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
           <div class="cs">${c.relicked} of ${rsum.players} relicked · ${c.at_target} at R${c.relic}</div></div></div>`;
       }).join("");
     };
+    // a member's best attempts: which squads, at which tier, and who holds each one back
+    function drawPot(me) {
+      const box = $("#potCard");
+      if (!pconf || !me || !me.potential) { box.hidden = true; return; }
+      const t = me.potential, pb = potBand(me), names = pconf.names || {}, imgs = pconf.imgs || {};
+      const tierOf = n => pconf.tiers.find(x => x.tier === n) || {};
+      const nextUp = a => { const nt = pconf.tiers.find(x => x.tier === a.tier + 1); return nt ? `${esc(names[a.weakest] || a.weakest)} to ${nt.need} for Tier ${nt.tier} (+${fmt(nt.points - a.points)})` : "Top tier"; };
+      const lastPct = t.vs_last == null ? 0 : Math.min(100, t.vs_last);
+      box.hidden = false;
+      box.innerHTML = `<div class="chead"><div><h2>${esc(me.name)}'s potential score</h2><p class="hint" style="margin:0">Their best ${pconf.attempts} squads, each at the highest tier all five characters meet (no one used twice). Points are each tier's clear score, so this is a ceiling.</p></div></div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;margin:6px 0 4px">
+          <span><span class="num" style="font-size:24px;font-weight:700;color:var(--text)">${fmt(t.score)}</span> <span class="hint">potential · ${t.pct.toFixed(0)}% of the ${fmt(pconf.max)} maximum</span></span>
+          ${me.last != null ? `<span><b class="num">${fmt(me.last)}</b> <span class="hint">last score</span> ${pb ? `<span class="badge ${pb[0]}">${pb[1]} · ${t.vs_last.toFixed(0)}% of potential</span>` : ""}</span>` : `<span class="hint">No score yet</span>`}
+          ${target ? `<span class="hint">${t.score >= target ? `✓ Target ${fmt(target)} is within reach` : `✗ Target ${fmt(target)} is out of reach with this roster`}</span>` : ""}
+        </div>
+        ${me.last != null ? `<div class="potbar" title="Last score against potential"><i style="width:${lastPct}%;background:${pb ? css(pb[0] === "b-good" ? "--good" : pb[0] === "b-warn" ? "--warn" : "--bad") : css("--accent")}"></i></div>` : ""}
+        <div style="margin-top:8px">${t.attempts.map((a, i) => `<div class="potrow">
+          <div class="sq"><b>${i + 1}. ${esc(a.squad)}</b><span><span class="tierchip">Tier ${a.tier}</span> ${tierOf(a.tier).need || ""}</span></div>
+          <div class="mem">${a.members.map(k => pf({ id: k, label: names[k] || k, img: imgs[k] }, "sm " + (k === a.weakest && a.tier < 7 ? "weak" : ""))).join("")}<span class="hint" style="align-self:center;font-size:12px">${a.tier < 7 ? "Next: " + nextUp(a) : "Top tier"}</span></div>
+          <div class="pts"><b>${fmt(a.points)}</b><span class="hint">points</span></div></div>`).join("")}
+          ${t.attempts.length < pconf.attempts ? `<div class="hint" style="padding-top:8px">${pconf.attempts - t.attempts.length} attempt${pconf.attempts - t.attempts.length === 1 ? "" : "s"} with no squad available yet.</div>` : ""}</div>`;
+    }
     document.querySelectorAll("#charOrder button").forEach(b => b.onclick = () => { document.querySelectorAll("#charOrder button").forEach(x => x.setAttribute("aria-pressed", x === b)); drawChars(); });
     drawChars();
 
@@ -579,15 +633,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
   function renderReady() {
       const q = $("#rSearch").value.toLowerCase();
       const rows = current.filter(p => p.readiness && p.name.toLowerCase().includes(q))
-        .sort((a, b) => rSort.key === "name" ? a.name.localeCompare(b.name) * rSort.dir : ((a.readiness.score - b.readiness.score) * rSort.dir || a.name.localeCompare(b.name)));
-      const head1 = multiTeam ? `<tr><th colspan="3"></th>${rconf.teams.map(t => `<th class="team" colspan="${t.characters.length}">${esc(t.name)}</th>`).join("")}</tr>` : "";
-      const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}"><span class="vt">${esc(c.label)}</span>${pf(c)}</th>`).join("")}</tr>`;
+        .sort((a, b) => rSort.key === "name" ? a.name.localeCompare(b.name) * rSort.dir
+          : rSort.key === "pot" ? (((a.potential?.score ?? -1) - (b.potential?.score ?? -1)) * rSort.dir || a.name.localeCompare(b.name))
+          : rSort.key === "reach" ? (((a.potential?.vs_last ?? -1) - (b.potential?.vs_last ?? -1)) * rSort.dir || a.name.localeCompare(b.name))
+          : ((a.readiness.score - b.readiness.score) * rSort.dir || a.name.localeCompare(b.name)));
+      const head1 = multiTeam ? `<tr><th colspan="${3 + (pconf ? 2 : 0)}"></th>${rconf.teams.map(t => `<th class="team" colspan="${t.characters.length}">${esc(t.name)}</th>`).join("")}</tr>` : "";
+      const head2 = `<tr><th data-sort="name" class="${rSort.key === "name" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Player</th><th data-sort="score" class="${rSort.key === "score" ? (rSort.dir > 0 ? "asc" : "desc") : ""}">Readiness</th><th class="r">Relicked</th>${pconf ? `<th data-sort="pot" class="r ${rSort.key === "pot" ? (rSort.dir > 0 ? "asc" : "desc") : ""}" title="Best score their roster could reach">Potential</th><th data-sort="reach" class="${rSort.key === "reach" ? (rSort.dir > 0 ? "asc" : "desc") : ""}" title="Last score as a share of potential">Last / potential</th>` : ""}${chars.map(c => `<th class="c ${c.first ? "first" : ""}" title="${esc(c.label)} · target R${c.relic}"><span class="vt">${esc(c.label)}</span>${pf(c)}</th>`).join("")}</tr>`;
       const body = rows.map(p => {
         const r = p.readiness, st = ST[r.status];
-        return `<tr class="click ${p.name === window.__rWho ? "sel" : ""}" data-name="${esc(p.name)}" tabindex="0" title="Show ${esc(p.name)} on the character cards"><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;
+        return `<tr class="click ${p.name === window.__rWho ? "sel" : ""}" data-name="${esc(p.name)}" tabindex="0" title="Show ${esc(p.name)} on the character cards"><td class="name">${esc(p.name)}</td><td><span class="num">${r.score.toFixed(0)}%</span> <span class="badge ${st[0]}">${st[1]}</span></td><td class="r num">${r.relicked}/${r.characters}</td>${pconf ? (() => { const t = p.potential, pb = potBand(p); return `<td class="r num">${t ? fmt(t.score) : "–"}</td><td>${t && t.vs_last != null ? `<span class="num">${t.vs_last.toFixed(0)}%</span> <span class="badge ${pb[0]}">${pb[1]}</span>` : `<span class="hint">${p.last == null ? "no score" : "–"}</span>`}</td>`; })() : ""}${chars.map(c => `<td class="c ${c.first ? "first" : ""}">${cellHtml(r.relics[c.id], c.relic)}</td>`).join("")}</tr>`;
       }).join("");
       const missing = current.filter(p => !p.readiness).map(p => esc(p.name));
-      $("#rTable").innerHTML = `<thead>${head1}${head2}</thead><tbody>${body}${missing.length ? `<tr><td colspan="${chars.length + 3}" class="sub" style="white-space:normal">Not in the roster export yet: ${missing.join(", ")}</td></tr>` : ""}</tbody>`;
+      $("#rTable").innerHTML = `<thead>${head1}${head2}</thead><tbody>${body}${missing.length ? `<tr><td colspan="${chars.length + 3 + (pconf ? 2 : 0)}" class="sub" style="white-space:normal">Not in the roster export yet: ${missing.join(", ")}</td></tr>` : ""}</tbody>`;
       syncTopScroll();
       $("#rTable").querySelectorAll("tbody tr[data-name]").forEach(tr => { const go = () => setWho(tr.dataset.name === window.__rWho ? "" : tr.dataset.name, true); tr.onclick = go; tr.onkeydown = e => { if (e.key === "Enter") go(); }; });
       $("#rTable").querySelectorAll("th[data-sort]").forEach(th => th.onclick = () => { const k = th.dataset.sort; rSort = { key: k, dir: rSort.key === k ? -rSort.dir : (k === "name" ? 1 : -1) }; renderReady(); });
