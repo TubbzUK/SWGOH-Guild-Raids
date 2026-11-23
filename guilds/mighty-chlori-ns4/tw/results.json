@@ -82,5 +82,12 @@
   "their_score": 11758,
   "source": "game",
   "opponent": "East Endor Trading Company"
+ },
+ "2026-11-22": {
+  "result": "win",
+  "our_score": 25810,
+  "their_score": 10358,
+  "source": "game",
+  "opponent": "Fortuna Favors the Bold"
  }
 }

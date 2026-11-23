@@ -89,5 +89,12 @@
   "their_score": 10814,
   "source": "game",
   "opponent": "Belgian Rebellion"
+ },
+ "2026-11-22": {
+  "result": "win",
+  "our_score": 21623,
+  "their_score": 9140,
+  "source": "game",
+  "opponent": "The Bantha Militia"
  }
 }
