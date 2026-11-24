@@ -1,5 +1,5 @@
 {
-"date": "2026-11-23",
+"date": "2026-11-24",
 "players": [
 {
 "name": "Aserius",
@@ -241,43 +241,43 @@
 },
 {
 "name": "EmperorArteta",
-"gp": 15308677,
-"gp_char": 10184465,
+"gp": 15308799,
+"gp_char": 10184587,
 "gp_ship": 5124212,
 "skill": 3373,
 "league": "Kyber",
 "division": 2,
 "mods": {
 "s10": 1447,
-"s15": 851,
+"s15": 852,
 "s20": 429,
 "s25": 165,
-"six": 1568,
+"six": 1569,
 "mods": 2052
 }
 },
 {
 "name": "Everton Jabb",
-"gp": 13366748,
-"gp_char": 8877554,
-"gp_ship": 4489194,
+"gp": 13383257,
+"gp_char": 8891143,
+"gp_ship": 4492114,
 "skill": 2923,
 "league": "Aurodium",
 "division": 2,
 "mods": {
-"s10": 756,
-"s15": 370,
-"s20": 120,
+"s10": 773,
+"s15": 375,
+"s20": 121,
 "s25": 21,
-"six": 788,
-"mods": 1710
+"six": 789,
+"mods": 1764
 }
 },
 {
 "name": "Fleshstorm",
-"gp": 14042413,
+"gp": 14045511,
 "gp_char": 9155216,
-"gp_ship": 4887197,
+"gp_ship": 4890295,
 "skill": 2800,
 "league": "Aurodium",
 "division": 3,
@@ -292,8 +292,8 @@
 },
 {
 "name": "FØAL",
-"gp": 14620023,
-"gp_char": 9686955,
+"gp": 14620072,
+"gp_char": 9687004,
 "gp_ship": 4933068,
 "skill": 3164,
 "league": "Kyber",
@@ -301,7 +301,7 @@
 "mods": {
 "s10": 779,
 "s15": 374,
-"s20": 146,
+"s20": 147,
 "s25": 25,
 "six": 639,
 "mods": 1989
@@ -316,7 +316,7 @@
 "league": "Aurodium",
 "division": 1,
 "mods": {
-"s10": 924,
+"s10": 925,
 "s15": 367,
 "s20": 116,
 "s25": 23,
@@ -326,8 +326,8 @@
 },
 {
 "name": "Holycrabe",
-"gp": 14719445,
-"gp_char": 9728259,
+"gp": 14721440,
+"gp_char": 9730254,
 "gp_ship": 4991186,
 "skill": 2912,
 "league": "Aurodium",
@@ -343,8 +343,8 @@
 },
 {
 "name": "Iceman2781",
-"gp": 14057261,
-"gp_char": 9247691,
+"gp": 14057471,
+"gp_char": 9247901,
 "gp_ship": 4809570,
 "skill": 3070,
 "league": "Kyber",
@@ -360,9 +360,9 @@
 },
 {
 "name": "IceMerlin",
-"gp": 13244755,
+"gp": 13252805,
 "gp_char": 8665816,
-"gp_ship": 4578939,
+"gp_ship": 4586989,
 "skill": 3102,
 "league": "Kyber",
 "division": 4,
@@ -394,9 +394,9 @@
 },
 {
 "name": "Jon401",
-"gp": 12350837,
+"gp": 12355479,
 "gp_char": 8091495,
-"gp_ship": 4259342,
+"gp_ship": 4263984,
 "skill": 2678,
 "league": "Chromium",
 "division": 1,
@@ -513,8 +513,8 @@
 },
 {
 "name": "PRCalvin",
-"gp": 15751369,
-"gp_char": 10576356,
+"gp": 15751572,
+"gp_char": 10576559,
 "gp_ship": 5175013,
 "skill": 2897,
 "league": "Aurodium",
@@ -525,7 +525,7 @@
 "s20": 165,
 "s25": 25,
 "six": 637,
-"mods": 1642
+"mods": 1643
 }
 },
 {
@@ -564,8 +564,8 @@
 },
 {
 "name": "Rikie1",
-"gp": 13294573,
-"gp_char": 8897862,
+"gp": 13349613,
+"gp_char": 8952902,
 "gp_ship": 4396711,
 "skill": 2847,
 "league": "Aurodium",
@@ -717,8 +717,8 @@
 },
 {
 "name": "Viggen",
-"gp": 14204601,
-"gp_char": 9416099,
+"gp": 14209767,
+"gp_char": 9421265,
 "gp_ship": 4788502,
 "skill": 2596,
 "league": "Aurodium",
